@@ -1,11 +1,18 @@
 .data 0x00 -1 f-0.34
 
 .symbols
-    # name, type (0x00 - data, 0x01 - function), offset (-1 for foreign functions), return type flag, parameter type flags, parameter counts (1 per set flag, in register file order)
-    # Note that data symbols logically have none of the pieces after the offset, so the values will be ignored
-    countToAMillion 0x01 0x00 0x01 0x00
+    # name, type (data or function), offset (-1 for foreign functions)
+    # Note that data symbols logically have none of the pieces after the offset
+    countToAMillion function $countToAMillion
+        void
+        # Parameters and registers specified the same way - a sequence of integers, in register file order.
+        # Note that parameter spec is ignored by the VM - it is only useful
+        # for reflection by embedders, though it is always required. Missing integers are assumed zero.
+        parameters 0
+        registers 3
 
 .code
+  countToAMillion:
     CONST r2, 1000000
     CONST r1, 1
   loop:

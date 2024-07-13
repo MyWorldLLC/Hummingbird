@@ -70,25 +70,30 @@ public class Assembler {
         var builder = Executable.builder();
         var labels = new Labels();
         var asm = new CharStream(source);
-        while (asm.hasRemaining()){
-            var section = getSectionName(asm);
-            if(section == null){
-                throw new AssemblyException("Invalid assembly: could not read section at " + asm.debug(15));
+
+        try {
+            while (asm.hasRemaining()) {
+                var section = getSectionName(asm);
+                if (section == null) {
+                    throw new AssemblyException("Invalid assembly: could not read section at " + asm.debug(15));
+                }
+
+                if (DATA_SECTION.equals(section)) {
+                    parseDataSection(asm, labels, builder);
+                } else if (SYMBOL_SECTION.equals(section)) {
+                    parseSymbolSection(asm, labels, builder);
+                } else if (CODE_SECTION.equals(section)) {
+                    parseCodeSection(asm, labels, builder);
+                } else {
+                    throw new AssemblyException("Invalid section name: " + section);
+                }
+
             }
 
-            if(DATA_SECTION.equals(section)){
-                parseDataSection(asm, labels, builder);
-            }else if(SYMBOL_SECTION.equals(section)){
-                parseSymbolSection(asm, labels, builder);
-            }else if(CODE_SECTION.equals(section)){
-                parseCodeSection(asm, labels, builder);
-            }else {
-                throw new AssemblyException("Invalid section name: " + section);
-            }
-
+            resolveLabels(labels, builder);
+        } catch (Exception e) {
+            throw new AssemblyException("Assembly failed", e);
         }
-
-        resolveLabels(labels, builder);
 
         return builder.build();
     }
@@ -116,58 +121,54 @@ public class Assembler {
     protected void parseSymbolSection(CharStream asm, Labels labels, Executable.Builder builder) throws AssemblyException {
         skipNewlinesAndComments(asm);
 
-        var name = consume(asm, symbolName);
-        syntaxCheck(asm, name, "symbol name");
-        skipWhitespace(asm);
+        while(moreWithinSection(asm)){
+            var name = consume(asm, symbolName);
+            syntaxCheck(asm, name, "symbol name");
+            skipNewlinesAndComments(asm);
 
-        var type = consume(asm, intLiteral);
-        syntaxCheck(asm, type, "symbol type");
+            var typeName = consume(asm, symbolName);
+            syntaxCheck(asm, typeName, "symbol type");
+            skipNewlinesAndComments(asm);
 
-        var typeInt = parseIntLiteral(type).intValue();
-        if(typeInt < 0 || typeInt >= Symbol.Type.values().length){
-            throw new AssemblyException("Invalid type for symbol " + name + ": " + typeInt);
-        }
+            var type = Symbol.Type.valueOf(typeName.toString().toUpperCase());
+            if(type == Symbol.Type.DATA){
+                var label = parseLabelUse(asm);
+                labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
+                    builder.appendSymbol(Symbol.data(name.toString(), resolvedIndex));
+                });
+            }else if(type == Symbol.Type.FUNCTION){
+                var label = parseLabelUse(asm);
+                skipNewlinesAndComments(asm);
 
-        var symbolType = Symbol.Type.values()[typeInt];
+                var rType = parseReturnTypeFlag(asm);
+                skipNewlinesAndComments(asm);
 
-        skipWhitespace(asm);
+                var paramCounts = parseTypeCounts(asm, "parameters");
+                skipNewlinesAndComments(asm);
 
-        var offset = consume(asm, intLiteral);
-        syntaxCheck(asm, offset, "symbol offset");
-        var offsetInt = parseIntLiteral(offset).intValue();
-        skipWhitespace(asm);
+                var registerCounts = parseTypeCounts(asm, "registers");
+                skipNewlinesAndComments(asm);
 
-        var returnType = consume(asm, intLiteral);
-        syntaxCheck(asm, returnType, "function return type");
-        var returnTypeInt = parseIntLiteral(returnType).intValue();
-        skipWhitespace(asm);
+                labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
+                    builder.appendSymbol(Symbol.function(label.name(), resolvedIndex, rType, paramCounts, registerCounts));
+                });
+            }else if(type == Symbol.Type.FOREIGN){
 
-        var parameterTypes = consume(asm, intLiteral);
-        syntaxCheck(asm, parameterTypes, "function parameter type flags");
-        skipWhitespace(asm);
+                var rType = parseReturnTypeFlag(asm);
+                skipNewlinesAndComments(asm);
 
-        var paramTypesInt = parseIntLiteral(parameterTypes).intValue();
+                var paramCounts = parseTypeCounts(asm, "parameters");
+                skipNewlinesAndComments(asm);
 
-        var paramTypeCounts = new ArrayList<Integer>();
-        for(int i = 0; i < TypeFlag.values().length; i++){
-            if(TypeFlag.isSet(paramTypesInt, TypeFlag.values()[i])){
-                var count = consume(asm, intLiteral);
-                syntaxCheck(asm, count, "function parameter " + TypeFlag.values()[i].name() + " count");
-                skipWhitespace(asm);
+                var registerCounts = parseTypeCounts(asm, "registers");
+                skipNewlinesAndComments(asm);
 
-                paramTypeCounts.add(parseIntLiteral(count).intValue());
+                builder.appendSymbol(Symbol.foreignFunction(name.toString(), rType, paramCounts, registerCounts));
             }
+            skipNewlinesAndComments(asm);
+
         }
 
-        var iCount = TypeFlag.isSet(paramTypesInt, TypeFlag.INT) ? paramTypeCounts.remove(0) : 0;
-        var fCount = TypeFlag.isSet(paramTypesInt, TypeFlag.FLOAT) ? paramTypeCounts.remove(0) : 0;
-        var lCount = TypeFlag.isSet(paramTypesInt, TypeFlag.LONG) ? paramTypeCounts.remove(0) : 0;
-        var dCount = TypeFlag.isSet(paramTypesInt, TypeFlag.DOUBLE) ? paramTypeCounts.remove(0) : 0;
-        var sCount = TypeFlag.isSet(paramTypesInt, TypeFlag.STRING) ? paramTypeCounts.remove(0) : 0;
-        var oCount = TypeFlag.isSet(paramTypesInt, TypeFlag.OBJECT) ? paramTypeCounts.remove(0) : 0;
-
-        builder.appendSymbol(new Symbol(name.toString(), symbolType, offsetInt, returnTypeInt, paramTypesInt,
-                iCount, fCount, lCount, dCount, sCount, oCount));
     }
 
     protected void parseCodeSection(CharStream asm, Labels labels, Executable.Builder builder) throws AssemblyException {
@@ -218,7 +219,14 @@ public class Assembler {
                 var index = builder.appendOpcode(null);
                 var pendingOpcode = new PendingOpcode(index, ins.toString(), operands);
                 for(var label : unresolvedLabels){
-                    labels.markUnresolvedUse(label.name(), pendingOpcode);
+                    labels.markUnresolvedUse(label.name(), (resolved, resolvedIndex) -> {
+                        for(int i = 0; i < pendingOpcode.operands().size(); i++){
+                            if(pendingOpcode.operands().get(i) instanceof Label l){
+                                pendingOpcode.operands().set(i, labels.getResolvedIndex(l.name()));
+                            }
+                        }
+                        builder.replaceOpcode(pendingOpcode.index(), makeOpcode(pendingOpcode.name(), pendingOpcode.operands()));
+                    });
                 }
             }else{
                 builder.appendOpcode(makeOpcode(ins.toString(), operands));
@@ -239,13 +247,8 @@ public class Assembler {
                 throw new AssemblyException("Unresolved label: " + label);
             }
 
-            for(var pending : uses){
-                for(int i = 0; i < pending.operands().size(); i++){
-                    if(pending.operands().get(i) instanceof Label l){
-                        pending.operands().set(i, labels.getResolvedIndex(l.name()));
-                    }
-                }
-                builder.replaceOpcode(pending.index(), makeOpcode(pending.name(), pending.operands()));
+            for(var user : uses){
+                user.resolved(label, labels.getResolvedIndex(label));
             }
         }
     }
@@ -360,6 +363,36 @@ public class Assembler {
         catch(Exception ex){
             throw new AssemblyException("Invalid int literal: " + sequence.toString());
         }
+    }
+
+    protected TypeFlag parseReturnTypeFlag(CharStream asm) throws AssemblyException {
+        var type = consume(asm, symbolName);
+        syntaxCheck(asm, type, "symbol return type");
+
+        return TypeFlag.valueOf(type.toString().toUpperCase());
+    }
+
+    protected TypeCounts parseTypeCounts(CharStream asm, String requiredName) throws AssemblyException {
+        var name = consume(asm, symbolName);
+        syntaxCheck(asm, name, "symbol type count");
+
+        var nameStr = name.toString();
+        if(!nameStr.equals(requiredName)){
+            throw new AssemblyException("Wrong type count name: expected " + requiredName + ", got " + nameStr);
+        }
+
+        skipWhitespace(asm);
+
+        var counts = TypeCounts.makeTypeCountArray();
+        int parsed = 0;
+        while(parsed < counts.length && !asm.peek(newline, comment)){
+            var count = parseIntLiteral(consume(asm, intLiteral));
+            counts[parsed] = count.intValue();
+            parsed++;
+            skipWhitespace(asm);
+        }
+
+        return new TypeCounts(nameStr, counts);
     }
 
     protected Object parseStringLiteral(CharSequence sequence){

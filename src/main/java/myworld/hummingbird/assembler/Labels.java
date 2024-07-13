@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Labels {
 
     protected final Map<String, Integer> resolvedLabels;
-    protected final Map<String, List<PendingOpcode>> unresolvedLabelUses;
+    protected final Map<String, List<UnresolvedLabelHandler>> unresolvedLabelUses;
 
     public Labels(){
         resolvedLabels = new HashMap<>();
@@ -22,9 +23,9 @@ public class Labels {
         resolvedLabels.put(label, opcodeIndex);
     }
 
-    public void markUnresolvedUse(String label, PendingOpcode opcode){
+    public void markUnresolvedUse(String label, UnresolvedLabelHandler user){
         unresolvedLabelUses.computeIfAbsent(label, k -> new ArrayList<>())
-                .add(opcode);
+                .add(user);
     }
 
     public boolean isResolved(Label label){
@@ -42,7 +43,7 @@ public class Labels {
         throw new AssemblyException("Unresolved label: " + label);
     }
 
-    public Map<String, List<PendingOpcode>> getUnresolvedLabelUses(){
+    public Map<String, List<UnresolvedLabelHandler>> getUnresolvedLabelUses(){
         return unresolvedLabelUses;
     }
 

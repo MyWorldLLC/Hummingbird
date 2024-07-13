@@ -6,7 +6,8 @@ public enum TypeFlag {
     LONG,
     DOUBLE,
     STRING,
-    OBJECT;
+    OBJECT,
+    VOID;
 
     public static int flagBitFor(TypeFlag flag){
         return 0x01 << flag.ordinal();
@@ -24,7 +25,4 @@ public enum TypeFlag {
         return (bits & flagBitFor(flag)) != 0;
     }
 
-    public static boolean isVoid(int bits){
-        return bits == 0;
-    }
 }
