@@ -1,0 +1,14 @@
+.data 0x00 -1 f-0.34
+
+#.symbols
+    # name, type (0x00 - data, 0x01 - function), offset (-1 for foreign functions), return type flag, parameter type flags, parameter counts (1 per set flag, in register file order)
+    # Note that data symbols have none of the pieces after the offset
+    # countToAMillion 0x01 0x00 0x00
+
+.code
+    CONST r2, 1000000
+    CONST r1, 1
+  loop:
+    ADD r0, r1
+    IFLT r0, r2, $loop
+    RETURN r0
