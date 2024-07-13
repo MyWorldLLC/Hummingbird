@@ -124,6 +124,7 @@ public class Assembler {
         while(moreWithinSection(asm)){
             var name = consume(asm, symbolName);
             syntaxCheck(asm, name, "symbol name");
+            var nameStr = name.toString();
             skipNewlinesAndComments(asm);
 
             var typeName = consume(asm, symbolName);
@@ -133,8 +134,10 @@ public class Assembler {
             var type = Symbol.Type.valueOf(typeName.toString().toUpperCase());
             if(type == Symbol.Type.DATA){
                 var label = parseLabelUse(asm);
+                var index = builder.indexOfNextSymbol();
+                builder.appendSymbol(null);
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.appendSymbol(Symbol.data(name.toString(), resolvedIndex));
+                    builder.replaceSymbol(index, Symbol.data(nameStr, resolvedIndex));
                 });
             }else if(type == Symbol.Type.FUNCTION){
                 var label = parseLabelUse(asm);
@@ -149,8 +152,11 @@ public class Assembler {
                 var registerCounts = parseTypeCounts(asm, "registers");
                 skipNewlinesAndComments(asm);
 
+                var index = builder.indexOfNextSymbol();
+                builder.appendSymbol(Symbol.empty(nameStr));
+
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.appendSymbol(Symbol.function(label.name(), resolvedIndex, rType, paramCounts, registerCounts));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts, registerCounts));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 
@@ -163,7 +169,7 @@ public class Assembler {
                 var registerCounts = parseTypeCounts(asm, "registers");
                 skipNewlinesAndComments(asm);
 
-                builder.appendSymbol(Symbol.foreignFunction(name.toString(), rType, paramCounts, registerCounts));
+                builder.appendSymbol(Symbol.foreignFunction(nameStr, rType, paramCounts, registerCounts));
             }
             skipNewlinesAndComments(asm);
 

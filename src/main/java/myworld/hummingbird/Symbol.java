@@ -10,6 +10,10 @@ public record Symbol(String name, Type type, int offset, TypeFlag rType, TypeCou
         FOREIGN
     }
 
+    public static Symbol empty(String name){
+        return new Symbol(name, null, FOREIGN_FUNCTION_OFFSET, null, null, null);
+    }
+
     public static Symbol data(String name, int offset){
         return new Symbol(name, Type.DATA, offset, null, null, null);
     }

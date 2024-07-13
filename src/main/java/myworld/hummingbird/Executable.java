@@ -30,6 +30,14 @@ public record Executable(byte[] data, Symbol[] symbols, Opcode[] code) {
             return offset;
         }
 
+        public void replaceSymbol(int index, Symbol symbol){
+            symbols.set(index, symbol);
+        }
+
+        public int indexOfNextSymbol(){
+            return symbols.size();
+        }
+
         public int appendOpcode(Opcode opcode){
             var offset = opcodes.size();
             opcodes.add(opcode);
