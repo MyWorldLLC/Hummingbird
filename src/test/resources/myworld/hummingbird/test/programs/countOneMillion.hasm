@@ -1,9 +1,9 @@
 .data 0x00 -1 f-0.34
 
-#.symbols
+.symbols
     # name, type (0x00 - data, 0x01 - function), offset (-1 for foreign functions), return type flag, parameter type flags, parameter counts (1 per set flag, in register file order)
-    # Note that data symbols have none of the pieces after the offset
-    # countToAMillion 0x01 0x00 0x00
+    # Note that data symbols logically have none of the pieces after the offset, so the values will be ignored
+    countToAMillion 0x01 0x00 0x01 0x00
 
 .code
     CONST r2, 1000000

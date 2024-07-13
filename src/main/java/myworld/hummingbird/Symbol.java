@@ -4,7 +4,7 @@ public record Symbol(String name, Type type, int offset, int rType, int pTypeFla
 
     public static final int FOREIGN_FUNCTION_OFFSET = -1;
 
-    enum Type {
+    public enum Type {
         DATA,
         FUNCTION
     }

@@ -1,9 +1,6 @@
 package myworld.hummingbird.assembler;
 
-import myworld.hummingbird.Assembles;
-import myworld.hummingbird.CoreOpcodes;
-import myworld.hummingbird.Executable;
-import myworld.hummingbird.Opcode;
+import myworld.hummingbird.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,6 +24,7 @@ public class Assembler {
     protected final Pattern sectionName;
     protected final Pattern labelDef;
     protected final Pattern labelUse;
+    protected final Pattern symbolName;
     protected final Pattern register;
     protected final Pattern instruction;
     protected final Pattern intLiteral;
@@ -45,6 +43,7 @@ public class Assembler {
         sectionName = Pattern.compile("\\.\\w+");
         labelDef = Pattern.compile("\\w+:");
         labelUse = Pattern.compile("\\$\\w+");
+        symbolName = Pattern.compile("\\w+");
         register = Pattern.compile("r\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
@@ -67,10 +66,6 @@ public class Assembler {
         }
     }
 
-    public Method opcodeFactory(String opcodeName){
-        return opcodeFactories.get(opcodeName);
-    }
-
     public Executable assemble(CharSequence source) throws AssemblyException {
         var builder = Executable.builder();
         var labels = new Labels();
@@ -78,7 +73,7 @@ public class Assembler {
         while (asm.hasRemaining()){
             var section = getSectionName(asm);
             if(section == null){
-                throw new AssemblyException("Invalid assembly: could not read section at " + asm.safeSlice(asm.offset(), 15) + "...");
+                throw new AssemblyException("Invalid assembly: could not read section at " + asm.debug(15));
             }
 
             if(DATA_SECTION.equals(section)){
@@ -118,9 +113,61 @@ public class Assembler {
 
     }
 
-    protected void parseSymbolSection(CharStream asm, Labels labels, Executable.Builder builder){
-        // TODO - consume symbols
+    protected void parseSymbolSection(CharStream asm, Labels labels, Executable.Builder builder) throws AssemblyException {
         skipNewlinesAndComments(asm);
+
+        var name = consume(asm, symbolName);
+        syntaxCheck(asm, name, "symbol name");
+        skipWhitespace(asm);
+
+        var type = consume(asm, intLiteral);
+        syntaxCheck(asm, type, "symbol type");
+
+        var typeInt = parseIntLiteral(type).intValue();
+        if(typeInt < 0 || typeInt >= Symbol.Type.values().length){
+            throw new AssemblyException("Invalid type for symbol " + name + ": " + typeInt);
+        }
+
+        var symbolType = Symbol.Type.values()[typeInt];
+
+        skipWhitespace(asm);
+
+        var offset = consume(asm, intLiteral);
+        syntaxCheck(asm, offset, "symbol offset");
+        var offsetInt = parseIntLiteral(offset).intValue();
+        skipWhitespace(asm);
+
+        var returnType = consume(asm, intLiteral);
+        syntaxCheck(asm, returnType, "function return type");
+        var returnTypeInt = parseIntLiteral(returnType).intValue();
+        skipWhitespace(asm);
+
+        var parameterTypes = consume(asm, intLiteral);
+        syntaxCheck(asm, parameterTypes, "function parameter type flags");
+        skipWhitespace(asm);
+
+        var paramTypesInt = parseIntLiteral(parameterTypes).intValue();
+
+        var paramTypeCounts = new ArrayList<Integer>();
+        for(int i = 0; i < TypeFlag.values().length; i++){
+            if(TypeFlag.isSet(paramTypesInt, TypeFlag.values()[i])){
+                var count = consume(asm, intLiteral);
+                syntaxCheck(asm, count, "function parameter " + TypeFlag.values()[i].name() + " count");
+                skipWhitespace(asm);
+
+                paramTypeCounts.add(parseIntLiteral(count).intValue());
+            }
+        }
+
+        var iCount = TypeFlag.isSet(paramTypesInt, TypeFlag.INT) ? paramTypeCounts.remove(0) : 0;
+        var fCount = TypeFlag.isSet(paramTypesInt, TypeFlag.FLOAT) ? paramTypeCounts.remove(0) : 0;
+        var lCount = TypeFlag.isSet(paramTypesInt, TypeFlag.LONG) ? paramTypeCounts.remove(0) : 0;
+        var dCount = TypeFlag.isSet(paramTypesInt, TypeFlag.DOUBLE) ? paramTypeCounts.remove(0) : 0;
+        var sCount = TypeFlag.isSet(paramTypesInt, TypeFlag.STRING) ? paramTypeCounts.remove(0) : 0;
+        var oCount = TypeFlag.isSet(paramTypesInt, TypeFlag.OBJECT) ? paramTypeCounts.remove(0) : 0;
+
+        builder.appendSymbol(new Symbol(name.toString(), symbolType, offsetInt, returnTypeInt, paramTypesInt,
+                iCount, fCount, lCount, dCount, sCount, oCount));
     }
 
     protected void parseCodeSection(CharStream asm, Labels labels, Executable.Builder builder) throws AssemblyException {
@@ -137,7 +184,9 @@ public class Assembler {
 
             skipNewlinesAndComments(asm);
 
-            var ins = consume(asm, instruction).toString();
+            var ins = consume(asm, instruction);
+            syntaxCheck(asm, ins, "instruction");
+
             var operands = new ArrayList<>();
             var pending = false;
             var unresolvedLabels = new ArrayList<Label>();
@@ -167,12 +216,12 @@ public class Assembler {
 
             if(pending){
                 var index = builder.appendOpcode(null);
-                var pendingOpcode = new PendingOpcode(index, ins, operands);
+                var pendingOpcode = new PendingOpcode(index, ins.toString(), operands);
                 for(var label : unresolvedLabels){
                     labels.markUnresolvedUse(label.name(), pendingOpcode);
                 }
             }else{
-                builder.appendOpcode(makeOpcode(ins, operands));
+                builder.appendOpcode(makeOpcode(ins.toString(), operands));
             }
 
             skipNewlinesAndComments(asm);
@@ -224,14 +273,14 @@ public class Assembler {
         if(sequence != null) return parseFloatLiteral(sequence);
         sequence = consume(asm, stringLiteral);
         if(sequence != null) return parseStringLiteral(sequence);
-        throw new AssemblyException("Invalid literal: " + asm.safeSlice(asm.offset(), 10) + "...");
+        throw new AssemblyException("Invalid literal: " + asm.debug(10));
     }
 
     protected Label parseLabelUse(CharStream asm) throws AssemblyException {
         var sequence = consume(asm, labelUse);
         // Trim leading '$'
         if(sequence != null) return new Label(sequence.subSequence(1, sequence.length() - 1).toString());
-        throw new AssemblyException("Not a label use: " + asm.safeSlice(asm.offset(), 10) + "...");
+        throw new AssemblyException("Not a label use: " + asm.debug(10));
     }
 
     protected int parseRegister(CharStream asm) throws AssemblyException {
@@ -239,7 +288,7 @@ public class Assembler {
             var sequence = consume(asm, register);
             if(sequence != null) return Integer.parseInt(sequence.subSequence(1, sequence.length()).toString());
         }catch (Exception e){}
-        throw new AssemblyException("Invalid register reference: " + asm.safeSlice(asm.offset(), 10) + "...");
+        throw new AssemblyException("Invalid register reference: " + asm.debug(10));
     }
 
     protected Object parseOperand(CharStream asm) throws AssemblyException {
@@ -250,7 +299,7 @@ public class Assembler {
         }
     }
 
-    protected Object parseIntLiteral(CharSequence sequence) throws AssemblyException {
+    protected Number parseIntLiteral(CharSequence sequence) throws AssemblyException {
         try{
             var signifier = sequence.charAt(0);
             var hasSignifier = Character.isAlphabetic(signifier);
@@ -373,6 +422,12 @@ public class Assembler {
         }
     }
 
+    protected void syntaxCheck(CharStream asm, CharSequence check, String typeName) throws AssemblyException {
+        if(check == null){
+            throw new AssemblyException("Syntax error: could not match " + typeName + ": " + asm.debug(15));
+        }
+    }
+
     protected class CharStream {
 
         public static final char END = '\0';
@@ -428,6 +483,10 @@ public class Assembler {
 
         public boolean hasRemaining(){
             return offset < source.length();
+        }
+
+        public String debug(int length){
+            return safeSlice(offset, length).toString() + "...";
         }
 
     }
