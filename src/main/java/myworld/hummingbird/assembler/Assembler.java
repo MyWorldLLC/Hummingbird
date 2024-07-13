@@ -43,7 +43,7 @@ public class Assembler {
         sectionName = Pattern.compile("\\.\\w+");
         labelDef = Pattern.compile("\\w+:");
         labelUse = Pattern.compile("\\$\\w+");
-        symbolName = Pattern.compile("\\w+");
+        symbolName = Pattern.compile("\\D\\w+");
         register = Pattern.compile("r\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
@@ -385,7 +385,7 @@ public class Assembler {
 
         var counts = TypeCounts.makeTypeCountArray();
         int parsed = 0;
-        while(parsed < counts.length && !asm.peek(newline, comment)){
+        while(parsed < counts.length && !asm.peek(newline, comment, symbolName)){
             var count = parseIntLiteral(consume(asm, intLiteral));
             counts[parsed] = count.intValue();
             parsed++;
