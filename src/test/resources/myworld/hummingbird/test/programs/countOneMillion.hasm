@@ -15,6 +15,14 @@
   countToAMillion:
     CONST r2, 1000000
     CONST r1, 1
+    # TODO - typed registers, as shown below. This
+    # allows using the same opcode name for logically identical
+    # operations that are defined on multiple register types (const, add, etc)
+    # Also TODO - add support for below opcodes and other important ones
+    #CONV ri0, rf1
+    #CONV rf0, ri1
+    #BCONV rd0, ri1
+    #STR rs0, ro0
   loop:
     ADD r0, r1
     IFLT r0, r2, $loop

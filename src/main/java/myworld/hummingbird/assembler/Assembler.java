@@ -193,6 +193,7 @@ public class Assembler {
 
             var ins = consume(asm, instruction);
             syntaxCheck(asm, ins, "instruction");
+            var opName = ins.toString().toUpperCase();
 
             var operands = new ArrayList<>();
             var pending = false;
@@ -223,7 +224,7 @@ public class Assembler {
 
             if(pending){
                 var index = builder.appendOpcode(null);
-                var pendingOpcode = new PendingOpcode(index, ins.toString(), operands);
+                var pendingOpcode = new PendingOpcode(index, opName, operands);
                 for(var label : unresolvedLabels){
                     labels.markUnresolvedUse(label.name(), (resolved, resolvedIndex) -> {
                         for(int i = 0; i < pendingOpcode.operands().size(); i++){
@@ -235,7 +236,7 @@ public class Assembler {
                     });
                 }
             }else{
-                builder.appendOpcode(makeOpcode(ins.toString(), operands));
+                builder.appendOpcode(makeOpcode(opName, operands));
             }
 
             skipNewlinesAndComments(asm);
@@ -294,6 +295,7 @@ public class Assembler {
 
     protected int parseRegister(CharStream asm) throws AssemblyException {
         try{
+            // TODO - parse and encode register type
             var sequence = consume(asm, register);
             if(sequence != null) return Integer.parseInt(sequence.subSequence(1, sequence.length()).toString());
         }catch (Exception e){}
