@@ -55,6 +55,7 @@ public class HummingbirdVM {
                         case 1 -> condFloats(cond, registers, dst, src);
                         case 2 -> condLongs(cond, registers, dst, src);
                         case 3 -> condDoubles(cond, registers, dst, src);
+                        case 4 -> condStrings(cond, registers, dst, src);
                         default -> false;
                     };
 
@@ -175,6 +176,28 @@ public class HummingbirdVM {
             }
             case COND_GT -> {
                 return registers.dreg()[dst] > registers.dreg()[src];
+            }
+        }
+        return false;
+    }
+
+    private static boolean condStrings(int cond, Registers registers, int dst, int src){
+        var test = registers.sreg()[dst].compareTo(registers.sreg()[src]);
+        switch (cond){
+            case COND_LT -> {
+                return test < 0;
+            }
+            case COND_LE -> {
+                return test <= 0;
+            }
+            case COND_EQ -> {
+                return test == 0;
+            }
+            case COND_GE -> {
+                return test >= 0;
+            }
+            case COND_GT -> {
+                return test > 0;
             }
         }
         return false;
