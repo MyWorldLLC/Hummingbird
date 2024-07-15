@@ -18,7 +18,13 @@ public class HummingbirdVM {
 
     protected Fiber fiber;
 
-    public Object run() {
+    public Object run(){
+        var frame = Frame.hostFrame();
+        run(frame);
+        return frame.registers().ireg()[0];
+    }
+
+    public void run(Frame parent) {
 
         var ip = 0;
         var instructions = exe.code();
@@ -33,6 +39,9 @@ public class HummingbirdVM {
                     new String[0],
                     new Object[0]
             );
+
+            Frame frame = new Frame(parent, registers);
+            frame.setIp(instructions.length + 2);
 
             var stop = false;
             while (!stop && ip < instructions.length) {
@@ -107,48 +116,34 @@ public class HummingbirdVM {
                         var cond = Opcodes.registerType(ins.src());
                         if(condInts(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
-
                     }
                     case FCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
                         if(condFloats(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
-
                     }
                     case LCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
                         if(condLongs(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
-
                     }
                     case DCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
                         if(condDoubles(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
-
                     }
                     case SCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
                         if(condStrings(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
                     }
                     case OCOND -> {
@@ -156,37 +151,35 @@ public class HummingbirdVM {
                         var cond = Opcodes.registerType(ins.src());
                         if(condObjects(cond, registers, dst, src)){
                             ip = ins.extra();
-                        }else{
-                            stop = true;
                         }
                     }
                     case RETURN -> {
+                        var target = frame.returnTarget();
+                        frame = frame.parent();
+                        ip = frame.ip();
                         switch (type){
                             case INT_T -> {
-                                // TODO - instead of 'return' keyword, copy value
-                                // to parent frame and unwind stack by one frame
-                                return registers.ireg()[dst];
+                                frame.registers().ireg()[target] = registers.ireg()[dst];
                             }
                             case FLOAT_T -> {
-                                return registers.freg()[dst];
+                                frame.registers().freg()[target] =  registers.freg()[dst];
                             }
                             case LONG_T -> {
-                                return registers.lreg()[dst];
+                                frame.registers().lreg()[target] =  registers.lreg()[dst];
                             }
                             case DOUBLE_T -> {
-                                return registers.dreg()[dst];
+                                frame.registers().dreg()[target] =  registers.dreg()[dst];
                             }
                             case STRING_T -> {
-                                return registers.sreg()[dst];
+                                frame.registers().sreg()[target] =  registers.sreg()[dst];
                             }
                             case OBJECT_T -> {
-                                return registers.oreg()[dst];
+                                frame.registers().oreg()[target] =  registers.oreg()[dst];
                             }
                         }
                     }
                 }
             }
-            return registers.ireg()[0];
         } catch (Exception e) {
             System.out.println("Failure at ip: " + (ip - 1));
             System.out.println(Arrays.toString(instructions));

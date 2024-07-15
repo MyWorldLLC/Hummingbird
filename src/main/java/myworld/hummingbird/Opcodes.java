@@ -38,10 +38,7 @@ public class Opcodes {
     public static final int DCOND = 0x0B;
     public static final int SCOND = 0x0C;
     public static final int OCOND = 0x0D;
-
-    // ========= Returns =========
-    public static final int RETURN = 0x0E; // 0x0E
-    public static final int VRETURN = 0x0F;
+    public static final int RETURN = 0x0E;
 
     // ========= Calls =========
     public static final int CALL = 0x10;
@@ -129,11 +126,6 @@ public class Opcodes {
     public static Opcode IFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
         return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_GT, src), target);
     }
-
-    /*@Assembles("IFLT")
-    public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(IFLT, dst, src, target);
-    }*/
 
     @Assembles("RETURN")
     public static Opcode RETURN(@Register Integer src){
