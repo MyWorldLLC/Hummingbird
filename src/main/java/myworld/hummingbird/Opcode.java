@@ -25,4 +25,8 @@ public record Opcode(int opcode, int dst, int src, int extra, int extra1, int ex
         return (type << 24) | reg;
     }
 
+    public static int encodeOpcodeType(int type, int opcode){
+        return type | opcode;
+    }
+
 }

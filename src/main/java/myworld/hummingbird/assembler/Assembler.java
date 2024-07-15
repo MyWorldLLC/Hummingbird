@@ -35,7 +35,7 @@ public class Assembler {
 
     public Assembler(){
         opcodeFactories = new HashMap<>();
-        register(CoreOpcodes.class);
+        register(Opcodes.class);
 
         comment = Pattern.compile("#.*");
         whitespace = Pattern.compile("\\h+");
