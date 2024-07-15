@@ -298,17 +298,17 @@ public class Assembler {
             var sequence = consume(asm, register);
             if(sequence != null) {
                 var type = switch (sequence.charAt(1)){
-                    case 'i' -> 0;
-                    case 'f' -> 1;
-                    case 'l' -> 2;
-                    case 'd' -> 3;
-                    case 's' -> 4;
-                    case 'o' -> 5;
-                    default -> 0;
+                    case 'i' -> TypeFlag.INT;
+                    case 'f' -> TypeFlag.FLOAT;
+                    case 'l' -> TypeFlag.LONG;
+                    case 'd' -> TypeFlag.DOUBLE;
+                    case 's' -> TypeFlag.STRING;
+                    case 'o' -> TypeFlag.OBJECT;
+                    default -> TypeFlag.INT;
                 };
                 var str = sequence.subSequence(2, sequence.length()).toString(); // Drop leading 'rt'
                 var index = Integer.parseInt(str);
-                return Opcode.encodeRegisterOperand(type, index);
+                return Opcodes.encodeRegisterOperand(type, index);
             }
         }catch (Exception e){}
         throw new AssemblyException("Invalid register reference: " + asm.debug(10));
