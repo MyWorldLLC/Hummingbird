@@ -6,7 +6,7 @@
 
 .code
   # fib(15)
-  CONST ri0, 4
+  CONST ri0, 30
   CALL ri0, 0, 0, 0, 0, 0, 0, 0
   RETURN ri0
   fibonacci:
@@ -15,17 +15,15 @@
     IFGE ri0, ri1, $recurse
     RETURN ri0
   recurse:
+    # Constants (ri0 = n)
+    CONST ri1, 1
+    CONST ri2, 2
     #fib(n - 1)
-    CONST ri2, 1
-    CONST ri3, 0
-    ADD ri3, ri0 # copy param (ri3 empty, so effectively a copy)
-    SUB ri3, ri2 #(ri3 = n - 1)
-    CALL ri3, 0, 3, 0, 0, 0, 0, 0 #fib(n - 1)
+    SUB ri0, ri1 #(ri0 = n - 1)
+    CALL ri3, 0, 0, 0, 0, 0, 0, 0 #ri3 = fib(n - 1)
     #fib(n - 2)
-    CONST ri4, 2
-    CONST ri5, 0
-    ADD ri5, ri0 # copy param (ri5 empty, so effectively a copy)
-    SUB ri5, ri4 #(ri5 = n - 2)
-    CALL ri5, 0, 5, 0, 0, 0, 0, 0 #fib(n - 2)
-    ADD ri3, ri5
+    PARAM ri0, 0 #(ri0 = n)
+    SUB ri0, ri2 #(ri0 = n - 2)
+    CALL ri4, 0, 0, 0, 0, 0, 0, 0 #ri4 = fib(n - 2)
+    ADD ri3, ri4
     RETURN ri3

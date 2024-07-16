@@ -45,9 +45,9 @@ public class Opcodes {
     public static final int PARAM = 0x0F;
     public static final int CALL = 0x10;
     public static final int COPY = 0x11;
-    public static final int VCALL = 0x11;
+    public static final int FCALL = 0x11;
     public static final int DCALL = 0x12; // Dynamic calls - parameter counts in registers instead of immediates
-    public static final int DVCALL = 0x13;
+    public static final int DFCALL = 0x13;
 
     // ========= Bitwise Ops =========
     public static final int BAND = 0x14;

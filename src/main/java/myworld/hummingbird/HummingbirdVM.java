@@ -63,8 +63,8 @@ public class HummingbirdVM {
                         switch (type){
                             case INT_T -> registers.ireg()[dst] = ins.src();
                             case FLOAT_T -> registers.freg()[dst] = Float.intBitsToFloat(ins.src());
-                            case LONG_T -> registers.lreg()[dst] = ins.src(); // TODO
-                            case DOUBLE_T -> registers.dreg()[dst] = ins.src(); // TODO
+                            case LONG_T -> registers.lreg()[dst] = longFromInts(ins.src(), ins.extra());
+                            case DOUBLE_T -> registers.dreg()[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
                             case STRING_T -> registers.sreg()[dst] = constString(ins.src());
                             case OBJECT_T -> registers.oreg()[dst] = null;
                         }
@@ -199,7 +199,7 @@ public class HummingbirdVM {
                                 cSymbol.registers().objectCounts()
                         );
                         var cFrame = new Frame(frame, cReg, cSymbol, new Params(ins.extra(), ins.extra1(), ins.extra2(), ins.extra3(), ins.extra4(), ins.extra5()));
-                        frame.setReturnTarget(dst);
+                        cFrame.setReturnTarget(dst);
                         frame.setIp(ip);
                         frame = cFrame;
                         registers = cReg;
