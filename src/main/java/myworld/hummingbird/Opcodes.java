@@ -41,7 +41,10 @@ public class Opcodes {
     public static final int RETURN = 0x0E;
 
     // ========= Calls =========
+
+    public static final int PARAM = 0x0F;
     public static final int CALL = 0x10;
+    public static final int COPY = 0x11;
     public static final int VCALL = 0x11;
     public static final int DCALL = 0x12; // Dynamic calls - parameter counts in registers instead of immediates
     public static final int DVCALL = 0x13;
@@ -93,43 +96,73 @@ public class Opcodes {
     public static final int UNBLOCK = 0x35;
 
     @Assembles("CONST")
-    public static Opcode CONST(@Register Integer dst, @Immediate Integer src){
-        return new Opcode(CONST, dst, src);
+    public static Opcode CONST(@Register Integer dst, @Immediate Object src){
+        if(src instanceof Integer i) {
+            return new Opcode(CONST, dst, i);
+        }else if(src instanceof Float f){
+            return new Opcode(CONST, dst, Float.floatToIntBits(f));
+        }
+        throw new IllegalArgumentException("Invalid operand type: " + src.getClass());
     }
 
     @Assembles("ADD")
     public static Opcode ADD(@Register Integer dst, @Register Integer src){
-        return new Opcode(ADD, dst, src);
+        return new Opcode(ADD, dst, Opcodes.registerIndex(src));
+    }
+
+    @Assembles("SUB")
+    public static Opcode SUB(@Register Integer dst, @Register Integer src){
+        return new Opcode(SUB, dst, Opcodes.registerIndex(src));
+    }
+
+    @Assembles("DIV")
+    public static Opcode DIV(@Register Integer dst, @Register Integer src){
+        return new Opcode(DIV, dst, Opcodes.registerIndex(src));
     }
 
     @Assembles("IFLT")
     public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_LT, src), target);
+        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_LT, Opcodes.registerIndex(src)), target);
     }
 
     @Assembles("IFLE")
     public static Opcode IFLE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_LE, src), target);
+        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_LE, Opcodes.registerIndex(src)), target);
     }
 
     @Assembles("IFEQ")
     public static Opcode IFEQ(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_EQ, src), target);
+        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_EQ, Opcodes.registerIndex(src)), target);
     }
 
     @Assembles("IFGE")
     public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_GE, src), target);
+        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_GE, Opcodes.registerIndex(src)), target);
     }
 
     @Assembles("IFGT")
     public static Opcode IFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_GT, src), target);
+        return new Opcode(ICOND, dst, Opcodes.encodeRegisterOperand(COND_GT, Opcodes.registerIndex(src)), target);
     }
 
     @Assembles("RETURN")
     public static Opcode RETURN(@Register Integer src){
         return new Opcode(RETURN, src);
+    }
+
+    @Assembles("PARAM")
+    public static Opcode PARAM(@Register Integer dst, @Immediate Integer src) {
+        return new Opcode(PARAM, dst, src);
+    }
+
+    @Assembles("CALL")
+    public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol, @Immediate Integer iParams, @Immediate Integer fParams,@Immediate Integer lParams, @Immediate Integer dParams, @Immediate Integer sParams, @Immediate Integer oParams) {
+        return new Opcode(CALL, dst, symbol, iParams, fParams, lParams, dParams, sParams, oParams);
+    }
+
+    @Assembles("COPY")
+    public static Opcode COPY(@Register Integer dst, @Register Integer src) {
+        return new Opcode(COPY, dst, Opcodes.registerIndex(src));
     }
 
     public static int registerType(int reg){
@@ -141,7 +174,7 @@ public class Opcodes {
     }
 
     public static int encodeRegisterOperand(TypeFlag type, int reg){
-        return (type.ordinal() << 24) | reg;
+        return encodeOpcodeType(type.ordinal(), reg);
     }
 
     public static int encodeRegisterOperand(int flags, int reg){

@@ -37,4 +37,15 @@ public record TypeCounts(String name, int[] counts) {
         return new int[TypeFlag.values().length - 1];
     }
 
+    public Params toParams(){
+        return new Params(
+                intCounts(),
+                floatCounts(),
+                longCounts(),
+                doubleCounts(),
+                stringCounts(),
+                objectCounts()
+        );
+    }
+
 }

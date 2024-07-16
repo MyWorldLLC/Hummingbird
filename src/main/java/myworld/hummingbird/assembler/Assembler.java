@@ -47,7 +47,7 @@ public class Assembler {
         register = Pattern.compile("r[ifldso]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
-        floatLiteral = Pattern.compile("[FfDd]?-?\\d*\\.\\d+([eE]-?\\d+)?");
+        floatLiteral = Pattern.compile("[FfDd]-?\\d*\\.\\d+([eE]-?\\d+)?");
         stringLiteral = Pattern.compile("\"(\\\\\"|[^\"])*\"");
     }
 
@@ -156,7 +156,7 @@ public class Assembler {
                 builder.appendSymbol(Symbol.empty(nameStr));
 
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts, registerCounts));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 
@@ -169,7 +169,7 @@ public class Assembler {
                 var registerCounts = parseTypeCounts(asm, "registers");
                 skipNewlinesAndComments(asm);
 
-                builder.appendSymbol(Symbol.foreignFunction(nameStr, rType, paramCounts, registerCounts));
+                builder.appendSymbol(Symbol.foreignFunction(nameStr, rType, paramCounts.toParams(), registerCounts));
             }
             skipNewlinesAndComments(asm);
 

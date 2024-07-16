@@ -19,9 +19,19 @@ public class HummingbirdVM {
     protected Fiber fiber;
 
     public Object run(){
-        var frame = Frame.hostFrame();
+        var symbol = exe.symbols()[0];
+        var frame = Frame.hostFrame(symbol);
         run(frame);
-        return frame.registers().ireg()[0];
+
+        return switch (symbol.rType()){
+            case INT -> frame.registers().ireg()[0];
+            case FLOAT -> frame.registers().freg()[0];
+            case LONG -> frame.registers().lreg()[0];
+            case DOUBLE -> frame.registers().dreg()[0];
+            case STRING -> frame.registers().sreg()[0];
+            case OBJECT -> frame.registers().oreg()[0];
+            case VOID -> null;
+        };
     }
 
     public void run(Frame parent) {
@@ -31,17 +41,16 @@ public class HummingbirdVM {
 
         try {
 
-            var registers = new Registers(
-                    new int[3],
-                    new long[0],
-                    new float[0],
-                    new double[0],
-                    new String[0],
-                    new Object[0]
+            var registers = allocateRegisters(
+                    parent.symbol().registers().intCounts(),
+                    parent.symbol().registers().floatCounts(),
+                    parent.symbol().registers().longCounts(),
+                    parent.symbol().registers().doubleCounts(),
+                    parent.symbol().registers().stringCounts(),
+                    parent.symbol().registers().objectCounts()
             );
 
-            Frame frame = new Frame(parent, registers);
-            frame.setIp(instructions.length + 2);
+            Frame frame = new Frame(parent, registers, parent.symbol(), Params.zeroes());
 
             var stop = false;
             while (!stop && ip < instructions.length) {
@@ -53,9 +62,9 @@ public class HummingbirdVM {
                     case CONST -> {
                         switch (type){
                             case INT_T -> registers.ireg()[dst] = ins.src();
-                            case FLOAT_T -> registers.freg()[dst] = ins.src();
-                            case LONG_T -> registers.lreg()[dst] = ins.src();
-                            case DOUBLE_T -> registers.dreg()[dst] = ins.src();
+                            case FLOAT_T -> registers.freg()[dst] = Float.intBitsToFloat(ins.src());
+                            case LONG_T -> registers.lreg()[dst] = ins.src(); // TODO
+                            case DOUBLE_T -> registers.dreg()[dst] = ins.src(); // TODO
                             case STRING_T -> registers.sreg()[dst] = constString(ins.src());
                             case OBJECT_T -> registers.oreg()[dst] = null;
                         }
@@ -155,27 +164,55 @@ public class HummingbirdVM {
                     }
                     case RETURN -> {
                         var target = frame.returnTarget();
+                        switch (type){
+                            case INT_T -> frame.parent.registers.ireg()[target] = registers.ireg()[dst];
+                            case FLOAT_T -> frame.parent.registers.freg()[target] = registers.freg()[dst];
+                            case LONG_T -> frame.parent.registers.lreg()[target] = registers.lreg()[dst];
+                            case DOUBLE_T -> frame.parent.registers.dreg()[target] = registers.dreg()[dst];
+                            case STRING_T -> frame.parent.registers.sreg()[target] = registers.sreg()[dst];
+                            case OBJECT_T -> frame.parent.registers.oreg()[target] = registers.oreg()[dst];
+                        }
                         frame = frame.parent();
                         ip = frame.ip();
+                        registers = frame.registers;
+                    }
+                    case PARAM -> {
+                        // TODO - support offset from register in addition to immediate
+                        var paramOffsets = frame.paramOffsets();
                         switch (type){
-                            case INT_T -> {
-                                frame.registers().ireg()[target] = registers.ireg()[dst];
-                            }
-                            case FLOAT_T -> {
-                                frame.registers().freg()[target] =  registers.freg()[dst];
-                            }
-                            case LONG_T -> {
-                                frame.registers().lreg()[target] =  registers.lreg()[dst];
-                            }
-                            case DOUBLE_T -> {
-                                frame.registers().dreg()[target] =  registers.dreg()[dst];
-                            }
-                            case STRING_T -> {
-                                frame.registers().sreg()[target] =  registers.sreg()[dst];
-                            }
-                            case OBJECT_T -> {
-                                frame.registers().oreg()[target] =  registers.oreg()[dst];
-                            }
+                            case INT_T -> registers.ireg()[dst] = frame.parent.registers.ireg()[paramOffsets.iParam() + ins.src()];
+                            case FLOAT_T -> registers.freg()[dst] = frame.parent.registers.freg()[paramOffsets.fParam() + ins.src()];
+                            case LONG_T -> registers.lreg()[dst] = frame.parent.registers.lreg()[paramOffsets.lParam() + ins.src()];
+                            case DOUBLE_T -> registers.dreg()[dst] = frame.parent.registers.dreg()[paramOffsets.dParam() + ins.src()];
+                            case STRING_T -> registers.sreg()[dst] = frame.parent.registers.sreg()[paramOffsets.sParam() + ins.src()];
+                            case OBJECT_T -> registers.oreg()[dst] = frame.parent.registers.oreg()[paramOffsets.oParam() + ins.src()];
+                        }
+                    }
+                    case CALL -> {
+                        var cSymbol = exe.symbols()[ins.src()];
+                        var cReg = allocateRegisters(
+                                cSymbol.registers().intCounts(),
+                                cSymbol.registers().floatCounts(),
+                                cSymbol.registers().longCounts(),
+                                cSymbol.registers().doubleCounts(),
+                                cSymbol.registers().stringCounts(),
+                                cSymbol.registers().objectCounts()
+                        );
+                        var cFrame = new Frame(frame, cReg, cSymbol, new Params(ins.extra(), ins.extra1(), ins.extra2(), ins.extra3(), ins.extra4(), ins.extra5()));
+                        frame.setReturnTarget(dst);
+                        frame.setIp(ip);
+                        frame = cFrame;
+                        registers = cReg;
+                        ip = cSymbol.offset(); // TODO - support foreign function calls
+                    }
+                    case COPY -> {
+                        switch (type){
+                            case INT_T -> registers.ireg()[dst] = registers.ireg()[ins.src()];
+                            case FLOAT_T -> registers.freg()[dst] = registers.freg()[ins.src()];
+                            case LONG_T -> registers.lreg()[dst] = registers.lreg()[ins.src()];
+                            case DOUBLE_T -> registers.dreg()[dst] = registers.dreg()[ins.src()];
+                            case STRING_T -> registers.sreg()[dst] = registers.sreg()[ins.src()];
+                            case OBJECT_T -> registers.oreg()[dst] = registers.oreg()[ins.src()];
                         }
                     }
                 }
@@ -320,6 +357,17 @@ public class HummingbirdVM {
             }
         }
         return false;
+    }
+
+    private static Registers allocateRegisters(int i, int f, int l, int d, int s, int o){
+        return new Registers(
+                new int[i],
+                new float[f],
+                new long[l],
+                new double[d],
+                new String[s],
+                new Object[o]
+        );
     }
 
 }

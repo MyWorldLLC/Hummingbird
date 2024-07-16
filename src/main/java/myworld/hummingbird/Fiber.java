@@ -22,12 +22,6 @@ public class Fiber {
         return current.parent();
     }
 
-    public Frame startCall(Registers registers){
-        var frame = new Frame(current, registers);
-        current = frame;
-        return frame;
-    }
-
     public void endCall(){
         current = current.parent();
     }

@@ -1,0 +1,15 @@
+.symbols
+    simple function $simple
+        int
+        parameters 1
+        registers 2
+
+.code
+  CONST ri0, 5
+  CALL ri0, 0, 0, 0, 0, 0, 0, 0
+  RETURN ri0
+  simple:
+    PARAM ri0, 0
+    CONST ri1, 2
+    ADD ri0, ri1
+    RETURN ri0
