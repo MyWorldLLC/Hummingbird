@@ -9,48 +9,59 @@ public class HummingbirdVM {
 
     protected final Executable exe;
     protected ByteBuffer memory;
+    protected SavedRegisters savedRegisters;
 
     public HummingbirdVM(Executable exe) {
         this.exe = exe;
 
         memory = ByteBuffer.allocate(1024);
+        savedRegisters = new SavedRegisters(1000000);
     }
 
     protected Fiber fiber;
 
     public Object run(){
         var symbol = exe.symbols()[0];
-        var frame = Frame.hostFrame(symbol);
-        run(frame);
+
+        var registers = allocateRegisters(
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+        );
+
+        savedRegisters.clear();
+
+        run(registers);
 
         return switch (symbol.rType()){
-            case INT -> frame.registers().ireg()[0];
-            case FLOAT -> frame.registers().freg()[0];
-            case LONG -> frame.registers().lreg()[0];
-            case DOUBLE -> frame.registers().dreg()[0];
-            case STRING -> frame.registers().sreg()[0];
-            case OBJECT -> frame.registers().oreg()[0];
+            case INT -> registers.ireg()[0];
+            case FLOAT -> registers.freg()[0];
+            case LONG -> registers.lreg()[0];
+            case DOUBLE -> registers.dreg()[0];
+            case STRING -> registers.sreg()[0];
+            case OBJECT -> registers.oreg()[0];
             case VOID -> null;
         };
     }
 
-    public void run(Frame parent) {
+    public void run(Registers registers) {
 
         var ip = 0;
         var instructions = exe.code();
 
+        var ireg = registers.ireg();
+        var freg = registers.freg();
+        var lreg = registers.lreg();
+        var dreg = registers.dreg();
+        var sreg = registers.sreg();
+        var oreg = registers.oreg();
+
         try {
 
-            var registers = allocateRegisters(
-                    parent.symbol().registers().intCounts(),
-                    parent.symbol().registers().floatCounts(),
-                    parent.symbol().registers().longCounts(),
-                    parent.symbol().registers().doubleCounts(),
-                    parent.symbol().registers().stringCounts(),
-                    parent.symbol().registers().objectCounts()
-            );
-
-            Frame frame = new Frame(parent, registers, parent.symbol(), Params.zeroes());
+            savedRegisters.saveIp(Integer.MAX_VALUE);
 
             var stop = false;
             while (!stop && ip < instructions.length) {
@@ -61,60 +72,60 @@ public class HummingbirdVM {
                 switch (ins.opcode()) {
                     case CONST -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] = ins.src();
-                            case FLOAT_T -> registers.freg()[dst] = Float.intBitsToFloat(ins.src());
-                            case LONG_T -> registers.lreg()[dst] = longFromInts(ins.src(), ins.extra());
-                            case DOUBLE_T -> registers.dreg()[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
-                            case STRING_T -> registers.sreg()[dst] = constString(ins.src());
-                            case OBJECT_T -> registers.oreg()[dst] = null;
+                            case INT_T -> ireg[dst] = ins.src();
+                            case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
+                            case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
+                            case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
+                            case STRING_T -> sreg[dst] = constString(ins.src());
+                            case OBJECT_T -> oreg[dst] = null;
                         }
                     }
                     case ADD -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] += registers.ireg()[ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] += registers.freg()[ins.src()];
-                            case LONG_T -> registers.lreg()[dst] += registers.lreg()[ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] += registers.dreg()[ins.src()];
+                            case INT_T -> ireg[dst] = ireg[ins.src()] + ireg[ins.extra()];
+                            case FLOAT_T -> freg[dst] = freg[ins.src()] + freg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] + lreg[ins.extra()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] + dreg[ins.extra()];
                         }
                     }
                     case SUB -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] -= registers.ireg()[ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] -= registers.freg()[ins.src()];
-                            case LONG_T -> registers.lreg()[dst] -= registers.lreg()[ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] -= registers.dreg()[ins.src()];
+                            case INT_T -> ireg[dst] = ireg[ins.src()] - ireg[ins.extra()];
+                            case FLOAT_T -> freg[dst] = freg[ins.src()] - freg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] - lreg[ins.extra()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] - dreg[ins.extra()];
                         }
                     }
                     case MUL -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] *= registers.ireg()[ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] *= registers.freg()[ins.src()];
-                            case LONG_T -> registers.lreg()[dst] *= registers.lreg()[ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] *= registers.dreg()[ins.src()];
+                            case INT_T -> ireg[dst] = ireg[ins.src()] * ireg[ins.extra()];
+                            case FLOAT_T -> freg[dst] = freg[ins.src()] * freg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] * lreg[ins.extra()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] * dreg[ins.extra()];
                         }
                     }
                     case DIV -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] /= registers.ireg()[ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] /= registers.freg()[ins.src()];
-                            case LONG_T -> registers.lreg()[dst] /= registers.lreg()[ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] /= registers.dreg()[ins.src()];
+                            case INT_T -> ireg[dst] = ireg[ins.src()] / ireg[ins.extra()];
+                            case FLOAT_T -> freg[dst] = freg[ins.src()] / freg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] / lreg[ins.extra()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] / dreg[ins.extra()];
                         }
                     }
                     case NEG -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] = -registers.ireg()[dst];
-                            case FLOAT_T -> registers.freg()[dst] = -registers.freg()[dst];
-                            case LONG_T -> registers.lreg()[dst] = -registers.lreg()[dst];
-                            case DOUBLE_T -> registers.dreg()[dst] = -registers.dreg()[dst];
+                            case INT_T -> ireg[dst] = -ireg[ins.src()];
+                            case FLOAT_T -> freg[dst] = -freg[ins.src()];
+                            case LONG_T -> lreg[dst] = -lreg[ins.src()];
+                            case DOUBLE_T -> dreg[dst] = -dreg[ins.src()];
                         }
                     }
                     case POW -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] = (int) Math.pow(registers.ireg()[dst], registers.ireg()[ins.src()]);
-                            case FLOAT_T -> registers.freg()[dst] = (float) Math.pow(registers.freg()[dst], registers.freg()[ins.src()]);
-                            case LONG_T -> registers.lreg()[dst] = (long) Math.pow(registers.lreg()[dst], registers.lreg()[ins.src()]);
-                            case DOUBLE_T -> registers.dreg()[dst] = Math.pow(registers.dreg()[dst], registers.dreg()[ins.src()]);
+                            case INT_T -> ireg[dst] = (int) Math.pow(ireg[ins.src()], ireg[ins.extra()]);
+                            case FLOAT_T -> freg[dst] = (float) Math.pow(freg[ins.src()], freg[ins.extra()]);
+                            case LONG_T -> lreg[dst] = (long) Math.pow(lreg[ins.src()], lreg[ins.extra()]);
+                            case DOUBLE_T -> dreg[dst] = Math.pow(dreg[ins.src()], dreg[ins.extra()]);
                         }
                     }
                     case GOTO -> {
@@ -163,56 +174,44 @@ public class HummingbirdVM {
                         }
                     }
                     case RETURN -> {
-                        var target = frame.returnTarget();
-                        switch (type){
-                            case INT_T -> frame.parent.registers.ireg()[target] = registers.ireg()[dst];
-                            case FLOAT_T -> frame.parent.registers.freg()[target] = registers.freg()[dst];
-                            case LONG_T -> frame.parent.registers.lreg()[target] = registers.lreg()[dst];
-                            case DOUBLE_T -> frame.parent.registers.dreg()[target] = registers.dreg()[dst];
-                            case STRING_T -> frame.parent.registers.sreg()[target] = registers.sreg()[dst];
-                            case OBJECT_T -> frame.parent.registers.oreg()[target] = registers.oreg()[dst];
-                        }
-                        frame = frame.parent();
-                        ip = frame.ip();
-                        registers = frame.registers;
+                        //System.out.println("Return @" + (ip - 1) + ": " + ireg[0]);
+                        ip = savedRegisters.restoreIp();
                     }
                     case PARAM -> {
-                        // TODO - support offset from register in addition to immediate
-                        var paramOffsets = frame.paramOffsets();
-                        switch (type){
-                            case INT_T -> registers.ireg()[dst] = frame.parent.registers.ireg()[paramOffsets.iParam() + ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] = frame.parent.registers.freg()[paramOffsets.fParam() + ins.src()];
-                            case LONG_T -> registers.lreg()[dst] = frame.parent.registers.lreg()[paramOffsets.lParam() + ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] = frame.parent.registers.dreg()[paramOffsets.dParam() + ins.src()];
-                            case STRING_T -> registers.sreg()[dst] = frame.parent.registers.sreg()[paramOffsets.sParam() + ins.src()];
-                            case OBJECT_T -> registers.oreg()[dst] = frame.parent.registers.oreg()[paramOffsets.oParam() + ins.src()];
-                        }
                     }
                     case CALL -> {
-                        var cSymbol = exe.symbols()[ins.src()];
-                        var cReg = allocateRegisters(
-                                cSymbol.registers().intCounts(),
-                                cSymbol.registers().floatCounts(),
-                                cSymbol.registers().longCounts(),
-                                cSymbol.registers().doubleCounts(),
-                                cSymbol.registers().stringCounts(),
-                                cSymbol.registers().objectCounts()
-                        );
-                        var cFrame = new Frame(frame, cReg, cSymbol, new Params(ins.extra(), ins.extra1(), ins.extra2(), ins.extra3(), ins.extra4(), ins.extra5()));
-                        cFrame.setReturnTarget(dst);
-                        frame.setIp(ip);
-                        frame = cFrame;
-                        registers = cReg;
+                        var cSymbol = exe.symbols()[dst];
+                        savedRegisters.saveIp(ip);
                         ip = cSymbol.offset(); // TODO - support foreign function calls
                     }
                     case COPY -> {
                         switch (type){
-                            case INT_T -> registers.ireg()[dst] = registers.ireg()[ins.src()];
-                            case FLOAT_T -> registers.freg()[dst] = registers.freg()[ins.src()];
-                            case LONG_T -> registers.lreg()[dst] = registers.lreg()[ins.src()];
-                            case DOUBLE_T -> registers.dreg()[dst] = registers.dreg()[ins.src()];
-                            case STRING_T -> registers.sreg()[dst] = registers.sreg()[ins.src()];
-                            case OBJECT_T -> registers.oreg()[dst] = registers.oreg()[ins.src()];
+                            case INT_T -> ireg[dst] = ireg[ins.src()];
+                            case FLOAT_T -> freg[dst] = freg[ins.src()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
+                            case STRING_T -> sreg[dst] = sreg[ins.src()];
+                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
+                        }
+                    }
+                    case SAVE -> {
+                        switch (type){
+                            case INT_T -> savedRegisters.save(ireg, dst, ins.src());
+                            case FLOAT_T -> savedRegisters.save(freg, dst, ins.src());
+                            case LONG_T -> lreg[dst] = lreg[ins.src()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
+                            case STRING_T -> sreg[dst] = sreg[ins.src()];
+                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
+                        }
+                    }
+                    case RESTORE -> {
+                        switch (type){
+                            case INT_T -> savedRegisters.restore(ireg, dst, ins.src());
+                            case FLOAT_T -> savedRegisters.restore(freg, dst, ins.src());
+                            case LONG_T -> lreg[dst] = lreg[ins.src()];
+                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
+                            case STRING_T -> sreg[dst] = sreg[ins.src()];
+                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
                     }
                 }

@@ -4,7 +4,7 @@
     # name, type (data or function), offset (-1 for foreign functions)
     # Note that data symbols logically have none of the pieces after the offset
     countToAMillion function $countToAMillion
-        void
+        int
         # Parameters and registers specified the same way - a sequence of integers, in register file order.
         # Note that parameter spec is ignored by the VM - it is only useful
         # for reflection by embedders, though it is always required. Missing integers are assumed zero.
@@ -16,6 +16,6 @@
     CONST ri2, 1000000
     CONST ri1, 1
   loop:
-    ADD ri0, ri1
+    ADD ri0, ri0, ri1
     IFLT ri0, ri2, $loop
-    RETURN ri0
+    RETURN

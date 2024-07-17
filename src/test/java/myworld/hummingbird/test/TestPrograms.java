@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 public class TestPrograms {
 
     public final HummingbirdVM countOneMillion = load("myworld/hummingbird/test/programs/countOneMillion.hasm");
+    public final HummingbirdVM callOneMillion = load("myworld/hummingbird/test/programs/callOneMillion.hasm");
     public final HummingbirdVM fibonacci30 = load("myworld/hummingbird/test/programs/fibonacci30.hasm");
     public final HummingbirdVM goldenRatio = load("myworld/hummingbird/test/programs/goldenRatio.hasm");
     public final HummingbirdVM simpleFunction = load("myworld/hummingbird/test/programs/simpleFunction.hasm");
@@ -32,6 +33,7 @@ public class TestPrograms {
         var programs = new HashMap<String, HummingbirdVM>();
 
         programs.put("countOneMillion", countOneMillion);
+        programs.put("callOneMillion", callOneMillion);
         programs.put("fibonacci30", fibonacci30);
         programs.put("simpleFunction", simpleFunction);
         programs.put("recursiveCountOneMillion", recursiveCountOneMillion);

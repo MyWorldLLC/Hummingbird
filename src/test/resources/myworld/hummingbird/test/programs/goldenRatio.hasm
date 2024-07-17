@@ -19,11 +19,11 @@
 
   calc:
     COPY  rf1, rf3  # temp = 1
-    DIV   rf1, rf0  # temp = 1/x
-    ADD   rf1, rf0  # temp = 1/x + x
-    ADD   rf1, rf3  # temp = 1/x + x + 1
-    DIV   rf1, rf4  # temp = (1/x + x + 1)/2
+    DIV   rf1, rf1, rf0  # temp = 1/x
+    ADD   rf1, rf1, rf0  # temp = 1/x + x
+    ADD   rf1, rf1, rf3  # temp = 1/x + x + 1
+    DIV   rf1, rf1, rf4  # temp = (1/x + x + 1)/2
     COPY  rf0, rf1  # x = temp
-    SUB   ri0, ri2
+    SUB   ri0, ri0, ri2
     IFGT  ri0, ri1, $calc
-    RETURN rf0
+    RETURN

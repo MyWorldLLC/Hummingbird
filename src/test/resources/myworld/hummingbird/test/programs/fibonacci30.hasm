@@ -5,25 +5,34 @@
             registers 6
 
 .code
-  # fib(15)
-  CONST ri0, 30
-  CALL ri0, 0, 0, 0, 0, 0, 0, 0
-  RETURN ri0
+  # fib(30)
+  CONST ri1, 30
+  CALL 0
+  RETURN
   fibonacci:
-    PARAM ri0, 0
-    CONST ri1, 2
-    IFGE ri0, ri1, $recurse
-    RETURN ri0
-  recurse:
-    # Constants (ri0 = n)
-    CONST ri1, 1
+    SAVE ri1, 4 # save ri1-ri4
     CONST ri2, 2
+    IFGE ri1, ri2, $recurse
+    COPY ri0, ri1
+    RESTORE ri1, 4
+    RETURN
+  recurse:
+    # Constants (ri1 = n)
+    CONST ri2, 1
+    CONST ri3, 2
+
+    # ri4 = n
+    COPY ri4, ri1
+
     #fib(n - 1)
-    SUB ri0, ri1 #(ri0 = n - 1)
-    CALL ri3, 0, 0, 0, 0, 0, 0, 0 #ri3 = fib(n - 1)
+    SUB ri1, ri4, ri2 # ri1 = n - 1
+    CALL 0
+    COPY ri2, ri0 # ri2 = fib(n - 1)
+
     #fib(n - 2)
-    PARAM ri0, 0 #(ri0 = n)
-    SUB ri0, ri2 #(ri0 = n - 2)
-    CALL ri4, 0, 0, 0, 0, 0, 0, 0 #ri4 = fib(n - 2)
-    ADD ri3, ri4
-    RETURN ri3
+    SUB ri1, ri4, ri3 # ri1 = n - 2
+    CALL 0
+
+    ADD ri0, ri0, ri2
+    RESTORE ri1, 4
+    RETURN

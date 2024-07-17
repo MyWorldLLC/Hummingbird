@@ -48,13 +48,6 @@ public class Frame {
         returnTarget = targetReg;
     }
 
-    public static Frame hostFrame(Symbol symbol){
-        var frame = new Frame(null, new Registers(), symbol, Params.zeroes());
-        frame.setIp(Integer.MAX_VALUE);
-        frame.setReturnTarget(0);
-        return frame;
-    }
-
     public String toString(){
         var builder = new StringBuilder();
 

@@ -45,6 +45,8 @@ public class Opcodes {
     public static final int PARAM = 0x0F;
     public static final int CALL = 0x10;
     public static final int COPY = 0x11;
+    public static final int SAVE = 0x12;
+    public static final int RESTORE = 0x13;
     public static final int FCALL = 0x11;
     public static final int DCALL = 0x12; // Dynamic calls - parameter counts in registers instead of immediates
     public static final int DFCALL = 0x13;
@@ -106,18 +108,18 @@ public class Opcodes {
     }
 
     @Assembles("ADD")
-    public static Opcode ADD(@Register Integer dst, @Register Integer src){
-        return new Opcode(ADD, dst, Opcodes.registerIndex(src));
+    public static Opcode ADD(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(ADD, dst, Opcodes.registerIndex(a), Opcodes.registerIndex(b));
     }
 
     @Assembles("SUB")
-    public static Opcode SUB(@Register Integer dst, @Register Integer src){
-        return new Opcode(SUB, dst, Opcodes.registerIndex(src));
+    public static Opcode SUB(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(SUB, dst, Opcodes.registerIndex(a), Opcodes.registerIndex(b));
     }
 
     @Assembles("DIV")
-    public static Opcode DIV(@Register Integer dst, @Register Integer src){
-        return new Opcode(DIV, dst, Opcodes.registerIndex(src));
+    public static Opcode DIV(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(DIV, dst, Opcodes.registerIndex(a), Opcodes.registerIndex(b));
     }
 
     @Assembles("IFLT")
@@ -146,23 +148,28 @@ public class Opcodes {
     }
 
     @Assembles("RETURN")
-    public static Opcode RETURN(@Register Integer src){
-        return new Opcode(RETURN, src);
-    }
-
-    @Assembles("PARAM")
-    public static Opcode PARAM(@Register Integer dst, @Immediate Integer src) {
-        return new Opcode(PARAM, dst, src);
+    public static Opcode RETURN(){
+        return new Opcode(RETURN, 0);
     }
 
     @Assembles("CALL")
-    public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol, @Immediate Integer iParams, @Immediate Integer fParams,@Immediate Integer lParams, @Immediate Integer dParams, @Immediate Integer sParams, @Immediate Integer oParams) {
-        return new Opcode(CALL, dst, symbol, iParams, fParams, lParams, dParams, sParams, oParams);
+    public static Opcode CALL(@Immediate Integer symbol) {
+        return new Opcode(CALL, symbol);
     }
 
     @Assembles("COPY")
     public static Opcode COPY(@Register Integer dst, @Register Integer src) {
         return new Opcode(COPY, dst, Opcodes.registerIndex(src));
+    }
+
+    @Assembles("SAVE")
+    public static Opcode SAVE(@Register Integer dst, @Immediate Integer count) {
+        return new Opcode(SAVE, dst, count);
+    }
+
+    @Assembles("RESTORE")
+    public static Opcode RESTORE(@Register Integer dst, @Immediate Integer count) {
+        return new Opcode(RESTORE, dst, count);
     }
 
     public static int registerType(int reg){

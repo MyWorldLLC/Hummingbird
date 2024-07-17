@@ -5,11 +5,13 @@
         registers 2
 
 .code
-  CONST ri0, 5
-  CALL ri0, 0, 0, 0, 0, 0, 0, 0
-  RETURN ri0
+  CONST ri1, 5
+  CALL 0
+  RETURN
   simple:
-    PARAM ri0, 0
-    CONST ri1, 2
-    ADD ri0, ri1
-    RETURN ri0
+    SAVE ri1, 2 # save ri1 & ri2 (ri0 is fine to stomp since that's where the return value goes)
+    CONST ri2, 2
+    COPY ri0, ri1
+    ADD ri0, ri0, ri2
+    RESTORE ri1, 2
+    RETURN
