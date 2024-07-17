@@ -14,16 +14,16 @@
     CONST ri0, 20    # counter
     CONST ri1, 0     # iconst 0
     CONST ri2, 1     # iconst 1
-    CONST rf3, f1.0  # fconst 1
+    CONST rf3, f1    # fconst 1
     CONST rf4, f2.0  # fconst 2
 
   calc:
-    COPY  rf1, rf3  # temp = 1
+    COPY  rf1, rf3       # temp = 1
     DIV   rf1, rf1, rf0  # temp = 1/x
     ADD   rf1, rf1, rf0  # temp = 1/x + x
     ADD   rf1, rf1, rf3  # temp = 1/x + x + 1
     DIV   rf1, rf1, rf4  # temp = (1/x + x + 1)/2
-    COPY  rf0, rf1  # x = temp
+    COPY  rf0, rf1       # x = temp
     SUB   ri0, ri0, ri2
     IFGT  ri0, ri1, $calc
     RETURN

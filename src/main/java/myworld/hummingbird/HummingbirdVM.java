@@ -15,7 +15,7 @@ public class HummingbirdVM {
         this.exe = exe;
 
         memory = ByteBuffer.allocate(1024);
-        savedRegisters = new SavedRegisters(1000000);
+        savedRegisters = new SavedRegisters(1000);
     }
 
     protected Fiber fiber;
@@ -173,10 +173,8 @@ public class HummingbirdVM {
                             ip = ins.extra();
                         }
                     }
-                    case RETURN -> {
-                        //System.out.println("Return @" + (ip - 1) + ": " + ireg[0]);
-                        ip = savedRegisters.restoreIp();
-                    }
+                    case RETURN ->
+                            ip = savedRegisters.restoreIp();
                     case PARAM -> {
                     }
                     case CALL -> {

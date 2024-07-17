@@ -47,7 +47,7 @@ public class Assembler {
         register = Pattern.compile("r[ifldso]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
-        floatLiteral = Pattern.compile("[FfDd]-?\\d*\\.\\d+([eE]-?\\d+)?");
+        floatLiteral = Pattern.compile("[FfDd]-?\\d*((\\.)?\\d+)?([eE]-?\\d+)?");
         stringLiteral = Pattern.compile("\"(\\\\\"|[^\"])*\"");
     }
 
@@ -369,7 +369,7 @@ public class Assembler {
 
             String str;
             if(hasSignifier){
-                str = sequence.subSequence(1, sequence.length() - 1).toString();
+                str = sequence.subSequence(1, sequence.length()).toString();
             }else{
                 str = sequence.toString();
             }
@@ -381,7 +381,7 @@ public class Assembler {
             }
         }
         catch(Exception ex){
-            throw new AssemblyException("Invalid int literal: " + sequence.toString());
+            throw new AssemblyException("Invalid float literal: " + sequence.toString(), ex);
         }
     }
 
