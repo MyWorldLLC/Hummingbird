@@ -41,15 +41,16 @@ public class Opcodes {
     public static final int RETURN = 0x0E;
 
     // ========= Calls =========
+    public static final int CALL = 0x0F;
+    public static final int COPY = 0x10;
+    public static final int SAVE = 0x11;
+    public static final int RESTORE = 0x12;
 
-    public static final int PARAM = 0x0F;
-    public static final int CALL = 0x10;
-    public static final int COPY = 0x11;
-    public static final int SAVE = 0x12;
-    public static final int RESTORE = 0x13;
-    public static final int FCALL = 0x11;
-    public static final int DCALL = 0x12; // Dynamic calls - parameter counts in registers instead of immediates
-    public static final int DFCALL = 0x13;
+    // ========= Fibers =========
+    public static final int SPAWN = 0x13;
+    public static final int YIELD = 0x15;
+    public static final int BLOCK = 0x16;
+    public static final int UNBLOCK = 0x17;
 
     // ========= Bitwise Ops =========
     public static final int BAND = 0x14;
@@ -88,14 +89,6 @@ public class Opcodes {
     public static final int REG_COUNT = 0x2D;
     public static final int REG_COPY = 0x2E;
     public static final int IP = 0x2F;
-
-    // ========= Fiber Ops =========
-    public static final int LAUNCH = 0x30;
-    public static final int VLAUNCH = 0x31;
-    public static final int YIELD = 0x32;
-    public static final int VYIELD = 0x33;
-    public static final int BLOCK = 0x34;
-    public static final int UNBLOCK = 0x35;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
@@ -153,8 +146,8 @@ public class Opcodes {
     }
 
     @Assembles("CALL")
-    public static Opcode CALL(@Immediate Integer symbol) {
-        return new Opcode(CALL, symbol);
+    public static Opcode CALL(@Immediate Integer label) {
+        return new Opcode(CALL, label);
     }
 
     @Assembles("COPY")
@@ -170,6 +163,16 @@ public class Opcodes {
     @Assembles("RESTORE")
     public static Opcode RESTORE(@Register Integer dst, @Immediate Integer count) {
         return new Opcode(RESTORE, dst, count);
+    }
+
+    @Assembles("SPAWN")
+    public static Opcode SPAWN(@Register Integer dst){
+        return new Opcode(SPAWN, dst);
+    }
+
+    @Assembles("YIELD")
+    public static Opcode YIELD(){
+        return new Opcode(YIELD, 0);
     }
 
     public static int registerType(int reg){

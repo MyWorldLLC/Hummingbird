@@ -9,7 +9,7 @@
     CONST ri1, 1
     CONST ri3, 0
   loop:
-    CALL 0
+    CALL $callOneMillion
     ADD ri3, ri3, ri0
     IFLT ri3, ri2, $loop
     COPY ri0, ri3

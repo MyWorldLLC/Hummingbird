@@ -2,6 +2,8 @@ package myworld.hummingbird;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import static myworld.hummingbird.Opcodes.*;
 
@@ -9,34 +11,35 @@ public class HummingbirdVM {
 
     protected final Executable exe;
     protected ByteBuffer memory;
-    protected SavedRegisters savedRegisters;
+    protected Fiber currentFiber;
+    protected final Deque<Fiber> runQueue;
 
     public HummingbirdVM(Executable exe) {
         this.exe = exe;
 
         memory = ByteBuffer.allocate(1024);
-        savedRegisters = new SavedRegisters(1000);
+
+        runQueue = new LinkedList<>();
     }
 
-    protected Fiber fiber;
-
     public Object run(){
-        var symbol = exe.symbols()[0];
 
-        var registers = allocateRegisters(
-                100,
-                100,
-                100,
-                100,
-                100,
-                100
-        );
+        spawn(null, null);
 
-        savedRegisters.clear();
+        currentFiber = nextFiber();
+        var registers = currentFiber.registers;
+        while(currentFiber != null){
+            registers = currentFiber.registers;
+            run(currentFiber);
+            currentFiber = nextFiber();
+        }
 
-        run(registers);
+        var rType = TypeFlag.INT;
+        if(exe.symbols().length > 0){
+            rType = exe.symbols()[0].rType();
+        }
 
-        return switch (symbol.rType()){
+        return switch (rType){
             case INT -> registers.ireg()[0];
             case FLOAT -> registers.freg()[0];
             case LONG -> registers.lreg()[0];
@@ -47,11 +50,50 @@ public class HummingbirdVM {
         };
     }
 
-    public void run(Registers registers) {
+    public Fiber spawn(Symbol entry, Registers initialState){
+        return spawn(entry != null ? entry.offset() : 0, initialState);
+    }
 
-        var ip = 0;
-        var instructions = exe.code();
+    protected Fiber spawn(int entry, Registers initialState){
+        var registers = allocateRegisters(
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+        );
 
+        if(initialState != null){
+            copyRegisters(initialState, registers);
+        }
+
+        var savedRegisters = new SavedRegisters(1000);
+        savedRegisters.saveIp(Integer.MAX_VALUE);
+        var fiber = new Fiber(registers, savedRegisters);
+
+        savedRegisters.saveIp(entry);
+
+        runQueue.push(fiber);
+
+        return fiber;
+    }
+
+    protected Fiber nextFiber(){
+        var it = runQueue.iterator();
+        while(it.hasNext()){
+            var fiber = it.next();
+            if(fiber.getState() == Fiber.State.RUNNABLE){
+                it.remove();
+                return fiber;
+            }
+        }
+        return null;
+    }
+
+    public void run(Fiber fiber) {
+
+        var registers = fiber.registers;
         var ireg = registers.ireg();
         var freg = registers.freg();
         var lreg = registers.lreg();
@@ -59,9 +101,12 @@ public class HummingbirdVM {
         var sreg = registers.sreg();
         var oreg = registers.oreg();
 
-        try {
+        var savedRegisters = fiber.savedRegisters;
+        var ip = savedRegisters.restoreIp();
 
-            savedRegisters.saveIp(Integer.MAX_VALUE);
+        var instructions = exe.code();
+
+        try {
 
             var stop = false;
             while (!stop && ip < instructions.length) {
@@ -173,14 +218,12 @@ public class HummingbirdVM {
                             ip = ins.extra();
                         }
                     }
-                    case RETURN ->
-                            ip = savedRegisters.restoreIp();
-                    case PARAM -> {
+                    case RETURN ->{
+                        ip = savedRegisters.restoreIp();
                     }
                     case CALL -> {
-                        var cSymbol = exe.symbols()[dst];
                         savedRegisters.saveIp(ip);
-                        ip = cSymbol.offset(); // TODO - support foreign function calls
+                        ip = dst; // TODO - support foreign function calls
                     }
                     case COPY -> {
                         switch (type){
@@ -211,6 +254,13 @@ public class HummingbirdVM {
                             case STRING_T -> sreg[dst] = sreg[ins.src()];
                             case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
+                    }
+                    case SPAWN -> {
+                        spawn(dst, registers);
+                    }
+                    case YIELD -> {
+                        savedRegisters.saveIp(ip);
+                        return;
                     }
                 }
             }
@@ -365,6 +415,13 @@ public class HummingbirdVM {
                 new String[s],
                 new Object[o]
         );
+    }
+
+    public static void copyRegisters(Registers from, Registers to){
+        System.arraycopy(from.ireg(), 0, to.ireg(), 0, from.ireg().length);
+        System.arraycopy(from.freg(), 0, to.freg(), 0, from.freg().length);
+        System.arraycopy(from.lreg(), 0, to.lreg(), 0, from.lreg().length);
+        System.arraycopy(from.dreg(), 0, to.dreg(), 0, from.dreg().length);
     }
 
 }

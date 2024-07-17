@@ -2,28 +2,34 @@ package myworld.hummingbird;
 
 public class Fiber {
 
-    protected final Frame root;
-    protected Frame current;
-
-    public Fiber(Frame root){
-        this.root = root;
-        current = root;
+    public enum State {
+        RUNNABLE,
+        BLOCKED
     }
 
-    public Frame root(){
-        return root;
+    protected State state;
+    protected final Registers registers;
+    protected final SavedRegisters savedRegisters;
+
+    public Fiber(Registers registers, SavedRegisters savedRegisters){
+        state = State.RUNNABLE;
+        this.registers = registers;
+        this.savedRegisters = savedRegisters;
     }
 
-    public Frame current(){
-        return current;
+    public void setState(State state){
+        this.state = state;
     }
 
-    public Frame parent(){
-        return current.parent();
+    public State getState(){
+        return state;
     }
 
-    public void endCall(){
-        current = current.parent();
+    public Registers getRegisters() {
+        return registers;
     }
 
+    public SavedRegisters getSavedRegisters() {
+        return savedRegisters;
+    }
 }

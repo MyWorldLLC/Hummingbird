@@ -7,7 +7,7 @@
 .code
   # fib(30)
   CONST ri1, 30
-  CALL 0
+  CALL $fibonacci
   RETURN
   fibonacci:
     SAVE ri1, 4 # save ri1-ri4
@@ -26,12 +26,12 @@
 
     #fib(n - 1)
     SUB ri1, ri4, ri2 # ri1 = n - 1
-    CALL 0
+    CALL $fibonacci
     COPY ri2, ri0 # ri2 = fib(n - 1)
 
     #fib(n - 2)
     SUB ri1, ri4, ri3 # ri1 = n - 2
-    CALL 0
+    CALL $fibonacci
 
     ADD ri0, ri0, ri2
     RESTORE ri1, 4
