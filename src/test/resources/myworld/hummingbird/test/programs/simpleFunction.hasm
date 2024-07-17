@@ -2,7 +2,6 @@
     simple function $simple
         int
         parameters 1
-        registers 2
 
 .code
   CONST ri1, 5

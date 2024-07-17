@@ -42,12 +42,13 @@ public class Opcodes {
 
     // ========= Calls =========
     public static final int CALL = 0x0F;
-    public static final int COPY = 0x10;
-    public static final int SAVE = 0x11;
-    public static final int RESTORE = 0x12;
+    public static final int FCALL = 0x10;
+    public static final int COPY = 0x11;
+    public static final int SAVE = 0x12;
+    public static final int RESTORE = 0x13;
 
     // ========= Fibers =========
-    public static final int SPAWN = 0x13;
+    public static final int SPAWN = 0x14;
     public static final int YIELD = 0x15;
     public static final int BLOCK = 0x16;
     public static final int UNBLOCK = 0x17;

@@ -2,7 +2,6 @@
     fibonacci function $fibonacci
             int
             parameters 1
-            registers 6
 
 .code
   # fib(30)

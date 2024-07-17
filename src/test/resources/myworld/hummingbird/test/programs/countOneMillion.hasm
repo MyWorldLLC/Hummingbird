@@ -9,7 +9,6 @@
         # Note that parameter spec is ignored by the VM - it is only useful
         # for reflection by embedders, though it is always required. Missing integers are assumed zero.
         parameters 0
-        registers 3
 
 .code
   countToAMillion:

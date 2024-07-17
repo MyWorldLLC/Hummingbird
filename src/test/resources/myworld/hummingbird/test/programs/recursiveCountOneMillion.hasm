@@ -2,7 +2,6 @@
     countToAMillion function $countToAMillion
         int
         parameters 1
-        registers 3
 
 .code
   CONST ri0, 0

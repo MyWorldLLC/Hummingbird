@@ -2,7 +2,6 @@
     goldenRatio function $goldenRatio
             float
             parameters 0
-            registers 6 6
 
 # Calculate an approximation of the golden ratio.
 # Algorithm complements of Ken Perano.

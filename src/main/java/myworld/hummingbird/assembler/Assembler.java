@@ -121,6 +121,8 @@ public class Assembler {
     protected void parseSymbolSection(CharStream asm, Labels labels, Executable.Builder builder) throws AssemblyException {
         skipNewlinesAndComments(asm);
 
+        var foreignIndex = 0;
+
         while(moreWithinSection(asm)){
             var name = consume(asm, symbolName);
             syntaxCheck(asm, name, "symbol name");
@@ -149,14 +151,11 @@ public class Assembler {
                 var paramCounts = parseTypeCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
-                var registerCounts = parseTypeCounts(asm, "registers");
-                skipNewlinesAndComments(asm);
-
                 var index = builder.indexOfNextSymbol();
                 builder.appendSymbol(Symbol.empty(nameStr));
 
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams()));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 
@@ -166,10 +165,8 @@ public class Assembler {
                 var paramCounts = parseTypeCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
-                var registerCounts = parseTypeCounts(asm, "registers");
-                skipNewlinesAndComments(asm);
-
-                builder.appendSymbol(Symbol.foreignFunction(nameStr, rType, paramCounts.toParams(), registerCounts));
+                builder.appendSymbol(Symbol.foreignFunction(nameStr, foreignIndex, rType, paramCounts.toParams()));
+                foreignIndex++;
             }
             skipNewlinesAndComments(asm);
 

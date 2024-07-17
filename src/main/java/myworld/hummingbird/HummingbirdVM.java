@@ -223,7 +223,10 @@ public class HummingbirdVM {
                     }
                     case CALL -> {
                         savedRegisters.saveIp(ip);
-                        ip = dst; // TODO - support foreign function calls
+                        ip = dst;
+                    }
+                    case FCALL -> {
+                        // TODO - support foreign function calls
                     }
                     case COPY -> {
                         switch (type){
