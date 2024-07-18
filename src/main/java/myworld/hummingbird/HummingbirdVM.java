@@ -321,8 +321,17 @@ public class HummingbirdVM {
                         savedRegisters.saveIp(ip);
                         ip = dst;
                     }
+                    case DCALL -> {
+                        savedRegisters.saveIp(ip);
+                        ip = ireg[dst];
+                    }
                     case FCALL -> {
                         var symbol = exe.symbols()[dst];
+                        var func = foreign[symbol.offset()];
+                        func.call(this, currentFiber);
+                    }
+                    case DFCALL -> {
+                        var symbol = exe.symbols()[ireg[dst]];
                         var func = foreign[symbol.offset()];
                         func.call(this, currentFiber);
                     }
@@ -368,38 +377,26 @@ public class HummingbirdVM {
                         var addr = ireg[ins.dst()];
                         long value = switch (wType) {
                             case INT_T -> ireg[src];
-                            case FLOAT_T -> Float.floatToIntBits(freg[src]);
                             case LONG_T -> lreg[src];
-                            case DOUBLE_T -> Double.doubleToLongBits(dreg[src]);
                             default -> 0;
                         };
                         switch (ins.extra()){
                             case BYTE_T -> memory.put(addr, (byte) value);
                             case CHAR_T -> memory.putChar(addr, (char) value);
                             case SHORT_T -> memory.putShort(addr, (short) value);
-                            case INT_T -> memory.putInt(addr, ireg[src]);
-                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
-                            case LONG_T -> memory.putLong(addr, lreg[src]);
-                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
                         }
                     }
                     case SREAD -> {
                         var addr = ireg[ins.dst()];
-                        long value = switch (ins.extra()){
+                        int value = switch (ins.extra()){
                             case BYTE_T -> memory.get(addr);
                             case CHAR_T -> memory.getChar(addr);
                             case SHORT_T -> memory.getShort(addr);
-                            case INT_T -> memory.getInt(addr);
-                            case FLOAT_T -> Float.floatToIntBits(memory.getFloat(addr));
-                            case LONG_T -> memory.getLong(addr);
-                            case DOUBLE_T -> Double.doubleToLongBits(memory.getDouble(addr));
                             default -> 0;
                         };
                         switch (type){
-                            case INT_T -> ireg[dst] = (int) value;
-                            case FLOAT_T -> freg[dst] = Float.intBitsToFloat((int) value);
+                            case INT_T -> ireg[dst] = value;
                             case LONG_T -> lreg[dst] = value;
-                            case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(value);
                         }
                     }
                     case GWRITE -> {

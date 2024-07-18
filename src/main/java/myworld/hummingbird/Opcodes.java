@@ -62,36 +62,38 @@ public class Opcodes {
 
     // ========= Calls =========
     public static final int CALL = 0x1B;
-    public static final int FCALL = 0x1C;
-    public static final int RETURN = 0x1D;
+    public static final int DCALL = 0x1C;
+    public static final int FCALL = 0x1D;
+    public static final int DFCALL = 0x1E;
+    public static final int RETURN = 0x1F;
 
     // ========= Fibers =========
-    public static final int SPAWN = 0x1E;
-    public static final int YIELD = 0x1F;
-    public static final int BLOCK = 0x20;
-    public static final int UNBLOCK = 0x21;
+    public static final int SPAWN = 0x20;
+    public static final int YIELD = 0x21;
+    public static final int BLOCK = 0x22;
+    public static final int UNBLOCK = 0x23;
 
     // ========= Memory =========
-    public static final int WRITE = 0x22;
-    public static final int READ = 0x23;
-    public static final int SWRITE = 0x24;
-    public static final int SREAD = 0x25;
-    public static final int GWRITE = 0x26;
-    public static final int GREAD = 0x27;
-    public static final int MEM_COPY = 0x28;
-    public static final int OBJ_COPY = 0x29;
-    public static final int ALLOCATED = 0x2A;
-    public static final int RESIZE = 0x2B;
-    public static final int OBJ_RESIZE = 0x2C;
+    public static final int WRITE = 0x24;
+    public static final int READ = 0x25;
+    public static final int SWRITE = 0x26;
+    public static final int SREAD = 0x27;
+    public static final int GWRITE = 0x28;
+    public static final int GREAD = 0x29;
+    public static final int MEM_COPY = 0x2A;
+    public static final int OBJ_COPY = 0x2B;
+    public static final int ALLOCATED = 0x2C;
+    public static final int RESIZE = 0x2D;
+    public static final int OBJ_RESIZE = 0x2E;
 
     // ========= Strings =========
-    public static final int STR = 0x2D;
-    public static final int STR_LEN = 0x2E;
-    public static final int CHAR_AT = 0x2F;
-    public static final int TO_CHARS = 0x30;
-    public static final int FROM_CHARS = 0x31;
-    public static final int CONCAT = 0x32;
-    public static final int SUB_STR = 0x33;
+    public static final int STR = 0x2F;
+    public static final int STR_LEN = 0x30;
+    public static final int CHAR_AT = 0x31;
+    public static final int TO_CHARS = 0x32;
+    public static final int FROM_CHARS = 0x33;
+    public static final int CONCAT = 0x34;
+    public static final int SUB_STR = 0x35;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
