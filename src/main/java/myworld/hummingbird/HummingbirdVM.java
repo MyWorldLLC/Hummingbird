@@ -11,6 +11,7 @@ public class HummingbirdVM {
 
     protected final Executable exe;
     protected ByteBuffer memory;
+    protected Object[] objMemory;
     protected Fiber currentFiber;
     protected final Deque<Fiber> runQueue;
     protected final ForeignFunction[] foreign;
@@ -20,6 +21,7 @@ public class HummingbirdVM {
         foreign = new ForeignFunction[(int)exe.foreignSymbols().count()];
 
         memory = ByteBuffer.allocate(1024);
+        objMemory = new Object[10];
 
         runQueue = new LinkedList<>();
     }
@@ -123,7 +125,7 @@ public class HummingbirdVM {
                             case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
                             case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
                             case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
-                            case STRING_T -> sreg[dst] = constString(ins.src());
+                            case STRING_T -> sreg[dst] = readString(ins.src());
                             case OBJECT_T -> oreg[dst] = null;
                         }
                     }
@@ -331,20 +333,99 @@ public class HummingbirdVM {
                         ((Fiber) oreg[dst]).setState(Fiber.State.RUNNABLE);
                     }
                     case WRITE -> {
+                        var wType = Opcodes.registerType(ins.src());
+                        var src = Opcodes.registerIndex(ins.src());
+                        switch (wType) {
+                            case INT_T -> memory.putInt(ins.dst(), ireg[src]);
+                            case FLOAT_T -> memory.putFloat(ins.dst(), freg[src]);
+                            case LONG_T -> memory.putLong(ins.dst(), lreg[src]);
+                            case DOUBLE_T -> memory.putDouble(ins.dst(), dreg[src]);
+                            case OBJECT_T -> objMemory[ins.dst()] = oreg[src];
+                        }
                     }
-                    case READ -> {}
-                    case MWRITE -> {}
-                    case MREAD -> {}
-                    case GWRITE -> {}
-                    case GREAD -> {}
-                    case ALLOCATED -> {}
-                    case RESIZE -> {}
-                    case STR -> {}
-                    case STR_LEN -> {}
-                    case CHAR_AT -> {}
-                    case CHARS -> {}
-                    case CONCAT -> {}
-                    case SUB_STR -> {}
+                    case READ -> {
+                        switch (type) {
+                            case INT_T -> ireg[dst] = memory.getInt(ireg[ins.src()]);
+                            case FLOAT_T -> freg[dst] = memory.getFloat(ireg[ins.src()]);
+                            case LONG_T -> lreg[dst] = memory.getLong(ireg[ins.src()]);
+                            case DOUBLE_T -> dreg[dst] = memory.getDouble(ireg[ins.src()]);
+                            case OBJECT_T -> oreg[dst] = objMemory[ireg[ins.src()]];
+                        }
+                    }
+                    case MWRITE -> {
+                        // TODO - masked write
+                    }
+                    case MREAD -> {
+                        // TODO - masked read
+                    }
+                    case GWRITE -> {
+                        // TODO - guarded write
+                    }
+                    case GREAD -> {
+                        // TODO - guarded read
+                    }
+                    case MEM_COPY -> {
+                        // TODO - bulk memory copy
+                    }
+                    case ALLOCATED -> {
+                        switch (ins.src()){
+                            case OBJECT_T -> ireg[dst] = objMemory.length;
+                            default -> ireg[dst] = memory.capacity();
+                        }
+                    }
+                    case RESIZE -> {
+                        // TODO - resize memory
+                    }
+                    case STR -> {
+                        switch(type) {
+                            case INT_T -> oreg[dst] = Integer.toString(ireg[ins.src()]);
+                            case FLOAT_T -> oreg[dst] = Float.toString(freg[ins.src()]);
+                            case LONG_T -> oreg[dst] = Long.toString(lreg[ins.src()]);
+                            case DOUBLE_T -> oreg[dst] = Double.toString(dreg[ins.src()]);
+                            case OBJECT_T -> {
+                                oreg[dst] = objectToString(oreg[ins.src()]);
+                            }
+                        }
+                    }
+                    case STR_LEN -> {
+                        if(oreg[ins.src()] instanceof String s){
+                            ireg[dst] = s.length();
+                        }else{
+                            ireg[dst] = 0;
+                        }
+                    }
+                    case CHAR_AT -> {
+                        if(oreg[ins.src()] instanceof String s){
+                            ireg[dst] = s.charAt(ireg[ins.extra()]);
+                        }else{
+                            ireg[dst] = 0;
+                        }
+                    }
+                    case TO_CHARS -> {
+                        var charBuf = memory.asCharBuffer();
+                        var address = ireg[dst];
+                        if(oreg[ins.src()] instanceof String s){
+                            var chars = s.toCharArray();
+                            memory.putInt(address, chars.length);
+                            charBuf.put((address + 4)/2, chars);
+                        }
+                    }
+                    case FROM_CHARS -> {
+                        var address = ireg[ins.src()];
+                        oreg[dst] = readString(address);
+                    }
+                    case CONCAT -> {
+                        var a = oreg[ins.src()];
+                        var b = oreg[ins.extra()];
+                        oreg[dst] = objectToString(a) + objectToString(b);
+                    }
+                    case SUB_STR -> {
+                        var start = ireg[ins.extra()];
+                        var end = ireg[ins.extra1()];
+                        var str = objectToString(oreg[ins.src()]);
+
+                        oreg[dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -354,7 +435,7 @@ public class HummingbirdVM {
         }
     }
 
-    public String constString(int address) {
+    public String readString(int address) {
         if(address < 0){
             return null;
         }
@@ -362,6 +443,10 @@ public class HummingbirdVM {
         char[] characters = new char[length];
         memory.slice(address, length * 2).asCharBuffer().get(characters);
         return new String(characters);
+    }
+
+    public String objectToString(Object obj){
+        return obj == null ? "null" : obj.toString();
     }
 
     public static long longFromInts(int high, int low) {

@@ -74,16 +74,18 @@ public class Opcodes {
     public static final int MREAD = 0x24;
     public static final int GWRITE = 0x25;
     public static final int GREAD = 0x26;
-    public static final int ALLOCATED = 0x27;
-    public static final int RESIZE = 0x28;
+    public static final int MEM_COPY = 0x27;
+    public static final int ALLOCATED = 0x28;
+    public static final int RESIZE = 0x29;
 
     // ========= Strings =========
-    public static final int STR = 0x29;
-    public static final int STR_LEN = 0x2A;
-    public static final int CHAR_AT = 0x2B;
-    public static final int CHARS = 0x2C;
-    public static final int CONCAT = 0x2D;
-    public static final int SUB_STR = 0x2E;
+    public static final int STR = 0x2A;
+    public static final int STR_LEN = 0x2B;
+    public static final int CHAR_AT = 0x2C;
+    public static final int TO_CHARS = 0x2D;
+    public static final int FROM_CHARS = 0x2E;
+    public static final int CONCAT = 0x2F;
+    public static final int SUB_STR = 0x30;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
