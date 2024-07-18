@@ -2,6 +2,9 @@ package myworld.hummingbird;
 
 public class Opcodes {
 
+    public static final int BYTE_T = -3;
+    public static final int CHAR_T = -2;
+    public static final int SHORT_T = -1;
     public static final int INT_T = 0;
     public static final int FLOAT_T = 1;
     public static final int LONG_T = 2;
@@ -71,8 +74,8 @@ public class Opcodes {
     // ========= Memory =========
     public static final int WRITE = 0x22;
     public static final int READ = 0x23;
-    public static final int MWRITE = 0x24;
-    public static final int MREAD = 0x25;
+    public static final int SWRITE = 0x24;
+    public static final int SREAD = 0x25;
     public static final int GWRITE = 0x26;
     public static final int GREAD = 0x27;
     public static final int MEM_COPY = 0x28;

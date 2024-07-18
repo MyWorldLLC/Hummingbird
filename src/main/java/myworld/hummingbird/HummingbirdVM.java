@@ -10,14 +10,20 @@ import static myworld.hummingbird.Opcodes.*;
 public class HummingbirdVM {
 
     protected final Executable exe;
+    protected final MemoryLimits limits;
     protected ByteBuffer memory;
     protected Object[] objMemory;
     protected Fiber currentFiber;
     protected final Deque<Fiber> runQueue;
     protected final ForeignFunction[] foreign;
 
-    public HummingbirdVM(Executable exe) {
+    public HummingbirdVM(Executable exe){
+        this(exe, new MemoryLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
+    }
+
+    public HummingbirdVM(Executable exe, MemoryLimits limits) {
         this.exe = exe;
+        this.limits = limits;
         foreign = new ForeignFunction[(int)exe.foreignSymbols().count()];
 
         memory = ByteBuffer.allocate(1024);
@@ -338,12 +344,13 @@ public class HummingbirdVM {
                     case WRITE -> {
                         var wType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());
+                        var addr = ireg[ins.dst()];
                         switch (wType) {
-                            case INT_T -> memory.putInt(ins.dst(), ireg[src]);
-                            case FLOAT_T -> memory.putFloat(ins.dst(), freg[src]);
-                            case LONG_T -> memory.putLong(ins.dst(), lreg[src]);
-                            case DOUBLE_T -> memory.putDouble(ins.dst(), dreg[src]);
-                            case OBJECT_T -> objMemory[ins.dst()] = oreg[src];
+                            case INT_T -> memory.putInt(addr, ireg[src]);
+                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
+                            case LONG_T -> memory.putLong(addr, lreg[src]);
+                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
+                            case OBJECT_T -> objMemory[addr] = oreg[src];
                         }
                     }
                     case READ -> {
@@ -355,17 +362,71 @@ public class HummingbirdVM {
                             case OBJECT_T -> oreg[dst] = objMemory[ireg[ins.src()]];
                         }
                     }
-                    case MWRITE -> {
-                        // TODO - masked write - BOR a mask with source, shift by specified amount, and BOR with destination
+                    case SWRITE -> {
+                        var wType = Opcodes.registerType(ins.src());
+                        var src = Opcodes.registerIndex(ins.src());
+                        var addr = ireg[ins.dst()];
+                        long value = switch (wType) {
+                            case INT_T -> ireg[src];
+                            case FLOAT_T -> Float.floatToIntBits(freg[src]);
+                            case LONG_T -> lreg[src];
+                            case DOUBLE_T -> Double.doubleToLongBits(dreg[src]);
+                            default -> 0;
+                        };
+                        switch (ins.extra()){
+                            case BYTE_T -> memory.put(addr, (byte) value);
+                            case CHAR_T -> memory.putChar(addr, (char) value);
+                            case SHORT_T -> memory.putShort(addr, (short) value);
+                            case INT_T -> memory.putInt(addr, ireg[src]);
+                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
+                            case LONG_T -> memory.putLong(addr, lreg[src]);
+                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
+                        }
                     }
-                    case MREAD -> {
-                        // TODO - masked read
+                    case SREAD -> {
+                        var addr = ireg[ins.dst()];
+                        long value = switch (ins.extra()){
+                            case BYTE_T -> memory.get(addr);
+                            case CHAR_T -> memory.getChar(addr);
+                            case SHORT_T -> memory.getShort(addr);
+                            case INT_T -> memory.getInt(addr);
+                            case FLOAT_T -> Float.floatToIntBits(memory.getFloat(addr));
+                            case LONG_T -> memory.getLong(addr);
+                            case DOUBLE_T -> Double.doubleToLongBits(memory.getDouble(addr));
+                            default -> 0;
+                        };
+                        switch (type){
+                            case INT_T -> ireg[dst] = (int) value;
+                            case FLOAT_T -> freg[dst] = Float.intBitsToFloat((int) value);
+                            case LONG_T -> lreg[dst] = value;
+                            case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(value);
+                        }
                     }
                     case GWRITE -> {
-                        // TODO - guarded write - BOR a sentinel byte with guard byte at guard address, write value at destination
+                        var wType = Opcodes.registerType(ins.src());
+                        var src = Opcodes.registerIndex(ins.src());
+                        var addr = ireg[ins.dst()];
+                        memory.put(ireg[ins.extra()], (byte) ins.extra1());
+                        switch (wType) {
+                            case INT_T -> memory.putInt(addr, ireg[src]);
+                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
+                            case LONG_T -> memory.putLong(addr, lreg[src]);
+                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
+                            case OBJECT_T -> objMemory[addr] = oreg[src];
+                        }
                     }
                     case GREAD -> {
-                        // TODO - guarded read
+                        var guard = memory.get(ireg[ins.extra()]);
+                        if(guard != 0){
+                            ip = ins.extra1();
+                        }
+                        switch (type) {
+                            case INT_T -> ireg[dst] = memory.getInt(ireg[ins.src()]);
+                            case FLOAT_T -> freg[dst] = memory.getFloat(ireg[ins.src()]);
+                            case LONG_T -> lreg[dst] = memory.getLong(ireg[ins.src()]);
+                            case DOUBLE_T -> dreg[dst] = memory.getDouble(ireg[ins.src()]);
+                            case OBJECT_T -> oreg[dst] = objMemory[ireg[ins.src()]];
+                        }
                     }
                     case MEM_COPY -> {
                         var start = ins.src();
@@ -384,10 +445,16 @@ public class HummingbirdVM {
                         }
                     }
                     case RESIZE -> {
-                        // TODO - resize memory
+                        var size = Math.min(ins.dst(), limits.bytes());
+                        var next = ByteBuffer.allocate(size);
+                        next.put(0, memory, 0, Math.min(size, memory.capacity()));
+                        memory = next;
                     }
                     case OBJ_RESIZE -> {
-                        // TODO - resize memory
+                        var size = Math.min(ins.dst(), limits.objects());
+                        var next = new Object[size];
+                        System.arraycopy(objMemory, 0, next, 0, Math.min(size, objMemory.length));
+                        objMemory = next;
                     }
                     case STR -> {
                         switch(type) {
