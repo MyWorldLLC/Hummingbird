@@ -356,19 +356,26 @@ public class HummingbirdVM {
                         }
                     }
                     case MWRITE -> {
-                        // TODO - masked write
+                        // TODO - masked write - BOR a mask with source, shift by specified amount, and BOR with destination
                     }
                     case MREAD -> {
                         // TODO - masked read
                     }
                     case GWRITE -> {
-                        // TODO - guarded write
+                        // TODO - guarded write - BOR a sentinel byte with guard byte at guard address, write value at destination
                     }
                     case GREAD -> {
                         // TODO - guarded read
                     }
                     case MEM_COPY -> {
-                        // TODO - bulk memory copy
+                        var start = ins.src();
+                        var end = ins.extra();
+                        memory.put(ireg[dst], memory.slice(start, end), 0, end - start);
+                    }
+                    case OBJ_COPY -> {
+                        var start = ins.src();
+                        var end = ins.extra();
+                        System.arraycopy(objMemory, start, objMemory, ireg[dst], end - start);
                     }
                     case ALLOCATED -> {
                         switch (ins.src()){
@@ -377,6 +384,9 @@ public class HummingbirdVM {
                         }
                     }
                     case RESIZE -> {
+                        // TODO - resize memory
+                    }
+                    case OBJ_RESIZE -> {
                         // TODO - resize memory
                     }
                     case STR -> {
