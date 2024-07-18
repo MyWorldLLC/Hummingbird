@@ -13,9 +13,11 @@ public class HummingbirdVM {
     protected ByteBuffer memory;
     protected Fiber currentFiber;
     protected final Deque<Fiber> runQueue;
+    protected final ForeignFunction[] foreign;
 
     public HummingbirdVM(Executable exe) {
         this.exe = exe;
+        foreign = new ForeignFunction[(int)exe.foreignSymbols().count()];
 
         memory = ByteBuffer.allocate(1024);
 
@@ -173,6 +175,56 @@ public class HummingbirdVM {
                             case DOUBLE_T -> dreg[dst] = Math.pow(dreg[ins.src()], dreg[ins.extra()]);
                         }
                     }
+                    case BAND -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] & ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] & lreg[ins.extra()];
+                        }
+                    }
+                    case BOR -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] | ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] | lreg[ins.extra()];
+                        }
+                    }
+                    case BXOR -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] ^ ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] ^ lreg[ins.extra()];
+                        }
+                    }
+                    case BNOT -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ~ireg[ins.src()];
+                            case LONG_T -> lreg[dst] = ~lreg[ins.src()];
+                        }
+                    }
+                    case BLSHIFT -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] << ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] << lreg[ins.extra()];
+                        }
+                    }
+                    case BSRSHIFT -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] >> ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] >> lreg[ins.extra()];
+                        }
+                    }
+                    case BURSHIFT -> {
+                        switch (type){
+                            case INT_T -> ireg[dst] = ireg[ins.src()] >>> ireg[ins.extra()];
+                            case LONG_T -> lreg[dst] = lreg[ins.src()] >>> lreg[ins.extra()];
+                        }
+                    }
+                    case CONV -> {
+                        switch (type){
+                            case INT_T -> toInt(registers, ins.src());
+                            case FLOAT_T -> toFloat(registers, ins.src());
+                            case LONG_T -> toLong(registers, ins.src());
+                            case DOUBLE_T -> toDouble(registers, ins.src());
+                        }
+                    }
                     case GOTO -> {
                         ip = dst;
                     }
@@ -221,13 +273,6 @@ public class HummingbirdVM {
                     case RETURN ->{
                         ip = savedRegisters.restoreIp();
                     }
-                    case CALL -> {
-                        savedRegisters.saveIp(ip);
-                        ip = dst;
-                    }
-                    case FCALL -> {
-                        // TODO - support foreign function calls
-                    }
                     case COPY -> {
                         switch (type){
                             case INT_T -> ireg[dst] = ireg[ins.src()];
@@ -258,13 +303,48 @@ public class HummingbirdVM {
                             case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
                     }
+                    case IP -> {
+                        ireg[dst] = ip;
+                    }
+                    case CALL -> {
+                        savedRegisters.saveIp(ip);
+                        ip = dst;
+                    }
+                    case FCALL -> {
+                        var symbol = exe.symbols()[dst];
+                        var func = foreign[symbol.offset()];
+                        func.call(this, currentFiber);
+                    }
                     case SPAWN -> {
-                        spawn(dst, registers);
+                        oreg[dst] = spawn(ins.src(), registers);
                     }
                     case YIELD -> {
                         savedRegisters.saveIp(ip);
                         return;
                     }
+                    case BLOCK -> {
+                        currentFiber.setState(Fiber.State.BLOCKED);
+                        savedRegisters.saveIp(ip);
+                        return;
+                    }
+                    case UNBLOCK -> {
+                        ((Fiber) oreg[dst]).setState(Fiber.State.RUNNABLE);
+                    }
+                    case WRITE -> {
+                    }
+                    case READ -> {}
+                    case MWRITE -> {}
+                    case MREAD -> {}
+                    case GWRITE -> {}
+                    case GREAD -> {}
+                    case ALLOCATED -> {}
+                    case RESIZE -> {}
+                    case STR -> {}
+                    case STR_LEN -> {}
+                    case CHAR_AT -> {}
+                    case CHARS -> {}
+                    case CONCAT -> {}
+                    case SUB_STR -> {}
                 }
             }
         } catch (Exception e) {
@@ -407,6 +487,54 @@ public class HummingbirdVM {
             }
         }
         return false;
+    }
+
+    private static int toInt(Registers registers, int src){
+        var type = Opcodes.registerType(src);
+        src = Opcodes.registerIndex(src);
+        return switch (type){
+            case INT_T -> registers.ireg()[src];
+            case FLOAT_T -> (int) registers.freg()[src];
+            case LONG_T -> (int) registers.lreg()[src];
+            case DOUBLE_T -> (int) registers.dreg()[src];
+            default -> 0;
+        };
+    }
+
+    private static float toFloat(Registers registers, int src){
+        var type = Opcodes.registerType(src);
+        src = Opcodes.registerIndex(src);
+        return switch (type){
+            case INT_T -> (float) registers.ireg()[src];
+            case FLOAT_T -> registers.freg()[src];
+            case LONG_T -> (float) registers.lreg()[src];
+            case DOUBLE_T -> (float) registers.dreg()[src];
+            default -> Float.NaN;
+        };
+    }
+
+    private static long toLong(Registers registers, int src){
+        var type = Opcodes.registerType(src);
+        src = Opcodes.registerIndex(src);
+        return switch (type){
+            case INT_T -> registers.ireg()[src];
+            case FLOAT_T -> (long) registers.freg()[src];
+            case LONG_T -> registers.lreg()[src];
+            case DOUBLE_T -> (long) registers.dreg()[src];
+            default -> 0;
+        };
+    }
+
+    private static double toDouble(Registers registers, int src){
+        var type = Opcodes.registerType(src);
+        src = Opcodes.registerIndex(src);
+        return switch (type){
+            case INT_T -> (double) registers.ireg()[src];
+            case FLOAT_T -> (double) registers.freg()[src];
+            case LONG_T -> (double) registers.lreg()[src];
+            case DOUBLE_T -> registers.dreg()[src];
+            default -> Double.NaN;
+        };
     }
 
     private static Registers allocateRegisters(int i, int f, int l, int d, int s, int o){

@@ -1,7 +1,9 @@
 package myworld.hummingbird;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 public record Executable(byte[] data, Symbol[] symbols, Opcode[] code) {
 
@@ -24,7 +26,7 @@ public record Executable(byte[] data, Symbol[] symbols, Opcode[] code) {
             return offset;
         }
 
-        public int appendSymbol(Symbol symbol){
+        public int appendSymbol(Symbol symbol) {
             var offset = symbols.size();
             symbols.add(symbol);
             return offset;
@@ -74,5 +76,10 @@ public record Executable(byte[] data, Symbol[] symbols, Opcode[] code) {
             );
         }
 
+    }
+
+    public Stream<Symbol> foreignSymbols(){
+        return Arrays.stream(symbols)
+                .filter(Symbol::isForeignFunction);
     }
 }

@@ -8,8 +8,6 @@ public class Opcodes {
     public static final int DOUBLE_T = 3;
     public static final int STRING_T = 4;
     public static final int OBJECT_T = 5;
-    public static final int VOID_T = 6;
-
 
     public static final int COND_LT = 0;
     public static final int COND_LE = 1;
@@ -30,66 +28,62 @@ public class Opcodes {
     public static final int NEG = 0x05;
     public static final int POW = 0x06;
 
-    // ========= Flow Ops =========
-    public static final int GOTO = 0x07;
-    public static final int ICOND = 0x08;
-    public static final int FCOND = 0x09;
-    public static final int LCOND = 0x0A;
-    public static final int DCOND = 0x0B;
-    public static final int SCOND = 0x0C;
-    public static final int OCOND = 0x0D;
-    public static final int RETURN = 0x0E;
+    // ========= Bitwise =========
+    public static final int BAND = 0x07;
+    public static final int BOR = 0x08;
+    public static final int BXOR = 0x09;
+    public static final int BNOT = 0x0A;
+    public static final int BLSHIFT = 0x0B;
+    public static final int BSRSHIFT = 0x0C;
+    public static final int BURSHIFT = 0x0D;
+
+    // ========= Conversion =========
+    public static final int CONV = 0x0E;
+
+    // ========= Flow =========
+    public static final int GOTO = 0x0F;
+    public static final int ICOND = 0x10;
+    public static final int FCOND = 0x11;
+    public static final int LCOND = 0x12;
+    public static final int DCOND = 0x13;
+    public static final int SCOND = 0x14;
+    public static final int OCOND = 0x15;
+    public static final int RETURN = 0x16;
+
+    // ========= Registers =========
+
+    public static final int COPY = 0x17;
+    public static final int SAVE = 0x18;
+    public static final int RESTORE = 0x19;
+    public static final int IP = 0x1A;
 
     // ========= Calls =========
-    public static final int CALL = 0x0F;
-    public static final int FCALL = 0x10;
-    public static final int COPY = 0x11;
-    public static final int SAVE = 0x12;
-    public static final int RESTORE = 0x13;
+    public static final int CALL = 0x1B;
+    public static final int FCALL = 0x1C;
 
     // ========= Fibers =========
-    public static final int SPAWN = 0x14;
-    public static final int YIELD = 0x15;
-    public static final int BLOCK = 0x16;
-    public static final int UNBLOCK = 0x17;
+    public static final int SPAWN = 0x1D;
+    public static final int YIELD = 0x1E;
+    public static final int BLOCK = 0x1F;
+    public static final int UNBLOCK = 0x20;
 
-    // ========= Bitwise Ops =========
-    public static final int BAND = 0x14;
-    public static final int BOR = 0x15;
-    public static final int BXOR = 0x16;
-    public static final int BNOT = 0x17;
-    public static final int BLSHIFT = 0x18;
-    public static final int BSRSHIFT = 0x19;
-    public static final int BURSHIFT = 0x1A;
+    // ========= Memory =========
+    public static final int WRITE = 0x21;
+    public static final int READ = 0x22;
+    public static final int MWRITE = 0x23;
+    public static final int MREAD = 0x24;
+    public static final int GWRITE = 0x25;
+    public static final int GREAD = 0x26;
+    public static final int ALLOCATED = 0x27;
+    public static final int RESIZE = 0x28;
 
-    // ========= Conversion Ops =========
-    public static final int CONV = 0x1B;
-
-    // ========= Memory Ops =========
-    public static final int WRITE = 0x1C;
-    public static final int READ = 0x1D;
-    public static final int MWRITE = 0x1E;
-    public static final int MREAD = 0x1F;
-    public static final int GWRITE = 0x20;
-    public static final int GREAD = 0x21;
-    public static final int ALLOCATED = 0x22;
-    public static final int STRINGS = 0x23;
-    public static final int OBJECTS = 0x24;
-    public static final int RESIZE = 0x25;
-
-    // ========= String Ops =========
-    public static final int CHAR_AT = 0x26;
-    public static final int STR_LEN = 0x27;
-    public static final int CHARS = 0x28;
+    // ========= Strings =========
     public static final int STR = 0x29;
-    public static final int CONCAT = 0x2A;
-    public static final int SUB_STR = 0x2B;
-
-    // ========= Frame Inspection Ops =========
-    public static final int PARENT = 0x2C;
-    public static final int REG_COUNT = 0x2D;
-    public static final int REG_COPY = 0x2E;
-    public static final int IP = 0x2F;
+    public static final int STR_LEN = 0x2A;
+    public static final int CHAR_AT = 0x2B;
+    public static final int CHARS = 0x2C;
+    public static final int CONCAT = 0x2D;
+    public static final int SUB_STR = 0x2E;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
@@ -167,8 +161,8 @@ public class Opcodes {
     }
 
     @Assembles("SPAWN")
-    public static Opcode SPAWN(@Register Integer dst){
-        return new Opcode(SPAWN, dst);
+    public static Opcode SPAWN(@Register Integer dst, @Immediate Integer src){
+        return new Opcode(SPAWN, dst, src);
     }
 
     @Assembles("YIELD")
