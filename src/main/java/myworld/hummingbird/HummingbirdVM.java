@@ -230,6 +230,9 @@ public class HummingbirdVM {
                     case GOTO -> {
                         ip = dst;
                     }
+                    case JMP -> {
+                        ip = ireg[dst];
+                    }
                     case ICOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
