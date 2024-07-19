@@ -101,6 +101,11 @@ public class Opcodes {
             return new Opcode(CONST, dst, i);
         }else if(src instanceof Float f){
             return new Opcode(CONST, dst, Float.floatToIntBits(f));
+        }else if(src instanceof Long l){
+            return new Opcode(CONST, dst, highBits(l), lowBits(l));
+        } else if(src instanceof Double d){
+            var l = Double.doubleToLongBits(d);
+            return new Opcode(CONST, dst, highBits(l), lowBits(l));
         }
         throw new IllegalArgumentException("Invalid operand type: " + src.getClass());
     }
@@ -198,5 +203,13 @@ public class Opcodes {
 
     public static int encodeOpcodeType(int type, int opcode){
         return (type << 24) | opcode;
+    }
+
+    public static int highBits(long l){
+        return (int) (l >>> 32);
+    }
+
+    public static int lowBits(long l){
+        return (int) l;
     }
 }

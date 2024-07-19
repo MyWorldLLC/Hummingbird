@@ -14,7 +14,7 @@ public class Binary {
     public void encode(Opcode code, DataOutputStream os) throws IOException {
 
         var fields = new int[]{code.opcode(), code.dst(), code.src(),
-                code.extra(), code.extra1(), code.extra2(), code.extra3(), code.extra4(), code.extra5()};
+                code.extra(), code.extra1()};
 
         var trailingZeroes = 0;
         for(int i = fields.length - 1; i >= 0; i--){
