@@ -13,4 +13,8 @@ public record Opcode(int opcode, int dst, int src, int extra, int extra1){
         this(opcode, dst, 0, 0, 0);
     }
 
+    public Opcode(int opcode){
+        this(opcode, 0, 0, 0, 0);
+    }
+
 }

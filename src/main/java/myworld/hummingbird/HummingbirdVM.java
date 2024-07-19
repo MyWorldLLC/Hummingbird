@@ -387,7 +387,7 @@ public class HummingbirdVM {
                         }
                     }
                     case SREAD -> {
-                        var addr = ireg[ins.dst()];
+                        var addr = ireg[ins.src()];
                         int value = switch (ins.extra()){
                             case BYTE_T -> memory.get(addr);
                             case CHAR_T -> memory.getChar(addr);
@@ -426,13 +426,13 @@ public class HummingbirdVM {
                         }
                     }
                     case MEM_COPY -> {
-                        var start = ins.src();
-                        var end = ins.extra();
+                        var start = ireg[ins.src()];
+                        var end = ireg[ins.extra()];
                         memory.put(ireg[dst], memory.slice(start, end), 0, end - start);
                     }
                     case OBJ_COPY -> {
-                        var start = ins.src();
-                        var end = ins.extra();
+                        var start = ireg[ins.src()];
+                        var end = ireg[ins.extra()];
                         System.arraycopy(objMemory, start, objMemory, ireg[dst], end - start);
                     }
                     case ALLOCATED -> {
@@ -442,25 +442,27 @@ public class HummingbirdVM {
                         }
                     }
                     case RESIZE -> {
-                        var size = Math.min(ins.dst(), limits.bytes());
+                        var size = Math.min(ireg[ins.dst()], limits.bytes());
                         var next = ByteBuffer.allocate(size);
                         next.put(0, memory, 0, Math.min(size, memory.capacity()));
                         memory = next;
                     }
                     case OBJ_RESIZE -> {
-                        var size = Math.min(ins.dst(), limits.objects());
+                        var size = Math.min(ireg[ins.dst()], limits.objects());
                         var next = new Object[size];
                         System.arraycopy(objMemory, 0, next, 0, Math.min(size, objMemory.length));
                         objMemory = next;
                     }
                     case STR -> {
-                        switch(type) {
-                            case INT_T -> oreg[dst] = Integer.toString(ireg[ins.src()]);
-                            case FLOAT_T -> oreg[dst] = Float.toString(freg[ins.src()]);
-                            case LONG_T -> oreg[dst] = Long.toString(lreg[ins.src()]);
-                            case DOUBLE_T -> oreg[dst] = Double.toString(dreg[ins.src()]);
+                        var sType = Opcodes.registerType(ins.src());
+                        var src = Opcodes.registerIndex(ins.src());
+                        switch(sType) {
+                            case INT_T -> oreg[dst] = Integer.toString(ireg[src]);
+                            case FLOAT_T -> oreg[dst] = Float.toString(freg[src]);
+                            case LONG_T -> oreg[dst] = Long.toString(lreg[src]);
+                            case DOUBLE_T -> oreg[dst] = Double.toString(dreg[src]);
                             case OBJECT_T -> {
-                                oreg[dst] = objectToString(oreg[ins.src()]);
+                                oreg[dst] = objectToString(oreg[src]);
                             }
                         }
                     }
