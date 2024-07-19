@@ -5,7 +5,6 @@ public enum TypeFlag {
     FLOAT,
     LONG,
     DOUBLE,
-    STRING,
     OBJECT,
     VOID;
 

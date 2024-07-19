@@ -299,7 +299,6 @@ public class Assembler {
                     case 'f' -> TypeFlag.FLOAT;
                     case 'l' -> TypeFlag.LONG;
                     case 'd' -> TypeFlag.DOUBLE;
-                    case 's' -> TypeFlag.STRING;
                     case 'o' -> TypeFlag.OBJECT;
                     default -> TypeFlag.INT;
                 };

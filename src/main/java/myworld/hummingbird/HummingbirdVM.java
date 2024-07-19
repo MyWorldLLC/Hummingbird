@@ -54,7 +54,6 @@ public class HummingbirdVM {
             case FLOAT -> registers.freg()[0];
             case LONG -> registers.lreg()[0];
             case DOUBLE -> registers.dreg()[0];
-            case STRING -> registers.sreg()[0];
             case OBJECT -> registers.oreg()[0];
             case VOID -> null;
         };
@@ -66,7 +65,6 @@ public class HummingbirdVM {
 
     protected Fiber spawn(int entry, Registers initialState){
         var registers = allocateRegisters(
-                20,
                 20,
                 20,
                 20,
@@ -108,7 +106,6 @@ public class HummingbirdVM {
         var freg = registers.freg();
         var lreg = registers.lreg();
         var dreg = registers.dreg();
-        var sreg = registers.sreg();
         var oreg = registers.oreg();
 
         var savedRegisters = fiber.savedRegisters;
@@ -131,7 +128,6 @@ public class HummingbirdVM {
                             case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
                             case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
                             case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
-                            case STRING_T -> sreg[dst] = readString(ins.src());
                             case OBJECT_T -> oreg[dst] = null;
                         }
                     }
@@ -267,13 +263,6 @@ public class HummingbirdVM {
                             ip = ins.extra();
                         }
                     }
-                    case SCOND -> {
-                        var src = Opcodes.registerIndex(ins.src());
-                        var cond = Opcodes.registerType(ins.src());
-                        if(condStrings(cond, registers, dst, src)){
-                            ip = ins.extra();
-                        }
-                    }
                     case OCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
@@ -290,7 +279,6 @@ public class HummingbirdVM {
                             case FLOAT_T -> freg[dst] = freg[ins.src()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
                             case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case STRING_T -> sreg[dst] = sreg[ins.src()];
                             case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
                     }
@@ -300,7 +288,6 @@ public class HummingbirdVM {
                             case FLOAT_T -> savedRegisters.save(freg, dst, ins.src());
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
                             case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case STRING_T -> sreg[dst] = sreg[ins.src()];
                             case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
                     }
@@ -310,7 +297,6 @@ public class HummingbirdVM {
                             case FLOAT_T -> savedRegisters.restore(freg, dst, ins.src());
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
                             case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case STRING_T -> sreg[dst] = sreg[ins.src()];
                             case OBJECT_T -> oreg[dst] = oreg[ins.src()];
                         }
                     }
@@ -461,9 +447,7 @@ public class HummingbirdVM {
                             case FLOAT_T -> oreg[dst] = Float.toString(freg[src]);
                             case LONG_T -> oreg[dst] = Long.toString(lreg[src]);
                             case DOUBLE_T -> oreg[dst] = Double.toString(dreg[src]);
-                            case OBJECT_T -> {
-                                oreg[dst] = objectToString(oreg[src]);
-                            }
+                            case OBJECT_T -> oreg[dst] = objectToString(oreg[src]);
                         }
                     }
                     case STR_LEN -> {
@@ -504,6 +488,9 @@ public class HummingbirdVM {
                         var str = objectToString(oreg[ins.src()]);
 
                         oreg[dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
+                    }
+                    case SCOMP -> {
+                        ireg[dst] = compareStrings(oreg, ins.src(), ins.extra());
                     }
                 }
             }
@@ -616,29 +603,13 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static boolean condStrings(int cond, Registers registers, int dst, int src){
-        var test = cond != COND_NULL ? registers.sreg()[dst].compareTo(registers.sreg()[src]) : 0;
-        switch (cond){
-            case COND_LT -> {
-                return test < 0;
-            }
-            case COND_LE -> {
-                return test <= 0;
-            }
-            case COND_EQ -> {
-                return test == 0;
-            }
-            case COND_GE -> {
-                return test >= 0;
-            }
-            case COND_GT -> {
-                return test > 0;
-            }
-            case COND_NULL -> {
-                return registers.sreg()[dst] == null;
-            }
+    private static int compareStrings(Object[] oreg, int a, int b){
+        var objA = oreg[a];
+        var objB = oreg[b];
+        if(objA instanceof String strA && objB instanceof String strB){
+            return strA.compareTo(strB);
         }
-        return false;
+        return Integer.MAX_VALUE;
     }
 
     private static boolean condObjects(int cond, Registers registers, int dst, int src){
@@ -701,13 +672,12 @@ public class HummingbirdVM {
         };
     }
 
-    private static Registers allocateRegisters(int i, int f, int l, int d, int s, int o){
+    private static Registers allocateRegisters(int i, int f, int l, int d, int o){
         return new Registers(
                 new int[i],
                 new float[f],
                 new long[l],
                 new double[d],
-                new String[s],
                 new Object[o]
         );
     }

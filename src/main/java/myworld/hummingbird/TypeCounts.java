@@ -25,10 +25,6 @@ public record TypeCounts(String name, int[] counts) {
         return counts[TypeFlag.DOUBLE.ordinal()];
     }
 
-    public int stringCounts(){
-        return counts[TypeFlag.STRING.ordinal()];
-    }
-
     public int objectCounts(){
         return counts[TypeFlag.OBJECT.ordinal()];
     }
@@ -43,7 +39,6 @@ public record TypeCounts(String name, int[] counts) {
                 floatCounts(),
                 longCounts(),
                 doubleCounts(),
-                stringCounts(),
                 objectCounts()
         );
     }
