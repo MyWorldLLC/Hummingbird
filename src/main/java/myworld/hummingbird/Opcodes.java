@@ -94,6 +94,10 @@ public class Opcodes {
     public static final int SUB_STR = 0x34;
     public static final int SCOMP = 0x35;
 
+    // ========= Exceptions =========
+    public static final int TRAPS = 0x36;
+    public static final int TRAP = 0x37;
+
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
         if(src instanceof Integer i) {
@@ -377,6 +381,16 @@ public class Opcodes {
     @Assembles("SCOMP")
     public static Opcode SCOMP(@Register Integer dst, @Register Integer a, @Register Integer b) {
         return new Opcode(SCOMP, registerIndex(dst), registerIndex(a), registerIndex(b));
+    }
+
+    @Assembles("TRAPS")
+    public static Opcode TRAPS(@Immediate Integer tableAddr, @Immediate Integer handlerCount) {
+        return new Opcode(TRAPS, tableAddr, handlerCount);
+    }
+
+    @Assembles("TRAP")
+    public static Opcode TRAP(@Register Integer code) {
+        return new Opcode(TRAP, registerIndex(code));
     }
 
     public static int registerType(int reg){

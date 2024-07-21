@@ -1,9 +1,8 @@
 package myworld.hummingbird;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.function.Function;
 
 import static myworld.hummingbird.Opcodes.*;
 
@@ -14,42 +13,46 @@ public class HummingbirdVM {
     protected ByteBuffer memory;
     protected Object[] objMemory;
     protected Fiber currentFiber;
+    protected int trapTableAddr = -1;
+    protected int trapHandlerCount = 0;
+    protected List<Function<Throwable, Integer>> trapCodes;
     protected final Deque<Fiber> runQueue;
     protected final ForeignFunction[] foreign;
 
-    public HummingbirdVM(Executable exe){
+    public HummingbirdVM(Executable exe) {
         this(exe, new MemoryLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
     }
 
     public HummingbirdVM(Executable exe, MemoryLimits limits) {
         this.exe = exe;
         this.limits = limits;
-        foreign = new ForeignFunction[(int)exe.foreignSymbols().count()];
+        foreign = new ForeignFunction[(int) exe.foreignSymbols().count()];
 
         memory = ByteBuffer.allocate(1024);
         objMemory = new Object[10];
 
         runQueue = new LinkedList<>();
+        trapCodes = new ArrayList<>();
     }
 
-    public Object run(){
+    public Object run() {
 
         spawn(null, null);
 
         currentFiber = nextFiber();
         var registers = currentFiber.registers;
-        while(currentFiber != null){
+        while (currentFiber != null) {
             registers = currentFiber.registers;
             run(currentFiber);
             currentFiber = nextFiber();
         }
 
         var rType = TypeFlag.INT;
-        if(exe.symbols().length > 0){
+        if (exe.symbols().length > 0) {
             rType = exe.symbols()[0].rType();
         }
 
-        return switch (rType){
+        return switch (rType) {
             case INT -> registers.ireg()[0];
             case FLOAT -> registers.freg()[0];
             case LONG -> registers.lreg()[0];
@@ -59,11 +62,11 @@ public class HummingbirdVM {
         };
     }
 
-    public Fiber spawn(Symbol entry, Registers initialState){
+    public Fiber spawn(Symbol entry, Registers initialState) {
         return spawn(entry != null ? entry.offset() : 0, initialState);
     }
 
-    protected Fiber spawn(int entry, Registers initialState){
+    protected Fiber spawn(int entry, Registers initialState) {
         var registers = allocateRegisters(
                 20,
                 20,
@@ -72,7 +75,7 @@ public class HummingbirdVM {
                 20
         );
 
-        if(initialState != null){
+        if (initialState != null) {
             copyRegisters(initialState, registers);
         }
 
@@ -87,11 +90,11 @@ public class HummingbirdVM {
         return fiber;
     }
 
-    protected Fiber nextFiber(){
+    protected Fiber nextFiber() {
         var it = runQueue.iterator();
-        while(it.hasNext()){
+        while (it.hasNext()) {
             var fiber = it.next();
-            if(fiber.getState() == Fiber.State.RUNNABLE){
+            if (fiber.getState() == Fiber.State.RUNNABLE) {
                 it.remove();
                 return fiber;
             }
@@ -99,7 +102,7 @@ public class HummingbirdVM {
         return null;
     }
 
-    public void run(Fiber fiber) {
+    public void run(Fiber fiber) throws HummingbirdException {
 
         var registers = fiber.registers;
         var ireg = registers.ireg();
@@ -112,18 +115,16 @@ public class HummingbirdVM {
         var ip = savedRegisters.restoreIp();
 
         var instructions = exe.code();
-
-        try {
-
-            var stop = false;
-            while (!stop && ip < instructions.length) {
-                var ins = instructions[ip];
-                var type = Opcodes.registerType(ins.dst());
-                var dst = Opcodes.registerIndex(ins.dst());
-                ip++;
+        var stop = false;
+        while (!stop && ip < instructions.length) {
+            var ins = instructions[ip];
+            var type = Opcodes.registerType(ins.dst());
+            var dst = Opcodes.registerIndex(ins.dst());
+            ip++;
+            try {
                 switch (ins.opcode()) {
                     case CONST -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ins.src();
                             case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
                             case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
@@ -132,7 +133,7 @@ public class HummingbirdVM {
                         }
                     }
                     case ADD -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] + ireg[ins.extra()];
                             case FLOAT_T -> freg[dst] = freg[ins.src()] + freg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] + lreg[ins.extra()];
@@ -140,7 +141,7 @@ public class HummingbirdVM {
                         }
                     }
                     case SUB -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] - ireg[ins.extra()];
                             case FLOAT_T -> freg[dst] = freg[ins.src()] - freg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] - lreg[ins.extra()];
@@ -148,7 +149,7 @@ public class HummingbirdVM {
                         }
                     }
                     case MUL -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] * ireg[ins.extra()];
                             case FLOAT_T -> freg[dst] = freg[ins.src()] * freg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] * lreg[ins.extra()];
@@ -156,15 +157,19 @@ public class HummingbirdVM {
                         }
                     }
                     case DIV -> {
-                        switch (type){
-                            case INT_T -> ireg[dst] = ireg[ins.src()] / ireg[ins.extra()];
-                            case FLOAT_T -> freg[dst] = freg[ins.src()] / freg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] / lreg[ins.extra()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] / dreg[ins.extra()];
+                        try{
+                            switch (type) {
+                                case INT_T -> ireg[dst] = ireg[ins.src()] / ireg[ins.extra()];
+                                case FLOAT_T -> freg[dst] = freg[ins.src()] / freg[ins.extra()];
+                                case LONG_T -> lreg[dst] = lreg[ins.src()] / lreg[ins.extra()];
+                                case DOUBLE_T -> dreg[dst] = dreg[ins.src()] / dreg[ins.extra()];
+                            }
+                        }catch(ArithmeticException ex){
+                            trap(Traps.DIV_BY_ZERO, registers, ip);
                         }
                     }
                     case NEG -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = -ireg[ins.src()];
                             case FLOAT_T -> freg[dst] = -freg[ins.src()];
                             case LONG_T -> lreg[dst] = -lreg[ins.src()];
@@ -172,7 +177,7 @@ public class HummingbirdVM {
                         }
                     }
                     case POW -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = (int) Math.pow(ireg[ins.src()], ireg[ins.extra()]);
                             case FLOAT_T -> freg[dst] = (float) Math.pow(freg[ins.src()], freg[ins.extra()]);
                             case LONG_T -> lreg[dst] = (long) Math.pow(lreg[ins.src()], lreg[ins.extra()]);
@@ -180,49 +185,49 @@ public class HummingbirdVM {
                         }
                     }
                     case BAND -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] & ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] & lreg[ins.extra()];
                         }
                     }
                     case BOR -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] | ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] | lreg[ins.extra()];
                         }
                     }
                     case BXOR -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] ^ ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] ^ lreg[ins.extra()];
                         }
                     }
                     case BNOT -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ~ireg[ins.src()];
                             case LONG_T -> lreg[dst] = ~lreg[ins.src()];
                         }
                     }
                     case BLSHIFT -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] << ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] << lreg[ins.extra()];
                         }
                     }
                     case BSRSHIFT -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] >> ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] >> lreg[ins.extra()];
                         }
                     }
                     case BURSHIFT -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()] >>> ireg[ins.extra()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()] >>> lreg[ins.extra()];
                         }
                     }
                     case CONV -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> toInt(registers, ins.src());
                             case FLOAT_T -> toFloat(registers, ins.src());
                             case LONG_T -> toLong(registers, ins.src());
@@ -238,43 +243,43 @@ public class HummingbirdVM {
                     case ICOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if(condInts(cond, registers, dst, src)){
+                        if (condInts(cond, registers, dst, src)) {
                             ip = ins.extra();
                         }
                     }
                     case FCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if(condFloats(cond, registers, dst, src)){
+                        if (condFloats(cond, registers, dst, src)) {
                             ip = ins.extra();
                         }
                     }
                     case LCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if(condLongs(cond, registers, dst, src)){
+                        if (condLongs(cond, registers, dst, src)) {
                             ip = ins.extra();
                         }
                     }
                     case DCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if(condDoubles(cond, registers, dst, src)){
+                        if (condDoubles(cond, registers, dst, src)) {
                             ip = ins.extra();
                         }
                     }
                     case OCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if(condObjects(cond, registers, dst, src)){
+                        if (condObjects(cond, registers, dst, src)) {
                             ip = ins.extra();
                         }
                     }
-                    case RETURN ->{
+                    case RETURN -> {
                         ip = savedRegisters.restoreIp();
                     }
                     case COPY -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = ireg[ins.src()];
                             case FLOAT_T -> freg[dst] = freg[ins.src()];
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
@@ -283,7 +288,7 @@ public class HummingbirdVM {
                         }
                     }
                     case SAVE -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> savedRegisters.save(ireg, dst, ins.src());
                             case FLOAT_T -> savedRegisters.save(freg, dst, ins.src());
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
@@ -292,7 +297,7 @@ public class HummingbirdVM {
                         }
                     }
                     case RESTORE -> {
-                        switch (type){
+                        switch (type) {
                             case INT_T -> savedRegisters.restore(ireg, dst, ins.src());
                             case FLOAT_T -> savedRegisters.restore(freg, dst, ins.src());
                             case LONG_T -> lreg[dst] = lreg[ins.src()];
@@ -366,7 +371,7 @@ public class HummingbirdVM {
                             case LONG_T -> lreg[src];
                             default -> 0;
                         };
-                        switch (ins.extra()){
+                        switch (ins.extra()) {
                             case BYTE_T -> memory.put(addr, (byte) value);
                             case CHAR_T -> memory.putChar(addr, (char) value);
                             case SHORT_T -> memory.putShort(addr, (short) value);
@@ -374,13 +379,13 @@ public class HummingbirdVM {
                     }
                     case SREAD -> {
                         var addr = ireg[ins.src()];
-                        int value = switch (ins.extra()){
+                        int value = switch (ins.extra()) {
                             case BYTE_T -> memory.get(addr);
                             case CHAR_T -> memory.getChar(addr);
                             case SHORT_T -> memory.getShort(addr);
                             default -> 0;
                         };
-                        switch (type){
+                        switch (type) {
                             case INT_T -> ireg[dst] = value;
                             case LONG_T -> lreg[dst] = value;
                         }
@@ -400,7 +405,7 @@ public class HummingbirdVM {
                     }
                     case GREAD -> {
                         var guard = memory.get(ireg[ins.extra()]);
-                        if(guard != 0){
+                        if (guard != 0) {
                             ip = ins.extra1();
                         }
                         switch (type) {
@@ -422,7 +427,7 @@ public class HummingbirdVM {
                         System.arraycopy(objMemory, start, objMemory, ireg[dst], end - start);
                     }
                     case ALLOCATED -> {
-                        switch (ins.src()){
+                        switch (ins.src()) {
                             case OBJECT_T -> ireg[dst] = objMemory.length;
                             default -> ireg[dst] = memory.capacity();
                         }
@@ -442,7 +447,7 @@ public class HummingbirdVM {
                     case STR -> {
                         var sType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());
-                        switch(sType) {
+                        switch (sType) {
                             case INT_T -> oreg[dst] = Integer.toString(ireg[src]);
                             case FLOAT_T -> oreg[dst] = Float.toString(freg[src]);
                             case LONG_T -> oreg[dst] = Long.toString(lreg[src]);
@@ -451,26 +456,26 @@ public class HummingbirdVM {
                         }
                     }
                     case STR_LEN -> {
-                        if(oreg[ins.src()] instanceof String s){
+                        if (oreg[ins.src()] instanceof String s) {
                             ireg[dst] = s.length();
-                        }else{
+                        } else {
                             ireg[dst] = 0;
                         }
                     }
                     case CHAR_AT -> {
-                        if(oreg[ins.src()] instanceof String s){
+                        if (oreg[ins.src()] instanceof String s) {
                             ireg[dst] = s.charAt(ireg[ins.extra()]);
-                        }else{
+                        } else {
                             ireg[dst] = 0;
                         }
                     }
                     case TO_CHARS -> {
                         var charBuf = memory.asCharBuffer();
                         var address = ireg[dst];
-                        if(oreg[ins.src()] instanceof String s){
+                        if (oreg[ins.src()] instanceof String s) {
                             var chars = s.toCharArray();
                             memory.putInt(address, chars.length);
-                            charBuf.put((address + 4)/2, chars);
+                            charBuf.put((address + 4) / 2, chars);
                         }
                     }
                     case FROM_CHARS -> {
@@ -492,17 +497,22 @@ public class HummingbirdVM {
                     case SCOMP -> {
                         ireg[dst] = compareStrings(oreg, ins.src(), ins.extra());
                     }
+                    case TRAPS -> {
+                        trapTableAddr = dst;
+                        trapHandlerCount = ins.src();
+                    }
+                    case TRAP -> {
+                        ip = trap(ireg[dst], registers, ip);
+                    }
                 }
+            } catch (Throwable t) {
+                ip = trap(t, registers, ip);
             }
-        } catch (Exception e) {
-            System.out.println("Failure at ip: " + (ip - 1));
-            System.out.println(Arrays.toString(instructions));
-            throw e;
         }
     }
 
     public String readString(int address) {
-        if(address < 0){
+        if (address < 0) {
             return null;
         }
         int length = Math.min(memory.getInt(address), memory.capacity() / 2);
@@ -511,16 +521,70 @@ public class HummingbirdVM {
         return new String(characters);
     }
 
-    public String objectToString(Object obj){
+    public String objectToString(Object obj) {
         return obj == null ? "null" : obj.toString();
+    }
+
+    public int trap(Throwable t, Registers registers, int ip){
+        return trap(getTrapCode(t), registers, ip, t);
+    }
+
+    public int trap(int code, Registers registers, int ip){
+        return trap(code, registers, ip, null);
+    }
+
+    public int trap(int code, Registers registers, int ip, Throwable t){
+        var handler = getTrapHandler(code);
+        if(handler != -1){
+            // ip - 1 because when this is called ip has always
+            // been advanced to the next instruction. It's simpler
+            // to do this once here than subtract one at every trap
+            // call site.
+            registers.ireg()[0] = ip - 1;
+            return handler;
+        }else{
+            throw new HummingbirdException(ip - 1, registers, t);
+        }
+    }
+
+    public int getTrapCode(Throwable t){
+        var code = -1;
+        for(int i = 0; i < trapCodes.size(); i++){
+            if(trapCodes.get(i).apply(t) > 0){
+                return i;
+            }
+        }
+        return code;
+    }
+    public int getTrapHandler(int exCode){
+        // Trap table layout: sequence of integer trap codes,
+        // followed by a sequence of trap handler addresses,
+        // 1 address per code.
+        if(trapTableAddr == -1 || exCode < 0){
+            return -1;
+        }
+        var start = trapTableAddr;
+        var end = trapTableAddr + trapHandlerCount;
+        while(start <= end){
+            var m = (start + end) / 2;
+            var mCode = memory.getInt(m);
+            if(mCode < exCode){
+                start = m + 1;
+            }else if(mCode > exCode){
+                end = m - 1;
+            }else{
+                return memory.getInt(trapTableAddr + trapHandlerCount + m);
+            }
+        }
+        return -1;
     }
 
     public static long longFromInts(int high, int low) {
         return ((long) high << 32) | ((long) low);
     }
 
-    private static boolean condInts(int cond, Registers registers, int dst, int src){
-        switch (cond){
+    private static boolean condInts(int cond, Registers registers, int dst, int src) {
+        switch (cond) {
             case COND_LT -> {
                 return registers.ireg()[dst] < registers.ireg()[src];
             }
@@ -540,8 +604,8 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static boolean condFloats(int cond, Registers registers, int dst, int src){
-        switch (cond){
+    private static boolean condFloats(int cond, Registers registers, int dst, int src) {
+        switch (cond) {
             case COND_LT -> {
                 return registers.freg()[dst] < registers.freg()[src];
             }
@@ -561,8 +625,8 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static boolean condLongs(int cond, Registers registers, int dst, int src){
-        switch (cond){
+    private static boolean condLongs(int cond, Registers registers, int dst, int src) {
+        switch (cond) {
             case COND_LT -> {
                 return registers.lreg()[dst] < registers.lreg()[src];
             }
@@ -582,8 +646,8 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static boolean condDoubles(int cond, Registers registers, int dst, int src){
-        switch (cond){
+    private static boolean condDoubles(int cond, Registers registers, int dst, int src) {
+        switch (cond) {
             case COND_LT -> {
                 return registers.dreg()[dst] < registers.dreg()[src];
             }
@@ -603,17 +667,17 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static int compareStrings(Object[] oreg, int a, int b){
+    private static int compareStrings(Object[] oreg, int a, int b) {
         var objA = oreg[a];
         var objB = oreg[b];
-        if(objA instanceof String strA && objB instanceof String strB){
+        if (objA instanceof String strA && objB instanceof String strB) {
             return strA.compareTo(strB);
         }
         return Integer.MAX_VALUE;
     }
 
-    private static boolean condObjects(int cond, Registers registers, int dst, int src){
-        switch (cond){
+    private static boolean condObjects(int cond, Registers registers, int dst, int src) {
+        switch (cond) {
             case COND_EQ -> {
                 return registers.oreg()[dst] == registers.oreg()[src];
             }
@@ -624,10 +688,10 @@ public class HummingbirdVM {
         return false;
     }
 
-    private static int toInt(Registers registers, int src){
+    private static int toInt(Registers registers, int src) {
         var type = Opcodes.registerType(src);
         src = Opcodes.registerIndex(src);
-        return switch (type){
+        return switch (type) {
             case INT_T -> registers.ireg()[src];
             case FLOAT_T -> (int) registers.freg()[src];
             case LONG_T -> (int) registers.lreg()[src];
@@ -636,10 +700,10 @@ public class HummingbirdVM {
         };
     }
 
-    private static float toFloat(Registers registers, int src){
+    private static float toFloat(Registers registers, int src) {
         var type = Opcodes.registerType(src);
         src = Opcodes.registerIndex(src);
-        return switch (type){
+        return switch (type) {
             case INT_T -> (float) registers.ireg()[src];
             case FLOAT_T -> registers.freg()[src];
             case LONG_T -> (float) registers.lreg()[src];
@@ -648,10 +712,10 @@ public class HummingbirdVM {
         };
     }
 
-    private static long toLong(Registers registers, int src){
+    private static long toLong(Registers registers, int src) {
         var type = Opcodes.registerType(src);
         src = Opcodes.registerIndex(src);
-        return switch (type){
+        return switch (type) {
             case INT_T -> registers.ireg()[src];
             case FLOAT_T -> (long) registers.freg()[src];
             case LONG_T -> registers.lreg()[src];
@@ -660,10 +724,10 @@ public class HummingbirdVM {
         };
     }
 
-    private static double toDouble(Registers registers, int src){
+    private static double toDouble(Registers registers, int src) {
         var type = Opcodes.registerType(src);
         src = Opcodes.registerIndex(src);
-        return switch (type){
+        return switch (type) {
             case INT_T -> (double) registers.ireg()[src];
             case FLOAT_T -> (double) registers.freg()[src];
             case LONG_T -> (double) registers.lreg()[src];
@@ -672,7 +736,7 @@ public class HummingbirdVM {
         };
     }
 
-    private static Registers allocateRegisters(int i, int f, int l, int d, int o){
+    private static Registers allocateRegisters(int i, int f, int l, int d, int o) {
         return new Registers(
                 new int[i],
                 new float[f],
@@ -682,7 +746,7 @@ public class HummingbirdVM {
         );
     }
 
-    public static void copyRegisters(Registers from, Registers to){
+    public static void copyRegisters(Registers from, Registers to) {
         System.arraycopy(from.ireg(), 0, to.ireg(), 0, from.ireg().length);
         System.arraycopy(from.freg(), 0, to.freg(), 0, from.freg().length);
         System.arraycopy(from.lreg(), 0, to.lreg(), 0, from.lreg().length);
