@@ -129,8 +129,10 @@ public class HummingbirdVM {
                             case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
                             case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
                             case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
-                            case OBJECT_T -> oreg[dst] = null;
                         }
+                    }
+                    case NULL -> {
+                        oreg[dst] = null;
                     }
                     case ADD -> {
                         switch (type) {
@@ -163,6 +165,18 @@ public class HummingbirdVM {
                                 case FLOAT_T -> freg[dst] = freg[ins.src()] / freg[ins.extra()];
                                 case LONG_T -> lreg[dst] = lreg[ins.src()] / lreg[ins.extra()];
                                 case DOUBLE_T -> dreg[dst] = dreg[ins.src()] / dreg[ins.extra()];
+                            }
+                        }catch(ArithmeticException ex){
+                            trap(Traps.DIV_BY_ZERO, registers, ip);
+                        }
+                    }
+                    case REM -> {
+                        try{
+                            switch (type) {
+                                case INT_T -> ireg[dst] = ireg[ins.src()] % ireg[ins.extra()];
+                                case FLOAT_T -> freg[dst] = freg[ins.src()] % freg[ins.extra()];
+                                case LONG_T -> lreg[dst] = lreg[ins.src()] % lreg[ins.extra()];
+                                case DOUBLE_T -> dreg[dst] = dreg[ins.src()] % dreg[ins.extra()];
                             }
                         }catch(ArithmeticException ex){
                             trap(Traps.DIV_BY_ZERO, registers, ip);
