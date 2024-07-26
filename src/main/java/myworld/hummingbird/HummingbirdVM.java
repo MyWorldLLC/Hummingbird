@@ -305,18 +305,18 @@ public class HummingbirdVM {
                         switch (type) {
                             case INT_T -> savedRegisters.save(ireg, dst, ins.src());
                             case FLOAT_T -> savedRegisters.save(freg, dst, ins.src());
-                            case LONG_T -> lreg[dst] = lreg[ins.src()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
+                            case LONG_T -> savedRegisters.save(lreg, dst, ins.src());
+                            case DOUBLE_T -> savedRegisters.save(dreg, dst, ins.src());
+                            case OBJECT_T -> savedRegisters.save(oreg, dst, ins.src());
                         }
                     }
                     case RESTORE -> {
                         switch (type) {
                             case INT_T -> savedRegisters.restore(ireg, dst, ins.src());
                             case FLOAT_T -> savedRegisters.restore(freg, dst, ins.src());
-                            case LONG_T -> lreg[dst] = lreg[ins.src()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
+                            case LONG_T -> savedRegisters.restore(lreg, dst, ins.src());
+                            case DOUBLE_T -> savedRegisters.restore(dreg, dst, ins.src());
+                            case OBJECT_T -> savedRegisters.restore(oreg, dst, ins.src());
                         }
                     }
                     case IP -> {
