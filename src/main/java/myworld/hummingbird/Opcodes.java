@@ -100,6 +100,9 @@ public class Opcodes {
     public static final int TRAPS = 0x38;
     public static final int TRAP = 0x39;
 
+    public static final int PARAM = 0x3A;
+    public static final int DEBUG = 0x3B;
+
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
         if(src instanceof Integer i) {
@@ -236,8 +239,8 @@ public class Opcodes {
     }
 
     @Assembles("RETURN")
-    public static Opcode RETURN(){
-        return new Opcode(RETURN, 0);
+    public static Opcode RETURN(@Register Integer value){
+        return new Opcode(RETURN, value);
     }
 
     @Assembles("COPY")
@@ -403,6 +406,16 @@ public class Opcodes {
     @Assembles("TRAP")
     public static Opcode TRAP(@Register Integer code) {
         return new Opcode(TRAP, registerIndex(code));
+    }
+
+    @Assembles("PARAM")
+    public static Opcode PARAM(@Register Integer dst, @Immediate Integer pIndex){
+        return new Opcode(PARAM, dst, pIndex);
+    }
+
+    @Assembles("DEBUG")
+    public static Opcode DEBUG(@Immediate Integer sentinel, @Register Integer src){
+        return new Opcode(DEBUG, sentinel, src);
     }
 
     public static int registerType(int reg){

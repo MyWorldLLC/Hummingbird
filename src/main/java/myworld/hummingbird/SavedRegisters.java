@@ -22,6 +22,8 @@ public class SavedRegisters {
     protected Object[] oreg;
     protected int oIndex;
 
+    protected IntStack regOffsets;
+
     public SavedRegisters(int initialSize){
         sizeInc = initialSize;
 
@@ -31,6 +33,8 @@ public class SavedRegisters {
         lreg = new long[initialSize];
         dreg = new double[initialSize];
         oreg = new Object[initialSize];
+
+        regOffsets = new IntStack(initialSize);
     }
 
     public void clear(){
@@ -40,6 +44,7 @@ public class SavedRegisters {
         lIndex = 0;
         dIndex = 0;
         oIndex = 0;
+        regOffsets.clear();
     }
 
     public void saveIp(int ip){
@@ -55,6 +60,18 @@ public class SavedRegisters {
     public int restoreIp(){
         ipIndex--;
         return ips[ipIndex];
+    }
+
+    public void saveRegisterOffset(int offset) {
+        regOffsets.push(offset);
+    }
+
+    public int restoreRegisterOffset(){
+        return regOffsets.pop();
+    }
+
+    public int callerRegisterOffset(){
+        return regOffsets.peek(1);
     }
 
     public void save(int[] reg, int index, int count){

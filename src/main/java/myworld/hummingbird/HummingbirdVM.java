@@ -67,12 +67,12 @@ public class HummingbirdVM {
     }
 
     protected Fiber spawn(int entry, Registers initialState) {
-        var registers = allocateRegisters(
-                20,
-                20,
-                20,
-                20,
-                20
+        var registers = allocateRegisters( // TODO - variable size register file
+                2000,
+                2000,
+                2000,
+                2000,
+                2000
         );
 
         if (initialState != null) {
@@ -81,6 +81,7 @@ public class HummingbirdVM {
 
         var savedRegisters = new SavedRegisters(1000);
         savedRegisters.saveIp(Integer.MAX_VALUE);
+        savedRegisters.saveRegisterOffset(0);
         var fiber = new Fiber(registers, savedRegisters);
 
         savedRegisters.saveIp(entry);
@@ -113,6 +114,7 @@ public class HummingbirdVM {
 
         var savedRegisters = fiber.savedRegisters;
         var ip = savedRegisters.restoreIp();
+        var regOffset = 0;
 
         var instructions = exe.code();
         var stop = false;
@@ -125,46 +127,46 @@ public class HummingbirdVM {
                 switch (ins.opcode()) {
                     case CONST -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ins.src();
-                            case FLOAT_T -> freg[dst] = Float.intBitsToFloat(ins.src());
-                            case LONG_T -> lreg[dst] = longFromInts(ins.src(), ins.extra());
-                            case DOUBLE_T -> dreg[dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
+                            case INT_T -> ireg[regOffset + dst] = ins.src();
+                            case FLOAT_T -> freg[regOffset + dst] = Float.intBitsToFloat(ins.src());
+                            case LONG_T -> lreg[regOffset + dst] = longFromInts(ins.src(), ins.extra());
+                            case DOUBLE_T -> dreg[regOffset + dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
                         }
                     }
                     case NULL -> {
-                        oreg[dst] = null;
+                        oreg[regOffset + dst] = null;
                     }
                     case ADD -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] + ireg[ins.extra()];
-                            case FLOAT_T -> freg[dst] = freg[ins.src()] + freg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] + lreg[ins.extra()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] + dreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] + ireg[regOffset + ins.extra()];
+                            case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] + freg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] + lreg[regOffset + ins.extra()];
+                            case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()] + dreg[regOffset + ins.extra()];
                         }
                     }
                     case SUB -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] - ireg[ins.extra()];
-                            case FLOAT_T -> freg[dst] = freg[ins.src()] - freg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] - lreg[ins.extra()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] - dreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] - ireg[regOffset + ins.extra()];
+                            case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] - freg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] - lreg[regOffset + ins.extra()];
+                            case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()] - dreg[regOffset + ins.extra()];
                         }
                     }
                     case MUL -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] * ireg[ins.extra()];
-                            case FLOAT_T -> freg[dst] = freg[ins.src()] * freg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] * lreg[ins.extra()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()] * dreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] * ireg[regOffset + ins.extra()];
+                            case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] * freg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] * lreg[regOffset + ins.extra()];
+                            case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()] * dreg[regOffset + ins.extra()];
                         }
                     }
                     case DIV -> {
                         try{
                             switch (type) {
-                                case INT_T -> ireg[dst] = ireg[ins.src()] / ireg[ins.extra()];
-                                case FLOAT_T -> freg[dst] = freg[ins.src()] / freg[ins.extra()];
-                                case LONG_T -> lreg[dst] = lreg[ins.src()] / lreg[ins.extra()];
-                                case DOUBLE_T -> dreg[dst] = dreg[ins.src()] / dreg[ins.extra()];
+                                case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] / ireg[regOffset + ins.extra()];
+                                case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] / freg[regOffset + ins.extra()];
+                                case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] / lreg[regOffset + ins.extra()];
+                                case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()] / dreg[regOffset + ins.extra()];
                             }
                         }catch(ArithmeticException ex){
                             trap(Traps.DIV_BY_ZERO, registers, ip);
@@ -173,10 +175,10 @@ public class HummingbirdVM {
                     case REM -> {
                         try{
                             switch (type) {
-                                case INT_T -> ireg[dst] = ireg[ins.src()] % ireg[ins.extra()];
-                                case FLOAT_T -> freg[dst] = freg[ins.src()] % freg[ins.extra()];
-                                case LONG_T -> lreg[dst] = lreg[ins.src()] % lreg[ins.extra()];
-                                case DOUBLE_T -> dreg[dst] = dreg[ins.src()] % dreg[ins.extra()];
+                                case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] % ireg[regOffset + ins.extra()];
+                                case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] % freg[regOffset + ins.extra()];
+                                case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] % lreg[regOffset + ins.extra()];
+                                case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()] % dreg[regOffset + ins.extra()];
                             }
                         }catch(ArithmeticException ex){
                             trap(Traps.DIV_BY_ZERO, registers, ip);
@@ -184,151 +186,160 @@ public class HummingbirdVM {
                     }
                     case NEG -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = -ireg[ins.src()];
-                            case FLOAT_T -> freg[dst] = -freg[ins.src()];
-                            case LONG_T -> lreg[dst] = -lreg[ins.src()];
-                            case DOUBLE_T -> dreg[dst] = -dreg[ins.src()];
+                            case INT_T -> ireg[regOffset + dst] = -ireg[regOffset + ins.src()];
+                            case FLOAT_T -> freg[regOffset + dst] = -freg[regOffset + ins.src()];
+                            case LONG_T -> lreg[regOffset + dst] = -lreg[regOffset + ins.src()];
+                            case DOUBLE_T -> dreg[regOffset + dst] = -dreg[regOffset + ins.src()];
                         }
                     }
                     case POW -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = (int) Math.pow(ireg[ins.src()], ireg[ins.extra()]);
-                            case FLOAT_T -> freg[dst] = (float) Math.pow(freg[ins.src()], freg[ins.extra()]);
-                            case LONG_T -> lreg[dst] = (long) Math.pow(lreg[ins.src()], lreg[ins.extra()]);
-                            case DOUBLE_T -> dreg[dst] = Math.pow(dreg[ins.src()], dreg[ins.extra()]);
+                            case INT_T -> ireg[regOffset + dst] = (int) Math.pow(ireg[regOffset + ins.src()], ireg[regOffset + ins.extra()]);
+                            case FLOAT_T -> freg[regOffset + dst] = (float) Math.pow(freg[regOffset + ins.src()], freg[regOffset + ins.extra()]);
+                            case LONG_T -> lreg[regOffset + dst] = (long) Math.pow(lreg[regOffset + ins.src()], lreg[regOffset + ins.extra()]);
+                            case DOUBLE_T -> dreg[regOffset + dst] = Math.pow(dreg[regOffset + ins.src()], dreg[regOffset + ins.extra()]);
                         }
                     }
                     case BAND -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] & ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] & lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] & ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] & lreg[regOffset + ins.extra()];
                         }
                     }
                     case BOR -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] | ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] | lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] | ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] | lreg[regOffset + ins.extra()];
                         }
                     }
                     case BXOR -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] ^ ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] ^ lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] ^ ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] ^ lreg[regOffset + ins.extra()];
                         }
                     }
                     case BNOT -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ~ireg[ins.src()];
-                            case LONG_T -> lreg[dst] = ~lreg[ins.src()];
+                            case INT_T -> ireg[regOffset + dst] = ~ireg[regOffset + ins.src()];
+                            case LONG_T -> lreg[regOffset + dst] = ~lreg[regOffset + ins.src()];
                         }
                     }
                     case BLSHIFT -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] << ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] << lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] << ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] << lreg[regOffset + ins.extra()];
                         }
                     }
                     case BSRSHIFT -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] >> ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] >> lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] >> ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] >> lreg[regOffset + ins.extra()];
                         }
                     }
                     case BURSHIFT -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()] >>> ireg[ins.extra()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()] >>> lreg[ins.extra()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] >>> ireg[regOffset + ins.extra()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()] >>> lreg[regOffset + ins.extra()];
                         }
                     }
                     case CONV -> {
                         switch (type) {
-                            case INT_T -> toInt(registers, ins.src());
-                            case FLOAT_T -> toFloat(registers, ins.src());
-                            case LONG_T -> toLong(registers, ins.src());
-                            case DOUBLE_T -> toDouble(registers, ins.src());
+                            case INT_T -> ireg[regOffset + dst] = toInt(registers, regOffset + ins.src());
+                            case FLOAT_T -> freg[regOffset + dst] = toFloat(registers, regOffset + ins.src());
+                            case LONG_T -> lreg[regOffset + dst] = toLong(registers, regOffset + ins.src());
+                            case DOUBLE_T -> dreg[regOffset + dst] = toDouble(registers, regOffset + ins.src());
                         }
                     }
                     case GOTO -> {
                         ip = dst;
                     }
                     case JMP -> {
-                        ip = ireg[dst];
+                        ip = ireg[regOffset + dst];
                     }
                     case ICOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if (condInts(cond, registers, dst, src)) {
+                        if (condInts(cond, registers, regOffset + dst, regOffset + src)) {
                             ip = ins.extra();
                         }
                     }
                     case FCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if (condFloats(cond, registers, dst, src)) {
+                        if (condFloats(cond, registers, regOffset + dst, regOffset + src)) {
                             ip = ins.extra();
                         }
                     }
                     case LCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if (condLongs(cond, registers, dst, src)) {
+                        if (condLongs(cond, registers, regOffset + dst, regOffset + src)) {
                             ip = ins.extra();
                         }
                     }
                     case DCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if (condDoubles(cond, registers, dst, src)) {
+                        if (condDoubles(cond, registers, regOffset + dst, regOffset + src)) {
                             ip = ins.extra();
                         }
                     }
                     case OCOND -> {
                         var src = Opcodes.registerIndex(ins.src());
                         var cond = Opcodes.registerType(ins.src());
-                        if (condObjects(cond, registers, dst, src)) {
+                        if (condObjects(cond, registers, regOffset + dst, regOffset + src)) {
                             ip = ins.extra();
                         }
                     }
                     case RETURN -> {
                         ip = savedRegisters.restoreIp();
+                        var returnOffset = savedRegisters.restoreRegisterOffset();
+                        ireg[returnOffset] = ireg[regOffset + dst]; // TODO - support non-ri0 return target, support non-int returns
+                        regOffset = returnOffset;
                     }
                     case COPY -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = ireg[ins.src()];
-                            case FLOAT_T -> freg[dst] = freg[ins.src()];
-                            case LONG_T -> lreg[dst] = lreg[ins.src()];
-                            case DOUBLE_T -> dreg[dst] = dreg[ins.src()];
-                            case OBJECT_T -> oreg[dst] = oreg[ins.src()];
+                            case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()];
+                            case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()];
+                            case LONG_T -> lreg[regOffset + dst] = lreg[regOffset + ins.src()];
+                            case DOUBLE_T -> dreg[regOffset + dst] = dreg[regOffset + ins.src()];
+                            case OBJECT_T -> oreg[regOffset + dst] = oreg[regOffset + ins.src()];
                         }
                     }
                     case SAVE -> {
                         switch (type) {
-                            case INT_T -> savedRegisters.save(ireg, dst, ins.src());
-                            case FLOAT_T -> savedRegisters.save(freg, dst, ins.src());
-                            case LONG_T -> savedRegisters.save(lreg, dst, ins.src());
-                            case DOUBLE_T -> savedRegisters.save(dreg, dst, ins.src());
-                            case OBJECT_T -> savedRegisters.save(oreg, dst, ins.src());
+                            case INT_T -> savedRegisters.save(ireg, regOffset + dst, regOffset + ins.src());
+                            case FLOAT_T -> savedRegisters.save(freg, regOffset + dst, regOffset + ins.src());
+                            case LONG_T -> savedRegisters.save(lreg, regOffset + dst, regOffset + ins.src());
+                            case DOUBLE_T -> savedRegisters.save(dreg, regOffset + dst, regOffset + ins.src());
+                            case OBJECT_T -> savedRegisters.save(oreg, regOffset + dst, regOffset + ins.src());
                         }
                     }
                     case RESTORE -> {
                         switch (type) {
-                            case INT_T -> savedRegisters.restore(ireg, dst, ins.src());
-                            case FLOAT_T -> savedRegisters.restore(freg, dst, ins.src());
-                            case LONG_T -> savedRegisters.restore(lreg, dst, ins.src());
-                            case DOUBLE_T -> savedRegisters.restore(dreg, dst, ins.src());
-                            case OBJECT_T -> savedRegisters.restore(oreg, dst, ins.src());
+                            case INT_T -> savedRegisters.restore(ireg, regOffset + dst, ins.src());
+                            case FLOAT_T -> savedRegisters.restore(freg, regOffset + dst, ins.src());
+                            case LONG_T -> savedRegisters.restore(lreg, regOffset + dst, ins.src());
+                            case DOUBLE_T -> savedRegisters.restore(dreg, regOffset + dst, ins.src());
+                            case OBJECT_T -> savedRegisters.restore(oreg, regOffset + dst, ins.src());
                         }
                     }
                     case IP -> {
                         ireg[dst] = ip;
                     }
                     case CALL -> {
+                        var symbol = exe.symbols()[ins.src()];
+
                         savedRegisters.saveIp(ip);
-                        ip = dst;
+                        //savedRegisters.saveIp(dst); // TODO - make return target variable
+                        savedRegisters.saveRegisterOffset(regOffset);
+                        regOffset += 6; // TODO - get this from symbol
+
+                        ip = symbol.offset();
                     }
                     case DCALL -> {
                         savedRegisters.saveIp(ip);
-                        ip = ireg[dst];
+                        ip = ireg[regOffset + dst];
                     }
                     case FCALL -> {
                         var symbol = exe.symbols()[dst];
@@ -336,12 +347,12 @@ public class HummingbirdVM {
                         func.call(this, currentFiber);
                     }
                     case DFCALL -> {
-                        var symbol = exe.symbols()[ireg[dst]];
+                        var symbol = exe.symbols()[ireg[regOffset + dst]];
                         var func = foreign[symbol.offset()];
                         func.call(this, currentFiber);
                     }
                     case SPAWN -> {
-                        oreg[dst] = spawn(ins.src(), registers);
+                        oreg[regOffset + dst] = spawn(ins.src(), registers);
                     }
                     case YIELD -> {
                         savedRegisters.saveIp(ip);
@@ -360,20 +371,20 @@ public class HummingbirdVM {
                         var src = Opcodes.registerIndex(ins.src());
                         var addr = ireg[ins.dst()];
                         switch (wType) {
-                            case INT_T -> memory.putInt(addr, ireg[src]);
-                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
-                            case LONG_T -> memory.putLong(addr, lreg[src]);
-                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
-                            case OBJECT_T -> objMemory[addr] = oreg[src];
+                            case INT_T -> memory.putInt(addr, ireg[regOffset + src]);
+                            case FLOAT_T -> memory.putFloat(addr, freg[regOffset + src]);
+                            case LONG_T -> memory.putLong(addr, lreg[regOffset + src]);
+                            case DOUBLE_T -> memory.putDouble(addr, dreg[regOffset + src]);
+                            case OBJECT_T -> objMemory[addr] = oreg[regOffset + src];
                         }
                     }
                     case READ -> {
                         switch (type) {
-                            case INT_T -> ireg[dst] = memory.getInt(ireg[ins.src()]);
-                            case FLOAT_T -> freg[dst] = memory.getFloat(ireg[ins.src()]);
-                            case LONG_T -> lreg[dst] = memory.getLong(ireg[ins.src()]);
-                            case DOUBLE_T -> dreg[dst] = memory.getDouble(ireg[ins.src()]);
-                            case OBJECT_T -> oreg[dst] = objMemory[ireg[ins.src()]];
+                            case INT_T -> ireg[regOffset + dst] = memory.getInt(ireg[regOffset + ins.src()]);
+                            case FLOAT_T -> freg[regOffset + dst] = memory.getFloat(ireg[regOffset + ins.src()]);
+                            case LONG_T -> lreg[regOffset + dst] = memory.getLong(ireg[regOffset + ins.src()]);
+                            case DOUBLE_T -> dreg[regOffset + dst] = memory.getDouble(ireg[regOffset + ins.src()]);
+                            case OBJECT_T -> oreg[regOffset + dst] = objMemory[ireg[regOffset + ins.src()]];
                         }
                     }
                     case SWRITE -> {
@@ -381,8 +392,8 @@ public class HummingbirdVM {
                         var src = Opcodes.registerIndex(ins.src());
                         var addr = ireg[ins.dst()];
                         long value = switch (wType) {
-                            case INT_T -> ireg[src];
-                            case LONG_T -> lreg[src];
+                            case INT_T -> ireg[regOffset + src];
+                            case LONG_T -> lreg[regOffset + src];
                             default -> 0;
                         };
                         switch (ins.extra()) {
@@ -392,7 +403,7 @@ public class HummingbirdVM {
                         }
                     }
                     case SREAD -> {
-                        var addr = ireg[ins.src()];
+                        var addr = ireg[regOffset + ins.src()];
                         int value = switch (ins.extra()) {
                             case BYTE_T -> memory.get(addr);
                             case CHAR_T -> memory.getChar(addr);
@@ -400,60 +411,60 @@ public class HummingbirdVM {
                             default -> 0;
                         };
                         switch (type) {
-                            case INT_T -> ireg[dst] = value;
-                            case LONG_T -> lreg[dst] = value;
+                            case INT_T -> ireg[regOffset + dst] = value;
+                            case LONG_T -> lreg[regOffset + dst] = value;
                         }
                     }
                     case GWRITE -> {
                         var wType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());
-                        var addr = ireg[ins.dst()];
-                        memory.put(ireg[ins.extra()], (byte) ins.extra1());
+                        var addr = ireg[regOffset + ins.dst()];
+                        memory.put(ireg[regOffset + ins.extra()], (byte) ins.extra1());
                         switch (wType) {
-                            case INT_T -> memory.putInt(addr, ireg[src]);
-                            case FLOAT_T -> memory.putFloat(addr, freg[src]);
-                            case LONG_T -> memory.putLong(addr, lreg[src]);
-                            case DOUBLE_T -> memory.putDouble(addr, dreg[src]);
-                            case OBJECT_T -> objMemory[addr] = oreg[src];
+                            case INT_T -> memory.putInt(addr, ireg[regOffset + src]);
+                            case FLOAT_T -> memory.putFloat(addr, freg[regOffset + src]);
+                            case LONG_T -> memory.putLong(addr, lreg[regOffset + src]);
+                            case DOUBLE_T -> memory.putDouble(addr, dreg[regOffset + src]);
+                            case OBJECT_T -> objMemory[addr] = oreg[regOffset + src];
                         }
                     }
                     case GREAD -> {
-                        var guard = memory.get(ireg[ins.extra()]);
+                        var guard = memory.get(ireg[regOffset + ins.extra()]);
                         if (guard != 0) {
                             ip = ins.extra1();
                         }
                         switch (type) {
-                            case INT_T -> ireg[dst] = memory.getInt(ireg[ins.src()]);
-                            case FLOAT_T -> freg[dst] = memory.getFloat(ireg[ins.src()]);
-                            case LONG_T -> lreg[dst] = memory.getLong(ireg[ins.src()]);
-                            case DOUBLE_T -> dreg[dst] = memory.getDouble(ireg[ins.src()]);
-                            case OBJECT_T -> oreg[dst] = objMemory[ireg[ins.src()]];
+                            case INT_T -> ireg[regOffset + dst] = memory.getInt(ireg[regOffset + ins.src()]);
+                            case FLOAT_T -> freg[regOffset + dst] = memory.getFloat(ireg[regOffset + ins.src()]);
+                            case LONG_T -> lreg[regOffset + dst] = memory.getLong(ireg[regOffset + ins.src()]);
+                            case DOUBLE_T -> dreg[regOffset + dst] = memory.getDouble(ireg[regOffset + ins.src()]);
+                            case OBJECT_T -> oreg[regOffset + dst] = objMemory[ireg[regOffset + ins.src()]];
                         }
                     }
                     case MEM_COPY -> {
-                        var start = ireg[ins.src()];
-                        var end = ireg[ins.extra()];
-                        memory.put(ireg[dst], memory.slice(start, end), 0, end - start);
+                        var start = ireg[regOffset + ins.src()];
+                        var end = ireg[regOffset + ins.extra()];
+                        memory.put(ireg[regOffset + dst], memory.slice(start, end), 0, end - start);
                     }
                     case OBJ_COPY -> {
-                        var start = ireg[ins.src()];
-                        var end = ireg[ins.extra()];
-                        System.arraycopy(objMemory, start, objMemory, ireg[dst], end - start);
+                        var start = ireg[regOffset + ins.src()];
+                        var end = ireg[regOffset + ins.extra()];
+                        System.arraycopy(objMemory, start, objMemory, ireg[regOffset + dst], end - start);
                     }
                     case ALLOCATED -> {
                         switch (ins.src()) {
-                            case OBJECT_T -> ireg[dst] = objMemory.length;
-                            default -> ireg[dst] = memory.capacity();
+                            case OBJECT_T -> ireg[regOffset + dst] = objMemory.length;
+                            default -> ireg[regOffset + dst] = memory.capacity();
                         }
                     }
                     case RESIZE -> {
-                        var size = Math.min(ireg[ins.dst()], limits.bytes());
+                        var size = Math.min(ireg[regOffset + ins.dst()], limits.bytes());
                         var next = ByteBuffer.allocate(size);
                         next.put(0, memory, 0, Math.min(size, memory.capacity()));
                         memory = next;
                     }
                     case OBJ_RESIZE -> {
-                        var size = Math.min(ireg[ins.dst()], limits.objects());
+                        var size = Math.min(ireg[regOffset + ins.dst()], limits.objects());
                         var next = new Object[size];
                         System.arraycopy(objMemory, 0, next, 0, Math.min(size, objMemory.length));
                         objMemory = next;
@@ -462,61 +473,67 @@ public class HummingbirdVM {
                         var sType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());
                         switch (sType) {
-                            case INT_T -> oreg[dst] = Integer.toString(ireg[src]);
-                            case FLOAT_T -> oreg[dst] = Float.toString(freg[src]);
-                            case LONG_T -> oreg[dst] = Long.toString(lreg[src]);
-                            case DOUBLE_T -> oreg[dst] = Double.toString(dreg[src]);
-                            case OBJECT_T -> oreg[dst] = objectToString(oreg[src]);
+                            case INT_T -> oreg[regOffset + dst] = Integer.toString(ireg[regOffset + src]);
+                            case FLOAT_T -> oreg[regOffset + dst] = Float.toString(freg[regOffset + src]);
+                            case LONG_T -> oreg[regOffset + dst] = Long.toString(lreg[regOffset + src]);
+                            case DOUBLE_T -> oreg[regOffset + dst] = Double.toString(dreg[regOffset + src]);
+                            case OBJECT_T -> oreg[regOffset + dst] = objectToString(oreg[regOffset + src]);
                         }
                     }
                     case STR_LEN -> {
-                        if (oreg[ins.src()] instanceof String s) {
-                            ireg[dst] = s.length();
+                        if (oreg[regOffset + ins.src()] instanceof String s) {
+                            ireg[regOffset + dst] = s.length();
                         } else {
-                            ireg[dst] = 0;
+                            ireg[regOffset + dst] = 0;
                         }
                     }
                     case CHAR_AT -> {
-                        if (oreg[ins.src()] instanceof String s) {
-                            ireg[dst] = s.charAt(ireg[ins.extra()]);
+                        if (oreg[regOffset + ins.src()] instanceof String s) {
+                            ireg[regOffset + dst] = s.charAt(ireg[regOffset + ins.extra()]);
                         } else {
-                            ireg[dst] = 0;
+                            ireg[regOffset + dst] = 0;
                         }
                     }
                     case TO_CHARS -> {
                         var charBuf = memory.asCharBuffer();
-                        var address = ireg[dst];
-                        if (oreg[ins.src()] instanceof String s) {
+                        var address = ireg[regOffset + dst];
+                        if (oreg[regOffset + ins.src()] instanceof String s) {
                             var chars = s.toCharArray();
                             memory.putInt(address, chars.length);
                             charBuf.put((address + 4) / 2, chars);
                         }
                     }
                     case FROM_CHARS -> {
-                        var address = ireg[ins.src()];
-                        oreg[dst] = readString(address);
+                        var address = ireg[regOffset + ins.src()];
+                        oreg[regOffset + dst] = readString(address);
                     }
                     case CONCAT -> {
-                        var a = oreg[ins.src()];
-                        var b = oreg[ins.extra()];
-                        oreg[dst] = objectToString(a) + objectToString(b);
+                        var a = oreg[regOffset + ins.src()];
+                        var b = oreg[regOffset + ins.extra()];
+                        oreg[regOffset + dst] = objectToString(a) + objectToString(b);
                     }
                     case SUB_STR -> {
-                        var start = ireg[ins.extra()];
-                        var end = ireg[ins.extra1()];
-                        var str = objectToString(oreg[ins.src()]);
+                        var start = ireg[regOffset + ins.extra()];
+                        var end = ireg[regOffset + ins.extra1()];
+                        var str = objectToString(oreg[regOffset + ins.src()]);
 
-                        oreg[dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
+                        oreg[regOffset + dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
                     }
                     case SCOMP -> {
-                        ireg[dst] = compareStrings(oreg, ins.src(), ins.extra());
+                        ireg[regOffset + dst] = compareStrings(oreg, regOffset + ins.src(), regOffset + ins.extra());
                     }
                     case TRAPS -> {
                         trapTableAddr = dst;
                         trapHandlerCount = ins.src();
                     }
                     case TRAP -> {
-                        ip = trap(ireg[dst], registers, ip);
+                        ip = trap(ireg[regOffset + dst], registers, ip);
+                    }
+                    case PARAM -> {
+                        ireg[regOffset + dst] = ireg[savedRegisters.callerRegisterOffset() + ins.src()];
+                    }
+                    case DEBUG -> {
+                        System.out.println("Debug @" + ip + ": " + ins.dst() + " " + ireg[regOffset + ins.src()]);
                     }
                 }
             } catch (Throwable t) {

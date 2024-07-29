@@ -5,12 +5,12 @@
 
 .code
   CONST ri1, 5
-  CALL $simple
-  RETURN
+  CALL 0
+  RETURN ri0
   simple:
     SAVE ri1, 2 # save ri1 & ri2 (ri0 is fine to stomp since that's where the return value goes)
     CONST ri2, 2
     COPY ri0, ri1
     ADD ri0, ri0, ri2
     RESTORE ri1, 2
-    RETURN
+    RETURN ri0

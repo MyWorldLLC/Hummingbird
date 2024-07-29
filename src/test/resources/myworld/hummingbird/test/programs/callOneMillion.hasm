@@ -5,14 +5,13 @@
 
 .code
     CONST ri2, 1000000
-    CONST ri1, 1
     CONST ri3, 0
   loop:
-    CALL $callOneMillion
+    CALL 0
     ADD ri3, ri3, ri0
     IFLT ri3, ri2, $loop
     COPY ri0, ri3
-    RETURN
+    RETURN ri0
   callOneMillion:
-    COPY ri0, ri1
-    RETURN
+    CONST ri0, 1
+    RETURN ri0

@@ -17,4 +17,4 @@
   loop:
     ADD ri0, ri0, ri1
     IFLT ri0, ri2, $loop
-    RETURN
+    RETURN ri0

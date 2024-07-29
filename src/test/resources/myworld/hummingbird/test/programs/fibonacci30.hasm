@@ -6,32 +6,31 @@
 .code
   # fib(30)
   CONST ri1, 30
-  CALL $fibonacci
-  RETURN
+  CALL 0
+  #DEBUG 0, ri0 # Root call, last return and happens once
+  RETURN ri0
   fibonacci:
-    SAVE ri1, 4 # save ri1-ri4
+    PARAM ri4, 1
     CONST ri2, 2
-    IFGE ri1, ri2, $recurse
-    COPY ri0, ri1
-    RESTORE ri1, 4
-    RETURN
+    IFGE ri4, ri2, $recurse
+    #DEBUG 1, ri4 # Simple case, n < 2
+    RETURN ri4
   recurse:
-    # Constants (ri1 = n)
+    # Constants (ri4 = n)
+    #DEBUG 2, ri4 # start recursion
     CONST ri2, 1
     CONST ri3, 2
 
-    # ri4 = n
-    COPY ri4, ri1
-
     #fib(n - 1)
     SUB ri1, ri4, ri2 # ri1 = n - 1
-    CALL $fibonacci
-    COPY ri2, ri0 # ri2 = fib(n - 1)
+    CALL 0
+
+    COPY ri5, ri0 # ri5 = fib(n - 1)
 
     #fib(n - 2)
     SUB ri1, ri4, ri3 # ri1 = n - 2
-    CALL $fibonacci
+    CALL 0
 
-    ADD ri0, ri0, ri2
-    RESTORE ri1, 4
-    RETURN
+    ADD ri0, ri0, ri5
+    #DEBUG 3, ri0 # end recursion
+    RETURN ri0

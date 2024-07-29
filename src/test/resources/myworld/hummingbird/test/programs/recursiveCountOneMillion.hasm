@@ -5,8 +5,8 @@
 
 .code
   CONST ri0, 0
-  CALL $countToAMillion
-  RETURN
+  CALL 0
+  RETURN ri0
   countToAMillion:
     SAVE ri1, 2 # save ri1, ri2
     CONST ri1, 1
@@ -14,7 +14,7 @@
     CONST ri2, 1000000
     IFLT ri0, ri2, $recurse
     RESTORE ri1, 2
-    RETURN
+    RETURN ri0
   recurse:
-    CALL $countToAMillion
-    RETURN
+    CALL 0
+    RETURN ri0

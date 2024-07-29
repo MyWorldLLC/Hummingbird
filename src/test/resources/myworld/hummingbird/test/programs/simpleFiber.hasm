@@ -3,4 +3,4 @@
     YIELD
   fiber:
     CONST ri0, 5
-    RETURN
+    RETURN ri0

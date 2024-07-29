@@ -25,4 +25,4 @@
     COPY  rf0, rf1       # x = temp
     SUB   ri0, ri0, ri2
     IFGT  ri0, ri1, $calc
-    RETURN
+    RETURN ri0
