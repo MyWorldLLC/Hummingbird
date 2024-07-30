@@ -264,8 +264,8 @@ public class Opcodes {
     }
 
     @Assembles("CALL")
-    public static Opcode CALL(@Immediate Integer label) {
-        return new Opcode(CALL, label);
+    public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol) {
+        return new Opcode(CALL, dst, symbol);
     }
 
     @Assembles("DCALL")

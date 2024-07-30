@@ -5,7 +5,7 @@
 
 .code
   CONST ri1, 5
-  CALL 0
+  CALL ri0, 0
   RETURN ri0
   simple:
     SAVE ri1, 2 # save ri1 & ri2 (ri0 is fine to stomp since that's where the return value goes)

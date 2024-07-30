@@ -85,6 +85,7 @@ public class HummingbirdVM {
         var fiber = new Fiber(registers, savedRegisters);
 
         savedRegisters.saveIp(entry);
+        savedRegisters.saveIp(0); // Return location
 
         runQueue.push(fiber);
 
@@ -292,9 +293,17 @@ public class HummingbirdVM {
                         }
                     }
                     case RETURN -> {
+                        var result = savedRegisters.restoreIp();
                         ip = savedRegisters.restoreIp();
                         var returnOffset = savedRegisters.restoreRegisterOffset();
-                        ireg[returnOffset] = ireg[regOffset + dst]; // TODO - support non-ri0 return target, support non-int returns
+                        switch (type){
+                            case INT_T -> ireg[returnOffset + result] = ireg[regOffset + dst];
+                            case FLOAT_T -> freg[returnOffset + result] = freg[regOffset + dst];
+                            case LONG_T -> lreg[returnOffset + result] = lreg[regOffset + dst];
+                            case DOUBLE_T -> dreg[returnOffset + result] = dreg[regOffset + dst];
+                            case OBJECT_T -> oreg[returnOffset + result] = oreg[regOffset + dst];
+                        }
+
                         regOffset = returnOffset;
                     }
                     case COPY -> {
@@ -331,7 +340,7 @@ public class HummingbirdVM {
                         var symbol = exe.symbols()[ins.src()];
 
                         savedRegisters.saveIp(ip);
-                        //savedRegisters.saveIp(dst); // TODO - make return target variable
+                        savedRegisters.saveIp(dst);
                         savedRegisters.saveRegisterOffset(regOffset);
                         regOffset += 6; // TODO - get this from symbol
 
