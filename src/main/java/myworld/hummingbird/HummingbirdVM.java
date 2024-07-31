@@ -107,18 +107,6 @@ public final class HummingbirdVM {
         return null;
     }
 
-    private int decodeOp(int[] ireg, int offset, int opFlags, int operand){
-        return switch (opFlags){
-            case 0x00 -> ireg[offset + operand];
-            case 0x01 -> operand;
-            default -> 0;
-        };
-    }
-
-    private void iSet(int[] ireg, int offset, int reg, int value){
-        ireg[offset + reg] = value;
-    }
-
     public void run(Fiber fiber) throws HummingbirdException {
 
         var registers = fiber.registers;
@@ -136,26 +124,27 @@ public final class HummingbirdVM {
         var stop = false;
         while (!stop && ip < instructions.length) {
             var ins = instructions[ip];
-            var type = Opcodes.registerType(ins.dst());
-            var dst = Opcodes.registerIndex(ins.dst());
-            var opcode = 0xFF & ins.opcode();
-            var opFlags = (0xFF00 & ins.opcode()) >> 8;
+            var dst = ins.dst();
+            var type = Opcodes.registerType(dst);
             ip++;
             try {
-                switch (opcode) {
+                switch (ins.opcode()) {
                     case CONST -> {
-                        switch (type) {
+                        ireg[regOffset + ins.dst()] = ins.src();
+                        //ireg[dst] = ins.src();
+                        /*switch (type) {
                             case INT_T -> ireg[regOffset + dst] = ins.src();
                             case FLOAT_T -> freg[regOffset + dst] = Float.intBitsToFloat(ins.src());
                             case LONG_T -> lreg[regOffset + dst] = longFromInts(ins.src(), ins.extra());
                             case DOUBLE_T -> dreg[regOffset + dst] = Double.longBitsToDouble(longFromInts(ins.src(), ins.extra()));
-                        }
+                        }*/
                     }
                     case NULL -> {
-                        oreg[regOffset + dst] = null;
+                        //oreg[regOffset + dst] = null;
                     }
                     case ADD -> {
-                        ireg[regOffset + dst] = ireg[regOffset + ins.src()] + ireg[regOffset + ins.extra()];
+                        add(ins, ireg, regOffset);
+                        //ireg[dst] = ireg[ins.src()] + ireg[ins.extra()];
                         //iSet(ireg, regOffset, dst, decodeOp(ireg, regOffset, opFlags, ins.src()) + decodeOp(ireg, regOffset, opFlags, ins.extra()));
                         //switch (type) {
                         //    case INT_T -> iSet(ireg, regOffset, dst, decodeOp(ireg, regOffset, opFlags, ins.src()) + decodeOp(ireg, regOffset, opFlags, ins.extra()));
@@ -165,6 +154,7 @@ public final class HummingbirdVM {
                         //}
                     }
                     case SUB -> {
+                        sub(ins, ireg, regOffset);
                         /*switch (type) {
                             case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()] - ireg[regOffset + ins.extra()];
                             case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()] - freg[regOffset + ins.extra()];
@@ -277,10 +267,8 @@ public final class HummingbirdVM {
                         ip = ireg[regOffset + dst];
                     }
                     case ICOND -> {
-                        var src = Opcodes.registerIndex(ins.src());
-                        var cond = Opcodes.registerType(ins.src());
-                        if (condInts(cond, registers, dst, src)) {
-                            ip = ins.extra();
+                        if(condInts(ins, ireg, regOffset)){
+                            ip = ins.extra1();
                         }
                     }
                     case FCOND -> {
@@ -315,17 +303,19 @@ public final class HummingbirdVM {
                         var result = savedRegisters.restoreIp();
                         ip = savedRegisters.restoreIp();
                         var returnOffset = savedRegisters.restoreRegisterOffset();
-                        switch (type){
+                        ireg[returnOffset + result] = ireg[regOffset + ins.dst()];
+                        /*switch (type){
                             case INT_T -> ireg[returnOffset + result] = ireg[regOffset + dst];
                             case FLOAT_T -> freg[returnOffset + result] = freg[regOffset + dst];
                             case LONG_T -> lreg[returnOffset + result] = lreg[regOffset + dst];
                             case DOUBLE_T -> dreg[returnOffset + result] = dreg[regOffset + dst];
                             case OBJECT_T -> oreg[returnOffset + result] = oreg[regOffset + dst];
-                        }
+                        }*/
 
                         regOffset = returnOffset;
                     }
                     case COPY -> {
+                        ireg[regOffset + dst] = ireg[regOffset + ins.src()];
                         /*switch (type) {
                             case INT_T -> ireg[regOffset + dst] = ireg[regOffset + ins.src()];
                             case FLOAT_T -> freg[regOffset + dst] = freg[regOffset + ins.src()];
@@ -359,28 +349,28 @@ public final class HummingbirdVM {
                         var symbol = exe.symbols()[ins.src()];
 
                         savedRegisters.saveIp(ip);
-                        savedRegisters.saveIp(dst);
+                        savedRegisters.saveIp(ins.dst());
                         savedRegisters.saveRegisterOffset(regOffset);
                         regOffset += symbol.registers();
 
                         ip = symbol.offset();
                     }
                     case DCALL -> {
-                        savedRegisters.saveIp(ip);
-                        ip = ireg[regOffset + dst];
+                        /*savedRegisters.saveIp(ip);
+                        ip = ireg[regOffset + dst];*/
                     }
                     case FCALL -> {
-                        var symbol = exe.symbols()[dst];
+                        /*var symbol = exe.symbols()[dst];
                         var func = foreign[symbol.offset()];
-                        func.call(this, currentFiber);
+                        func.call(this, currentFiber);*/
                     }
                     case DFCALL -> {
-                        var symbol = exe.symbols()[ireg[regOffset + dst]];
+                        /*var symbol = exe.symbols()[ireg[regOffset + dst]];
                         var func = foreign[symbol.offset()];
-                        func.call(this, currentFiber);
+                        func.call(this, currentFiber);*/
                     }
                     case SPAWN -> {
-                        oreg[regOffset + dst] = spawn(ins.src(), registers);
+                        //oreg[regOffset + dst] = spawn(ins.src(), registers);
                     }
                     case YIELD -> {
                         savedRegisters.saveIp(ip);
@@ -556,20 +546,28 @@ public final class HummingbirdVM {
                     }
                     case TRAP -> {
                         ip = trap(ireg[regOffset + dst], registers, ip);
-                    }
+                    }*/
                     case PARAM -> {
-                        ireg[regOffset + dst] = ireg[savedRegisters.callerRegisterOffset() + ins.src()];
+                        ireg[regOffset + ins.dst()] = ireg[savedRegisters.callerRegisterOffset() + ins.src()];
                     }
                     case DEBUG -> {
                         if(debugHandler != null){
                             debugHandler.debug(this, currentFiber, ins.dst(), ireg[regOffset + ins.src()]);
                         }
-                    }*/
+                    }
                 }
             } catch (Throwable t) {
                 ip = trap(t, registers, ip);
             }
         }
+    }
+
+    private static void add(Opcode ins, int[] ireg, int regOffset){
+        ireg[regOffset + ins.dst()] = ireg[regOffset + ins.src()] + ireg[regOffset + ins.extra()];
+    }
+
+    private static void sub(Opcode ins, int[] ireg, int regOffset){
+        ireg[regOffset + ins.dst()] = ireg[regOffset + ins.src()] - ireg[regOffset + ins.extra()];
     }
 
     public String readString(int address) {
@@ -644,26 +642,27 @@ public final class HummingbirdVM {
         return ((long) high << 32) | ((long) low);
     }
 
-    private static boolean condInts(int cond, Registers registers, int dst, int src) {
-        return registers.ireg()[dst] < registers.ireg()[src];
-        /*switch (cond) {
+    private static boolean condInts(Opcode ins, int[] ireg, int regOffset) {
+        var dst = regOffset + ins.dst();
+        var src = regOffset + ins.src();
+        switch (ins.extra()) {
             case COND_LT -> {
-                return registers.ireg()[dst] < registers.ireg()[src];
+                return ireg[dst] < ireg[src];
             }
             case COND_LE -> {
-                return registers.ireg()[dst] <= registers.ireg()[src];
+                return ireg[dst] <= ireg[src];
             }
             case COND_EQ -> {
-                return registers.ireg()[dst] == registers.ireg()[src];
+                return ireg[dst] == ireg[src];
             }
             case COND_GE -> {
-                return registers.ireg()[dst] >= registers.ireg()[src];
+                return ireg[dst] >= ireg[src];
             }
             case COND_GT -> {
-                return registers.ireg()[dst] > registers.ireg()[src];
+                return ireg[dst] > ireg[src];
             }
         }
-        return false;*/
+        return false;
     }
 
     private static boolean condFloats(int cond, Registers registers, int dst, int src) {
@@ -687,22 +686,24 @@ public final class HummingbirdVM {
         return false;
     }
 
-    private static boolean condLongs(int cond, Registers registers, int dst, int src) {
-        switch (cond) {
+    private static boolean condLongs(Opcode ins, int[] ireg, int regOffset) {
+        var dst = regOffset + ins.dst();
+        var src = regOffset + ins.src();
+        switch (ins.extra()) {
             case COND_LT -> {
-                return registers.lreg()[dst] < registers.lreg()[src];
+                return ireg[dst] < ireg[src];
             }
             case COND_LE -> {
-                return registers.lreg()[dst] <= registers.lreg()[src];
+                return ireg[dst] <= ireg[src];
             }
             case COND_EQ -> {
-                return registers.lreg()[dst] == registers.lreg()[src];
+                return ireg[dst] == ireg[src];
             }
             case COND_GE -> {
-                return registers.lreg()[dst] >= registers.lreg()[src];
+                return ireg[dst] >= ireg[src];
             }
             case COND_GT -> {
-                return registers.lreg()[dst] > registers.lreg()[src];
+                return ireg[dst] > ireg[src];
             }
         }
         return false;

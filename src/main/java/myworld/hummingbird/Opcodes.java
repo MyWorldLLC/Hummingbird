@@ -210,27 +210,27 @@ public class Opcodes {
 
     @Assembles("IFLT")
     public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_LT, registerIndex(src)), target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target);
     }
 
     @Assembles("IFLE")
     public static Opcode IFLE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_LE, registerIndex(src)), target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LE, target);
     }
 
     @Assembles("IFEQ")
     public static Opcode IFEQ(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_EQ, registerIndex(src)), target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_EQ, target);
     }
 
     @Assembles("IFGE")
     public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_GE, registerIndex(src)), target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target);
     }
 
     @Assembles("IFGT")
     public static Opcode IFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_GT, registerIndex(src)), target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GT, target);
     }
 
     @Assembles("IFNULL")
@@ -455,5 +455,31 @@ public class Opcodes {
             case OBJECT_T -> OCOND;
             default -> 0;
         };
+    }
+
+
+
+    public static long pack(int opcode, int ra, int rb, int rc, int immediate){
+        return ((long) opcode << 56) | ((long) ra << 48) | ((long) rb << 40) | ((long) rc << 32) | immediate;
+    }
+
+    public static int opcode(long opcode){
+        return (int)((opcode >> 56) & 0xFF);
+    }
+
+    public static int ra(long opcode){
+        return (int)((opcode >> 48) & 0xFF);
+    }
+
+    public static int rb(long opcode){
+        return (int)((opcode >> 40) & 0xFF);
+    }
+
+    public static int rc(long opcode){
+        return (int)((opcode >> 32) & 0xFF);
+    }
+
+    public static int immediate(long opcode){
+        return (int)(opcode & 0xFF);
     }
 }
