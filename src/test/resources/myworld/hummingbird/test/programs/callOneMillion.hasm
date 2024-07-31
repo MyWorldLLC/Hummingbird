@@ -2,6 +2,7 @@
     callOneMillion function $callOneMillion
         int
         parameters 0
+        registers 6
 
 .code
     CONST ri2, 1000000

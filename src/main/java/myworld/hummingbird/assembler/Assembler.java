@@ -153,11 +153,14 @@ public class Assembler {
                 var paramCounts = parseTypeCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
+                var registerCounts = parseTypeCounts(asm, "registers");
+                skipNewlinesAndComments(asm);
+
                 var index = builder.indexOfNextSymbol();
                 builder.appendSymbol(Symbol.empty(nameStr));
 
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams()));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts.toParams()));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 

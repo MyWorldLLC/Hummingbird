@@ -342,7 +342,7 @@ public class HummingbirdVM {
                         savedRegisters.saveIp(ip);
                         savedRegisters.saveIp(dst);
                         savedRegisters.saveRegisterOffset(regOffset);
-                        regOffset += 6; // TODO - get this from symbol
+                        regOffset += symbol.registers().iParam();
 
                         ip = symbol.offset();
                     }
