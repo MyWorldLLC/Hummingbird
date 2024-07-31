@@ -153,14 +153,14 @@ public class Assembler {
                 var paramCounts = parseTypeCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
-                var registerCounts = parseTypeCounts(asm, "registers");
+                var registerCounts = parseRegisterCount(asm);
                 skipNewlinesAndComments(asm);
 
                 var index = builder.indexOfNextSymbol();
                 builder.appendSymbol(Symbol.empty(nameStr));
 
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts.toParams()));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 
@@ -428,6 +428,19 @@ public class Assembler {
         }
 
         return new TypeCounts(nameStr, counts);
+    }
+
+    protected int parseRegisterCount(CharStream asm) throws AssemblyException {
+        var name = consume(asm, symbolName);
+        syntaxCheck(asm, name, "symbol register count");
+
+        if(!name.equals("registers")){
+            throw new AssemblyException("Wrong register count name: expected registers, got " + name);
+        }
+
+        skipWhitespace(asm);
+
+        return parseIntLiteral(consume(asm, intLiteral)).intValue();
     }
 
     protected Object parseStringLiteral(CharSequence sequence){
