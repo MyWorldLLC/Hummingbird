@@ -295,7 +295,7 @@ public class Assembler {
     protected Label parseLabelUse(CharStream asm) throws AssemblyException {
         var sequence = consume(asm, labelUse);
         // Trim leading '$'
-        if(sequence != null) return new Label(sequence.subSequence(1, sequence.length() - 1).toString());
+        if(sequence != null) return new Label(sequence.subSequence(1, sequence.length()).toString());
         throw new AssemblyException("Not a label use: " + asm.debug(10));
     }
 
@@ -436,7 +436,7 @@ public class Assembler {
         if(sequence == null) {
             return null;
         }
-        return sequence.subSequence(0, sequence.length() - 2).toString(); // Trim trailing colon
+        return sequence.subSequence(0, sequence.length() - 1).toString(); // Trim trailing colon
     }
 
     protected String getSectionName(CharStream asm){
