@@ -25,6 +25,7 @@ public class Assembler {
     protected final Pattern labelDef;
     protected final Pattern labelUse;
     protected final Pattern symbolName;
+    protected final Pattern symbolUse;
     protected final Pattern register;
     protected final Pattern instruction;
     protected final Pattern intLiteral;
@@ -44,6 +45,7 @@ public class Assembler {
         labelDef = Pattern.compile("\\w+:");
         labelUse = Pattern.compile("\\$\\w+");
         symbolName = Pattern.compile("\\D\\w+");
+        symbolUse = Pattern.compile("%\\D\\w+");
         register = Pattern.compile("r[ifldso]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
@@ -207,6 +209,13 @@ public class Assembler {
                         unresolvedLabels.add(label);
                         pending = true;
                     }
+                }else if(asm.peek() == '%'){
+                    var symbol = parseSymbolUse(asm);
+                    var index = builder.symbolIndex(symbol);
+                    if(index == -1){
+                        throw new AssemblyException("Symbol does not exist: " + symbol);
+                    }
+                    operands.add(index);
                 }else{
                     operands.add(parseOperand(asm));
                 }
@@ -288,6 +297,13 @@ public class Assembler {
         // Trim leading '$'
         if(sequence != null) return new Label(sequence.subSequence(1, sequence.length() - 1).toString());
         throw new AssemblyException("Not a label use: " + asm.debug(10));
+    }
+
+    protected String parseSymbolUse(CharStream asm) throws AssemblyException {
+        var sequence = consume(asm, symbolUse);
+        // Trim leading '%'
+        if(sequence != null) return sequence.subSequence(1, sequence.length()).toString();
+        throw new AssemblyException("Not a symbol use: " + asm.debug(10));
     }
 
     protected int parseRegister(CharStream asm) throws AssemblyException {

@@ -6,7 +6,7 @@
 .code
   # fib(30)
   CONST ri1, 30
-  CALL ri0, 0
+  CALL ri0, %fibonacci
   RETURN ri0
   fibonacci:
     PARAM ri4, 1
@@ -20,11 +20,11 @@
 
     #fib(n - 1)
     SUB ri1, ri4, ri2 # ri1 = n - 1
-    CALL ri5, 0
+    CALL ri5, %fibonacci
 
     #fib(n - 2)
     SUB ri1, ri4, ri3 # ri1 = n - 2
-    CALL ri0, 0
+    CALL ri0, %fibonacci
 
     ADD ri0, ri0, ri5
     RETURN ri0

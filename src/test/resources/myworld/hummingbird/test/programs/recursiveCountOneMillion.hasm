@@ -5,7 +5,7 @@
 
 .code
   CONST ri0, 0
-  CALL ri0, 0
+  CALL ri0, %countToAMillion
   RETURN ri0
   countToAMillion:
     SAVE ri1, 2 # save ri1, ri2
@@ -16,5 +16,5 @@
     RESTORE ri1, 2
     RETURN ri0
   recurse:
-    CALL ri0, 0
+    CALL ri0, %countToAMillion
     RETURN ri0

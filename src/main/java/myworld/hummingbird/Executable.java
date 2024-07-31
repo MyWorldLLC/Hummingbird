@@ -32,6 +32,15 @@ public record Executable(byte[] data, Symbol[] symbols, Opcode[] code) {
             return offset;
         }
 
+        public int symbolIndex(String symbol){
+            for(int i = 0; i < symbols.size(); i++){
+                if(symbols.get(i).name().equals(symbol)){
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         public void replaceSymbol(int index, Symbol symbol){
             symbols.set(index, symbol);
         }
