@@ -21,14 +21,6 @@ public class SavedRegisters {
         stack.clear();
     }
 
-    public void saveIp(int ip){
-        stack.push(ip);
-    }
-
-    public int restoreIp(){
-        return stack.pop();
-    }
-
     public void saveCallContext(int ip, int regOffset, int returnDest){
         stack.pushCtx(ip, regOffset, returnDest);
     }
