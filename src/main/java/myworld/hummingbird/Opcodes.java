@@ -2,9 +2,6 @@ package myworld.hummingbird;
 
 public class Opcodes {
 
-    public static final int BYTE_T = -3;
-    public static final int CHAR_T = -2;
-    public static final int SHORT_T = -1;
     public static final int INT_T = 0;
     public static final int FLOAT_T = 1;
     public static final int LONG_T = 2;
@@ -42,19 +39,19 @@ public class Opcodes {
     public static final int BURSHIFT = 0x0F;
 
     // ========= Conversion =========
-    public static final int CONV = 0x10;
+    public static final int L2D = 0x10;
+    public static final int D2L = 0x11;
 
     // ========= Flow =========
-    public static final int GOTO = 0x11;
-    public static final int JMP = 0x12;
-    public static final int ICOND = 0x13;
-    public static final int FCOND = 0x14;
-    public static final int LCOND = 0x15;
-    public static final int DCOND = 0x16;
-    public static final int OCOND = 0x17;
+    public static final int GOTO = 0x12;
+    public static final int JMP = 0x13;
+    public static final int ICOND = 0x14;
+    public static final int DCOND = 0x15;
 
     // ========= Registers =========
 
+    public static final int PARAM = 0x16;
+    public static final int PARAMS = 0x17;
     public static final int COPY = 0x18;
     public static final int SAVE = 0x19;
     public static final int RESTORE = 0x1A;
@@ -73,7 +70,7 @@ public class Opcodes {
     public static final int BLOCK = 0x23;
     public static final int UNBLOCK = 0x24;
 
-    // ========= Memory =========
+    // ========= Memory ========= // TODO - opcode renumbering
     public static final int WRITE = 0x25;
     public static final int READ = 0x26;
     public static final int SWRITE = 0x27;
@@ -100,13 +97,13 @@ public class Opcodes {
     public static final int TRAPS = 0x38;
     public static final int TRAP = 0x39;
 
-    public static final int PARAM = 0x3A;
+    // ========= Debug =========
     public static final int DEBUG = 0x3B;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
         if(src instanceof Integer i) {
-            return new Opcode(CONST, dst, i);
+            return new Opcode(CONST, dst, 0, i);
         }else if(src instanceof Float f){
             return new Opcode(CONST, dst, Float.floatToIntBits(f));
         }else if(src instanceof Long l){
@@ -193,10 +190,10 @@ public class Opcodes {
         return new Opcode(BURSHIFT, dst, registerIndex(a), registerIndex(b));
     }
 
-    @Assembles("CONV")
-    public static Opcode CONV(@Register Integer dst, @Register Integer src){
-        return new Opcode(CONV, dst, src);
-    }
+    //@Assembles("CONV")
+    //public static Opcode CONV(@Register Integer dst, @Register Integer src){
+    //    return new Opcode(CONV, dst, src);
+    //}
 
     @Assembles("GOTO")
     public static Opcode GOTO(@Immediate Integer dst){
@@ -413,6 +410,11 @@ public class Opcodes {
         return new Opcode(PARAM, dst, pIndex);
     }
 
+    @Assembles("PARAMS")
+    public static Opcode PARAMS(@Register Integer dst, @Immediate Integer pIndex, @Immediate Integer count){
+        return new Opcode(PARAMS, dst, pIndex, count);
+    }
+
     @Assembles("DEBUG")
     public static Opcode DEBUG(@Immediate Integer sentinel, @Register Integer src){
         return new Opcode(DEBUG, sentinel, src);
@@ -449,10 +451,7 @@ public class Opcodes {
     private static int conditionType(int dstReg){
         return switch (registerType(dstReg)){
             case INT_T -> ICOND;
-            case FLOAT_T -> FCOND;
-            case LONG_T -> LCOND;
             case DOUBLE_T -> DCOND;
-            case OBJECT_T -> OCOND;
             default -> 0;
         };
     }

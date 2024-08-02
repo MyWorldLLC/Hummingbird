@@ -1,6 +1,6 @@
 .symbols
     callOneMillion function $callOneMillion
-        int
+        long
         parameters 0
         registers 6
 
