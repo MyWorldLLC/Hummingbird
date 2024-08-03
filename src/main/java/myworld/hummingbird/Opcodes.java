@@ -282,7 +282,7 @@ public class Opcodes {
 
     @Assembles("SPAWN")
     public static Opcode SPAWN(@Register Integer dst, @Immediate Integer src){
-        return new Opcode(SPAWN, dst, src);
+        return new Opcode(SPAWN, registerIndex(dst), src);
     }
 
     @Assembles("YIELD")
