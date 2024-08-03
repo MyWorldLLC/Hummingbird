@@ -260,9 +260,14 @@ public class Opcodes {
         return new Opcode(IP, registerIndex(dst));
     }
 
+    @Assembles("CALL0")
+    public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol) {
+        return new Opcode(CALL, dst, symbol, 0, 0);
+    }
+
     @Assembles("CALL")
-    public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol) {
-        return new Opcode(CALL, dst, symbol);
+    public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol, @Register Integer src, @Immediate Integer count) {
+        return new Opcode(CALL, dst, symbol, src, count);
     }
 
     @Assembles("DCALL")

@@ -222,9 +222,14 @@ public final class HummingbirdVM {
                 case CALL -> {
                     var symbol = exe.symbols()[ins.src()];
 
+                    var callerOffset = regOffset;
+                    var callerParams = ins.extra();
                     savedRegisters.saveCallContext(ip, regOffset, ins.dst());
 
                     regOffset += symbol.registers();
+                    for(int i = 0; i < ins.extra1(); i++){
+                        reg[regOffset + i] = reg[callerOffset + callerParams + i];
+                    }
                     ip = symbol.offset();
                 }
                 case DCALL -> {

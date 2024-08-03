@@ -6,7 +6,7 @@
 
 .code
   CONST ri1, 5
-  CALL ri0, %simple
+  CALL0 ri0, %simple
   RETURN ri0
   simple:
     PARAMS ri1, 1, 1
