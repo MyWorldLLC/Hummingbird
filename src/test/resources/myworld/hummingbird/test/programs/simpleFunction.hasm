@@ -1,6 +1,6 @@
 .symbols
     simple function $simple
-        int
+        long
         parameters 1
         registers 6
 
@@ -9,9 +9,7 @@
   CALL ri0, %simple
   RETURN ri0
   simple:
-    SAVE ri1, 2 # save ri1 & ri2 (ri0 is fine to stomp since that's where the return value goes)
+    PARAMS ri1, 1, 1
     CONST ri2, 2
-    COPY ri0, ri1
-    ADD ri0, ri0, ri2
-    RESTORE ri1, 2
+    ADD ri0, ri1, ri2
     RETURN ri0
