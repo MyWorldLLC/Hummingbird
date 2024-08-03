@@ -18,5 +18,4 @@
   loop:
     ADD ri0, ri0, ri1
     IFLT ri0, ri2, $loop
-    #DEBUG 0, ri0
     RETURN ri0
