@@ -150,7 +150,7 @@ public class Assembler {
                 var rType = parseReturnTypeFlag(asm);
                 skipNewlinesAndComments(asm);
 
-                var paramCounts = parseTypeCounts(asm, "parameters");
+                var paramCounts = parseParamCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
                 var registerCounts = parseRegisterCount(asm);
@@ -160,17 +160,17 @@ public class Assembler {
                 builder.appendSymbol(Symbol.empty(nameStr));
 
                 labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
-                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts.toParams(), registerCounts));
+                    builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts, registerCounts));
                 });
             }else if(type == Symbol.Type.FOREIGN){
 
                 var rType = parseReturnTypeFlag(asm);
                 skipNewlinesAndComments(asm);
 
-                var paramCounts = parseTypeCounts(asm, "parameters");
+                var paramCounts = parseParamCounts(asm, "parameters");
                 skipNewlinesAndComments(asm);
 
-                builder.appendSymbol(Symbol.foreignFunction(nameStr, foreignIndex, rType, paramCounts.toParams()));
+                builder.appendSymbol(Symbol.foreignFunction(nameStr, foreignIndex, rType, paramCounts));
                 foreignIndex++;
             }
             skipNewlinesAndComments(asm);
@@ -407,7 +407,7 @@ public class Assembler {
         return TypeFlag.valueOf(type.toString().toUpperCase());
     }
 
-    protected TypeCounts parseTypeCounts(CharStream asm, String requiredName) throws AssemblyException {
+    protected int parseParamCounts(CharStream asm, String requiredName) throws AssemblyException {
         var name = consume(asm, symbolName);
         syntaxCheck(asm, name, "symbol type count");
 
@@ -418,16 +418,7 @@ public class Assembler {
 
         skipWhitespace(asm);
 
-        var counts = TypeCounts.makeTypeCountArray();
-        int parsed = 0;
-        while(parsed < counts.length && !asm.peek(newline, comment, symbolName)){
-            var count = parseIntLiteral(consume(asm, intLiteral));
-            counts[parsed] = count.intValue();
-            parsed++;
-            skipWhitespace(asm);
-        }
-
-        return new TypeCounts(nameStr, counts);
+        return parseIntLiteral(consume(asm, intLiteral)).intValue();
     }
 
     protected int parseRegisterCount(CharStream asm) throws AssemblyException {
