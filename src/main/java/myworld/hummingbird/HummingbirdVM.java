@@ -235,9 +235,14 @@ public final class HummingbirdVM {
                 case DCALL -> {
                     var symbol = exe.symbols()[(int) reg[regOffset + ins.src()]];
 
+                    var callerOffset = regOffset;
+                    var callerParams = ins.extra();
                     savedRegisters.saveCallContext(ip, regOffset, ins.dst());
 
                     regOffset += symbol.registers();
+                    for(int i = 0; i < ins.extra1(); i++){
+                        reg[regOffset + i] = reg[callerOffset + callerParams + i];
+                    }
                     ip = symbol.offset();
                 }
                 case FCALL -> {
