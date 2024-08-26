@@ -103,14 +103,14 @@ public class Opcodes {
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
         if(src instanceof Integer i) {
-            return new Opcode(CONST, dst, 0, i);
+            return new Opcode(CONST, dst, 0, i, 0, new ConstImpl(i));
         }else if(src instanceof Float f){
-            return new Opcode(CONST, dst, Float.floatToIntBits(f));
+            return new Opcode(CONST, dst, Float.floatToIntBits(f), 0, 0, new ConstImpl(Float.floatToIntBits(f)));
         }else if(src instanceof Long l){
-            return new Opcode(CONST, dst, highBits(l), lowBits(l));
+            return new Opcode(CONST, dst, highBits(l), lowBits(l), 0, new ConstImpl(l));
         } else if(src instanceof Double d){
             var l = Double.doubleToLongBits(d);
-            return new Opcode(CONST, dst, highBits(l), lowBits(l));
+            return new Opcode(CONST, dst, highBits(l), lowBits(l), 0, new ConstImpl(l));
         }
         throw new IllegalArgumentException("Invalid operand type: " + src.getClass());
     }
@@ -122,7 +122,7 @@ public class Opcodes {
 
     @Assembles("ADD")
     public static Opcode ADD(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(ADD, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(ADD, dst, registerIndex(a), registerIndex(b), 0, new AddImpl());
     }
 
     @Assembles("SUB")
@@ -207,7 +207,7 @@ public class Opcodes {
 
     @Assembles("IFLT")
     public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new IfltImpl());
     }
 
     @Assembles("IFLE")
@@ -237,7 +237,7 @@ public class Opcodes {
 
     @Assembles("RETURN")
     public static Opcode RETURN(@Register Integer value){
-        return new Opcode(RETURN, value);
+        return new Opcode(RETURN, value, 0, 0, 0, new ReturnImpl());
     }
 
     @Assembles("COPY")

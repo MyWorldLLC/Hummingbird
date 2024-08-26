@@ -116,18 +116,20 @@ public final class HummingbirdVM {
         var regOffset = callCtx.registerOffset;
 
         var instructions = exe.code();
-        while (ip < instructions.length) {
+        while (ip < instructions.length - 1) {
             var ins = instructions[ip];
-            ip++;
+            ip = ins.impl().apply(ins, reg, regOffset, ip + 1, instructions[ip + 1]);
+            /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {
-                    reg[regOffset + ins.dst()] = longFromInts(ins.src(), ins.extra());
+                    ip = ins.impl().apply(ins, reg, regOffset, ip);
                 }
                 case NULL -> {
                     objMemory[regOffset + ins.dst()] = null;
                 }
                 case ADD -> {
-                    add(ins, reg, regOffset);
+                    //add(ins, reg, regOffset);
+                    ins.impl().apply(ins, reg, regOffset, ip);
                 }
                 case SUB -> {
                     sub(ins, reg, regOffset);
@@ -189,9 +191,10 @@ public final class HummingbirdVM {
                     ip = (int) reg[regOffset + ins.dst()];
                 }
                 case ICOND -> {
-                    if (condLongs(ins, reg, regOffset)) {
-                        ip = ins.extra1();
-                    }
+                    ip = ins.impl().apply(ins, reg, regOffset, ip);
+                    //if (condLongs(ins, reg, regOffset)) {
+                    //    ip = ins.extra1();
+                    //}
                 }
                 case DCOND -> {
                     if (condDoubles(ins, reg, regOffset)) {
@@ -294,7 +297,7 @@ public final class HummingbirdVM {
                 }
                 case UNBLOCK -> {
                     ((Fiber) objMemory[(int) reg[regOffset + ins.dst()]]).setState(Fiber.State.RUNNABLE);
-                }
+                }*/
                     /*
                     case WRITE -> {
                         var wType = Opcodes.registerType(ins.src());
@@ -459,12 +462,12 @@ public final class HummingbirdVM {
                     case TRAP -> {
                         ip = trap(ireg[regOffset + dst], registers, ip);
                     }*/
-                    case DEBUG -> {
+                    /*case DEBUG -> {
                         if(debugHandler != null){
                             debugHandler.debug(this, currentFiber, ins.dst(), reg[regOffset + ins.src()]);
                         }
                     }
-            }
+            }*/
         }
     }
 
