@@ -8,14 +8,16 @@ public class Fiber {
     }
 
     protected State state;
-    protected final long[] registers;
-    protected final SavedRegisters savedRegisters;
+    public final long[] registers;
+    public final SavedRegisters savedRegisters;
 
-    protected int regOffset;
-    protected CallContext callCtx = new CallContext();
+    public int regOffset;
+    public CallContext callCtx = new CallContext();
+    public final Executable exe;
 
-    public Fiber(long[] registers, SavedRegisters savedRegisters){
+    public Fiber(Executable exe, long[] registers, SavedRegisters savedRegisters){
         state = State.RUNNABLE;
+        this.exe = exe;
         this.registers = registers;
         this.savedRegisters = savedRegisters;
     }

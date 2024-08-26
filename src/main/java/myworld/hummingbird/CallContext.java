@@ -2,8 +2,8 @@ package myworld.hummingbird;
 
 public class CallContext {
 
-    protected int ip;
-    protected int returnDest;
-    protected int registerOffset;
+    public int ip;
+    public int returnDest;
+    public int registerOffset;
 
 }

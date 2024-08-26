@@ -1,4 +1,7 @@
-package myworld.hummingbird;
+package myworld.hummingbird.instructions;
+
+import myworld.hummingbird.Fiber;
+import myworld.hummingbird.Opcode;
 
 public class AddImpl implements OpcodeImpl {
     @Override

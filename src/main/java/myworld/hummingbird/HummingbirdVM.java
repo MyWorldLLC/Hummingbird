@@ -84,7 +84,7 @@ public final class HummingbirdVM {
         savedRegisters.saveCallContext(Integer.MAX_VALUE, 0, 0);
         savedRegisters.saveCallContext(entry, 0, 0);
 
-        var fiber = new Fiber(registers.reg(), savedRegisters);
+        var fiber = new Fiber(exe, registers.reg(), savedRegisters);
 
         runQueue.push(fiber);
 

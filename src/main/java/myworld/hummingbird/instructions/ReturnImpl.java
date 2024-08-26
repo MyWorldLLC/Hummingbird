@@ -1,4 +1,7 @@
-package myworld.hummingbird;
+package myworld.hummingbird.instructions;
+
+import myworld.hummingbird.Fiber;
+import myworld.hummingbird.Opcode;
 
 public class ReturnImpl implements OpcodeImpl {
     @Override
@@ -12,8 +15,7 @@ public class ReturnImpl implements OpcodeImpl {
 
         reg[returnOffset + result] = reg[regOffset + ins.dst()];
 
-        ip = callCtx.ip;
         fiber.regOffset = returnOffset;
-        return ip;
+        return callCtx.ip;
     }
 }

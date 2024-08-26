@@ -1,5 +1,7 @@
 package myworld.hummingbird;
 
+import myworld.hummingbird.instructions.*;
+
 public class Opcodes {
 
     public static final int INT_T = 0;
@@ -242,7 +244,7 @@ public class Opcodes {
 
     @Assembles("COPY")
     public static Opcode COPY(@Register Integer dst, @Register Integer src) {
-        return new Opcode(COPY, dst, registerIndex(src));
+        return new Opcode(COPY, dst, registerIndex(src), 0, 0, new CopyImpl());
     }
 
     @Assembles("SAVE")
@@ -262,7 +264,7 @@ public class Opcodes {
 
     @Assembles("CALL0")
     public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol) {
-        return new Opcode(CALL, dst, symbol, 0, 0);
+        return new Opcode(CALL, dst, symbol, 0, 0, new CallImpl());
     }
 
     @Assembles("CALL")
