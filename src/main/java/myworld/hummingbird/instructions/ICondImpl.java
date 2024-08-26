@@ -1,13 +1,20 @@
-package myworld.hummingbird;
+package myworld.hummingbird.instructions;
+
+import myworld.hummingbird.Opcode;
 
 import static myworld.hummingbird.Opcodes.*;
 
-public class IfltImpl implements OpcodeImpl {
+public class ICondImpl extends InstructionImpl {
+
+    public ICondImpl(Opcode ins, int ip, InstructionImpl next) {
+        super(ins, ip, next);
+    }
 
     @Override
-    public int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode next) {
+    public int apply(long[] reg, int regOffset) {
         var dst = regOffset + ins.dst();
         var src = regOffset + ins.src();
+        var ip = next.ip;
         var result = switch (ins.extra()) {
             case COND_LT -> reg[dst] < reg[src];
             case COND_LE -> reg[dst] <= reg[src];

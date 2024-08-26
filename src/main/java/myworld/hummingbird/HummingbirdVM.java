@@ -1,5 +1,7 @@
 package myworld.hummingbird;
 
+import myworld.hummingbird.instructions.*;
+
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
@@ -115,10 +117,10 @@ public final class HummingbirdVM {
         var ip = callCtx.ip;
         var regOffset = callCtx.registerOffset;
 
-        var instructions = exe.code();
-        while (ip < instructions.length - 1) {
+        var instructions = loadInstructions(exe.code());
+        while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(ins, reg, regOffset, ip + 1, instructions[ip + 1]);
+            ip = ins.apply(reg, regOffset);
             /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {
@@ -675,6 +677,24 @@ public final class HummingbirdVM {
 
     public static void copyRegisters(Registers from, Registers to) {
         System.arraycopy(from.reg(), 0, to.reg(), 0, from.reg().length);
+    }
+
+    private static InstructionImpl[] loadInstructions(Opcode[] code){
+        var instructions = new InstructionImpl[code.length];
+        InstructionImpl next = new TerminalImpl(null, code.length, null);
+        for(int ip = code.length - 1; ip >= 0; ip--){
+            var opcode = code[ip];
+            var instruction = switch (opcode.opcode()){
+                case CONST -> new ConstImpl(opcode, ip, next, longFromInts(opcode.src(), opcode.extra()));
+                case ADD -> new AddImpl(opcode, ip, next);
+                case ICOND -> new ICondImpl(opcode, ip, next);
+                case RETURN -> new ReturnImpl(opcode, ip, next);
+                default -> throw new IllegalArgumentException("Unsupported opcode " + opcode.opcode());
+            };
+            instructions[ip] = instruction;
+            next = instruction;
+        }
+        return instructions;
     }
 
 }
