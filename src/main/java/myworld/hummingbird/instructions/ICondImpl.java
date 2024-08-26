@@ -11,10 +11,9 @@ public class ICondImpl extends InstructionImpl {
     }
 
     @Override
-    public int apply(long[] reg, int regOffset) {
+    public int apply(long[] reg, int regOffset, int ip, InstructionImpl[] instructions) {
         var dst = regOffset + ins.dst();
         var src = regOffset + ins.src();
-        var ip = next.ip;
         var result = switch (ins.extra()) {
             case COND_LT -> reg[dst] < reg[src];
             case COND_LE -> reg[dst] <= reg[src];
@@ -24,8 +23,8 @@ public class ICondImpl extends InstructionImpl {
             default -> false;
         };
         if(result){
-            ip = ins.extra1();
+            return ins.extra1();
         }
-        return ip;
+        return ip + 1;
     }
 }

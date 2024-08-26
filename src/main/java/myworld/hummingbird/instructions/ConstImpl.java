@@ -12,8 +12,8 @@ public class ConstImpl extends InstructionImpl {
     }
 
     @Override
-    public int apply(long[] reg, int regOffset) {
+    public int apply(long[] reg, int regOffset, int ip, InstructionImpl[] instructions) {
         reg[regOffset + ins.dst()] = value;
-        return next.apply(reg, regOffset);
+        return instructions[ip + 1].apply(reg, regOffset, ip + 1, instructions);
     }
 }

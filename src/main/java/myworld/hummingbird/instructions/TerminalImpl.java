@@ -8,7 +8,7 @@ public class TerminalImpl extends InstructionImpl {
     }
 
     @Override
-    public int apply(long[] reg, int regOffset) {
-        return ip;
+    public int apply(long[] reg, int regOffset, int ip, InstructionImpl[] instructions) {
+        return instructions.length;
     }
 }

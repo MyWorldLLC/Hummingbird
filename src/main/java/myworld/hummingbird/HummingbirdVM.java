@@ -120,7 +120,7 @@ public final class HummingbirdVM {
         var instructions = loadInstructions(exe.code());
         while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.apply(reg, regOffset);
+            ip = ins.apply(reg, regOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {

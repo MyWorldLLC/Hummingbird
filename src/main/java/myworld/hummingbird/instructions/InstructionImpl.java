@@ -14,5 +14,5 @@ public abstract class InstructionImpl {
         this.next = next;
     }
 
-    public abstract int apply(long[] reg, int regOffset);
+    public abstract int apply(long[] reg, int regOffset, int ip, InstructionImpl[] instructions);
 }

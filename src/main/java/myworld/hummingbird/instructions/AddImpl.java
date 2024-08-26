@@ -16,8 +16,8 @@ public class AddImpl extends InstructionImpl {
     }
 
     @Override
-    public int apply(long[] registers, int offset) {
+    public int apply(long[] registers, int offset, int ip, InstructionImpl[] instructions) {
         registers[offset + dst] = registers[offset + src] + registers[offset + extra];
-        return next.apply(registers, offset);
+        return instructions[ip + 1].apply(registers, offset, ip + 1, instructions);
     }
 }

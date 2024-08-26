@@ -9,7 +9,7 @@ public class ReturnImpl extends InstructionImpl {
     }
 
     @Override
-    public int apply(long[] reg, int regOffset) {
-        return next.ip; // TODO
+    public int apply(long[] reg, int regOffset, int ip, InstructionImpl[] instructions) {
+        return instructions.length; // TODO
     }
 }
