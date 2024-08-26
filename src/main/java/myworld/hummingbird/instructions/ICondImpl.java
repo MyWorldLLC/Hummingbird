@@ -5,7 +5,7 @@ import myworld.hummingbird.Opcode;
 
 import static myworld.hummingbird.Opcodes.*;
 
-public class IfltImpl implements OpcodeImpl {
+public class ICondImpl implements OpcodeImpl {
 
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {

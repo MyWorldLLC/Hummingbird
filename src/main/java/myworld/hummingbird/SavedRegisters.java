@@ -25,8 +25,8 @@ public class SavedRegisters {
         stack.pushCtx(ip, regOffset, returnDest);
     }
 
-    public void restoreCallContext(CallContext ctx){
-        stack.popCtx(ctx);
+    public void restoreCallContext(Fiber fiber){
+        stack.popCtx(fiber);
     }
 
     public int callerRegisterOffset(){

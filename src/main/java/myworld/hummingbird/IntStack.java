@@ -35,11 +35,11 @@ public final class IntStack {
         index += 3;
     }
 
-    public void popCtx(CallContext ctx){
+    public void popCtx(Fiber fiber){
         var i = index;
-        ctx.returnDest = ints[i - 1];
-        ctx.registerOffset = ints[i - 2];
-        ctx.ip = ints[i - 3];
+        fiber.returnDest = ints[i - 1];
+        fiber.registerOffset = ints[i - 2];
+        fiber.ip = ints[i - 3];
         index -= 3;
     }
 

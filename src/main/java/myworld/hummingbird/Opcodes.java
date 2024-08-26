@@ -129,7 +129,7 @@ public class Opcodes {
 
     @Assembles("SUB")
     public static Opcode SUB(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(SUB, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(SUB, dst, registerIndex(a), registerIndex(b), 0, new SubImpl());
     }
 
     @Assembles("MUL")
@@ -209,7 +209,7 @@ public class Opcodes {
 
     @Assembles("IFLT")
     public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new IfltImpl());
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new ICondImpl());
     }
 
     @Assembles("IFLE")
@@ -224,7 +224,7 @@ public class Opcodes {
 
     @Assembles("IFGE")
     public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target);
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target, new ICondImpl());
     }
 
     @Assembles("IFGT")
@@ -269,7 +269,7 @@ public class Opcodes {
 
     @Assembles("CALL")
     public static Opcode CALL(@Register Integer dst, @Immediate Integer symbol, @Register Integer src, @Immediate Integer count) {
-        return new Opcode(CALL, dst, symbol, src, count);
+        return new Opcode(CALL, dst, symbol, src, count, new CallImpl());
     }
 
     @Assembles("DCALL")

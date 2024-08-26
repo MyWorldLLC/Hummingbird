@@ -1,6 +1,6 @@
 package myworld.hummingbird;
 
-public class Fiber {
+public final class Fiber {
 
     public enum State {
         RUNNABLE,
@@ -9,17 +9,21 @@ public class Fiber {
 
     protected State state;
     public final long[] registers;
+    private final IntStack callStack;
     public final SavedRegisters savedRegisters;
 
-    public int regOffset;
-    public CallContext callCtx = new CallContext();
     public final Executable exe;
+
+    public int ip;
+    public int returnDest;
+    public int registerOffset;
 
     public Fiber(Executable exe, long[] registers, SavedRegisters savedRegisters){
         state = State.RUNNABLE;
         this.exe = exe;
         this.registers = registers;
         this.savedRegisters = savedRegisters;
+        callStack = new IntStack(1000);
     }
 
     public void setState(State state){
@@ -36,5 +40,13 @@ public class Fiber {
 
     public SavedRegisters getSavedRegisters() {
         return savedRegisters;
+    }
+
+    public void saveCallContext(int ip, int regOffset, int returnDest){
+        callStack.pushCtx(ip, regOffset, returnDest);
+    }
+
+    public void restoreCallContext(){
+        callStack.popCtx(this);
     }
 }

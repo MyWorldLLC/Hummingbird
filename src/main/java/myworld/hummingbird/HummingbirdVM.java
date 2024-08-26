@@ -81,10 +81,9 @@ public final class HummingbirdVM {
 
         var savedRegisters = new SavedRegisters(1000);
 
-        savedRegisters.saveCallContext(Integer.MAX_VALUE, 0, 0);
-        savedRegisters.saveCallContext(entry, 0, 0);
-
         var fiber = new Fiber(exe, registers.reg(), savedRegisters);
+        fiber.saveCallContext(Integer.MAX_VALUE, 0, 0);
+        fiber.saveCallContext(entry, 0, 0);
 
         runQueue.push(fiber);
 
@@ -105,15 +104,13 @@ public final class HummingbirdVM {
 
     public void run(Fiber fiber) throws HummingbirdException {
 
-        var callCtx = fiber.callCtx;
-        var savedRegisters = fiber.savedRegisters;
-        savedRegisters.restoreCallContext(callCtx);
-        var ip = callCtx.ip;
+        fiber.restoreCallContext();
+        var ip = fiber.ip;
 
         var instructions = exe.code();
         while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(fiber, ins, fiber.regOffset, ip, instructions);
+            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {

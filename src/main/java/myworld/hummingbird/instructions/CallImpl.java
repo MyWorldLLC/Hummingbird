@@ -10,7 +10,7 @@ public class CallImpl implements OpcodeImpl {
 
         var callerOffset = regOffset;
         var callerParams = ins.extra();
-        fiber.savedRegisters.saveCallContext(ip + 1, regOffset, ins.dst());
+        fiber.saveCallContext(ip + 1, regOffset, ins.dst());
 
         var reg = fiber.registers;
 
@@ -18,10 +18,10 @@ public class CallImpl implements OpcodeImpl {
         for(int i = 0; i < ins.extra1(); i++){
             reg[regOffset + i] = reg[callerOffset + callerParams + i];
         }
-        fiber.regOffset = regOffset;
-        fiber.callCtx.registerOffset = regOffset;
-        fiber.callCtx.ip = symbol.offset();
-        //System.out.println("CALL " + symbol.offset());
-        return symbol.offset();
+
+        fiber.registerOffset = regOffset;
+        ip = symbol.offset();
+        fiber.ip = ip;
+        return ip;
     }
 }
