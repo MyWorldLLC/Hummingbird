@@ -19,4 +19,3 @@
     ADD ri0, ri0, ri1
     IFLT ri0, ri2, $loop
     RETURN ri0
-    RETURN ri0

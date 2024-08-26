@@ -59,8 +59,8 @@ public final class HummingbirdVM {
         }
 
         return switch (rType) {
-            case LONG -> registers.reg()[0];
-            case OBJECT -> objMemory[(int)registers.reg()[0]];
+            case LONG -> registers[0];
+            case OBJECT -> objMemory[(int)registers[0]];
             case VOID -> null;
             default -> null; // TODO - remove obsoleted type flags
         };
@@ -84,14 +84,14 @@ public final class HummingbirdVM {
         savedRegisters.saveCallContext(Integer.MAX_VALUE, 0, 0);
         savedRegisters.saveCallContext(entry, 0, 0);
 
-        var fiber = new Fiber(registers, savedRegisters);
+        var fiber = new Fiber(registers.reg(), savedRegisters);
 
         runQueue.push(fiber);
 
         return fiber;
     }
 
-    protected Fiber nextFiber() {
+    private Fiber nextFiber() {
         var it = runQueue.iterator();
         while (it.hasNext()) {
             var fiber = it.next();
@@ -105,20 +105,15 @@ public final class HummingbirdVM {
 
     public void run(Fiber fiber) throws HummingbirdException {
 
-        var callCtx = new CallContext();
-
-        var registers = fiber.registers;
-        var reg = registers.reg();
-
+        var callCtx = fiber.callCtx;
         var savedRegisters = fiber.savedRegisters;
         savedRegisters.restoreCallContext(callCtx);
         var ip = callCtx.ip;
-        var regOffset = callCtx.registerOffset;
 
         var instructions = exe.code();
         while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(ins, reg, regOffset, ip, instructions);
+            ip = ins.impl().apply(fiber, ins, fiber.regOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {

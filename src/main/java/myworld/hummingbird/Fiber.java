@@ -8,10 +8,13 @@ public class Fiber {
     }
 
     protected State state;
-    protected final Registers registers;
+    protected final long[] registers;
     protected final SavedRegisters savedRegisters;
 
-    public Fiber(Registers registers, SavedRegisters savedRegisters){
+    protected int regOffset;
+    protected CallContext callCtx = new CallContext();
+
+    public Fiber(long[] registers, SavedRegisters savedRegisters){
         state = State.RUNNABLE;
         this.registers = registers;
         this.savedRegisters = savedRegisters;
@@ -25,7 +28,7 @@ public class Fiber {
         return state;
     }
 
-    public Registers getRegisters() {
+    public long[] getRegisters() {
         return registers;
     }
 

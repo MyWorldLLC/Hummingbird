@@ -1,10 +1,10 @@
 package myworld.hummingbird;
 
 public interface OpcodeImpl {
-    int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode[] instructions);
+    int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions);
 
-    static int chainNext(long[] reg, int regOffset, int ip, Opcode[] instructions){
+    static int chainNext(Fiber fiber, int regOffset, int ip, Opcode[] instructions){
         var next = instructions[ip + 1];
-        return next.impl().apply(next, reg, regOffset, ip + 1, instructions);
+        return next.impl().apply(fiber, next, regOffset, ip + 1, instructions);
     }
 }
