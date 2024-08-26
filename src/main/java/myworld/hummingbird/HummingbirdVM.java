@@ -116,9 +116,9 @@ public final class HummingbirdVM {
         var regOffset = callCtx.registerOffset;
 
         var instructions = exe.code();
-        while (ip < instructions.length - 1) {
+        while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(ins, reg, regOffset, ip + 1, instructions[ip + 1]);
+            ip = ins.impl().apply(ins, reg, regOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
                 case CONST -> {

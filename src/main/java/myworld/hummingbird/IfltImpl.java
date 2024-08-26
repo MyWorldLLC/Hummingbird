@@ -5,7 +5,7 @@ import static myworld.hummingbird.Opcodes.*;
 public class IfltImpl implements OpcodeImpl {
 
     @Override
-    public int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode next) {
+    public int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode[] instructions) {
         var dst = regOffset + ins.dst();
         var src = regOffset + ins.src();
         var result = switch (ins.extra()) {
@@ -17,8 +17,8 @@ public class IfltImpl implements OpcodeImpl {
             default -> false;
         };
         if(result){
-            ip = ins.extra1();
+            return ins.extra1();
         }
-        return ip;
+        return ip + 1;
     }
 }

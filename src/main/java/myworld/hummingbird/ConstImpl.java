@@ -9,8 +9,8 @@ public class ConstImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode next) {
+    public int apply(Opcode ins, long[] reg, int regOffset, int ip, Opcode[] instructions) {
         reg[regOffset + ins.dst()] = value;
-        return ip;
+        return OpcodeImpl.chainNext(reg, regOffset, ip, instructions);
     }
 }
