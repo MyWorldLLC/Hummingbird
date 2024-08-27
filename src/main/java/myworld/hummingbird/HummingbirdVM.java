@@ -11,7 +11,7 @@ public final class HummingbirdVM {
     private final Executable exe;
     private final MemoryLimits limits;
     private ByteBuffer memory;
-    private Object[] objMemory;
+    public Object[] objMemory;
     private Fiber currentFiber;
     private int trapTableAddr = -1;
     private int trapHandlerCount = 0;
@@ -66,11 +66,11 @@ public final class HummingbirdVM {
         };
     }
 
-    public Fiber spawn(Symbol entry, Registers initialState) {
+    public Fiber spawn(Symbol entry, long[] initialState) {
         return spawn(entry != null ? entry.offset() : 0, initialState);
     }
 
-    protected Fiber spawn(int entry, Registers initialState) {
+    public Fiber spawn(int entry, long[] initialState) {
         var registers = allocateRegisters( // TODO - variable size register file
                 2000
         );
@@ -81,7 +81,7 @@ public final class HummingbirdVM {
 
         var savedRegisters = new SavedRegisters(1000);
 
-        var fiber = new Fiber(exe, registers.reg(), savedRegisters);
+        var fiber = new Fiber(this, exe, registers, savedRegisters);
         fiber.saveCallContext(Integer.MAX_VALUE, 0, 0);
         fiber.saveCallContext(entry, 0, 0);
 
@@ -661,12 +661,12 @@ public final class HummingbirdVM {
         return false;
     }
 
-    private static Registers allocateRegisters(int l) {
-        return new Registers(new long[l]);
+    private static long[] allocateRegisters(int l) {
+        return new long[l];
     }
 
-    public static void copyRegisters(Registers from, Registers to) {
-        System.arraycopy(from.reg(), 0, to.reg(), 0, from.reg().length);
+    public static void copyRegisters(long[] from, long[] to) {
+        System.arraycopy(from, 0, to, 0, from.length);
     }
 
 }

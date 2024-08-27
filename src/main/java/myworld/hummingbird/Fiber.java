@@ -12,14 +12,16 @@ public final class Fiber {
     private final IntStack callStack;
     public final SavedRegisters savedRegisters;
 
+    public final HummingbirdVM vm;
     public final Executable exe;
 
     public int ip;
     public int returnDest;
     public int registerOffset;
 
-    public Fiber(Executable exe, long[] registers, SavedRegisters savedRegisters){
+    public Fiber(HummingbirdVM vm, Executable exe, long[] registers, SavedRegisters savedRegisters){
         state = State.RUNNABLE;
+        this.vm = vm;
         this.exe = exe;
         this.registers = registers;
         this.savedRegisters = savedRegisters;

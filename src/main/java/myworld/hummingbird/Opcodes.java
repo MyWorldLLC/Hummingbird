@@ -289,12 +289,12 @@ public class Opcodes {
 
     @Assembles("SPAWN")
     public static Opcode SPAWN(@Register Integer dst, @Immediate Integer src){
-        return new Opcode(SPAWN, registerIndex(dst), src);
+        return new Opcode(SPAWN, registerIndex(dst), src, 0, 0, new SpawnImpl());
     }
 
     @Assembles("YIELD")
     public static Opcode YIELD(){
-        return new Opcode(YIELD);
+        return new Opcode(YIELD, 0, 0, 0, 0, new YieldImpl());
     }
 
     @Assembles("BLOCK")
