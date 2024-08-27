@@ -19,8 +19,16 @@ public record Opcode(int opcode, int dst, int src, int extra, int extra1, Opcode
         this(opcode, dst, 0, 0, 0, null);
     }
 
+    public Opcode(int opcode, int dst, OpcodeImpl impl){
+        this(opcode, dst, 0, 0, 0, impl);
+    }
+
     public Opcode(int opcode){
         this(opcode, 0, 0, 0, 0, null);
+    }
+
+    public Opcode(int opcode, OpcodeImpl impl){
+        this(opcode, 0, 0, 0, 0, impl);
     }
 
 }

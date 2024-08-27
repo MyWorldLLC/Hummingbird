@@ -294,17 +294,17 @@ public class Opcodes {
 
     @Assembles("YIELD")
     public static Opcode YIELD(){
-        return new Opcode(YIELD, 0, 0, 0, 0, new YieldImpl());
+        return new Opcode(YIELD, new YieldImpl());
     }
 
     @Assembles("BLOCK")
     public static Opcode BLOCK(){
-        return new Opcode(BLOCK);
+        return new Opcode(BLOCK, new BlockImpl());
     }
 
     @Assembles("UNBLOCK")
     public static Opcode UNBLOCK(@Register Integer dst){
-        return new Opcode(UNBLOCK, dst);
+        return new Opcode(UNBLOCK, dst, new UnblockImpl());
     }
 
     @Assembles("WRITE")
