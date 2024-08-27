@@ -10,7 +10,6 @@ public final class Fiber {
     protected State state;
     public final long[] registers;
     private final IntStack callStack;
-    public final SavedRegisters savedRegisters;
 
     public final HummingbirdVM vm;
     public final Executable exe;
@@ -19,12 +18,11 @@ public final class Fiber {
     public int returnDest;
     public int registerOffset;
 
-    public Fiber(HummingbirdVM vm, Executable exe, long[] registers, SavedRegisters savedRegisters){
+    public Fiber(HummingbirdVM vm, Executable exe, long[] registers){
         state = State.RUNNABLE;
         this.vm = vm;
         this.exe = exe;
         this.registers = registers;
-        this.savedRegisters = savedRegisters;
         callStack = new IntStack(1000);
     }
 
@@ -38,10 +36,6 @@ public final class Fiber {
 
     public long[] getRegisters() {
         return registers;
-    }
-
-    public SavedRegisters getSavedRegisters() {
-        return savedRegisters;
     }
 
     public void saveCallContext(int ip, int regOffset, int returnDest){

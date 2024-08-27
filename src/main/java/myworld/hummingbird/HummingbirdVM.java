@@ -79,9 +79,7 @@ public final class HummingbirdVM {
             copyRegisters(initialState, registers);
         }
 
-        var savedRegisters = new SavedRegisters(1000);
-
-        var fiber = new Fiber(this, exe, registers, savedRegisters);
+        var fiber = new Fiber(this, exe, registers);
         fiber.saveCallContext(Integer.MAX_VALUE, 0, 0);
         fiber.saveCallContext(entry, 0, 0);
 
@@ -533,22 +531,22 @@ public final class HummingbirdVM {
         return obj == null ? "null" : obj.toString();
     }
 
-    public int trap(Throwable t, Registers registers, int ip) {
+    public int trap(Throwable t, long[] registers, int ip) {
         return trap(getTrapCode(t), registers, ip, t);
     }
 
-    public int trap(int code, Registers registers, int ip) {
+    public int trap(int code, long[] registers, int ip) {
         return trap(code, registers, ip, null);
     }
 
-    public int trap(int code, Registers registers, int ip, Throwable t) {
+    public int trap(int code, long[] registers, int ip, Throwable t) {
         var handler = getTrapHandler(code);
         if (handler != -1) {
             // ip - 1 because when this is called ip has always
             // been advanced to the next instruction. It's simpler
             // to do this once here than subtract one at every trap
             // call site.
-            registers.reg()[0] = ip - 1;
+            registers[0] = ip - 1;
             return handler;
         } else {
             throw new HummingbirdException(ip - 1, registers, t);
@@ -649,7 +647,7 @@ public final class HummingbirdVM {
         return Integer.MAX_VALUE;
     }
 
-    private static boolean condObjects(int cond, Registers registers, int dst, int src) {
+    private static boolean condObjects(int cond, long[] registers, int dst, int src) {
         switch (cond) {
             case COND_EQ -> {
                 //return registers.oreg()[dst] == registers.oreg()[src];
