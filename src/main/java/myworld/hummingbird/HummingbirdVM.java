@@ -13,8 +13,6 @@ public final class HummingbirdVM {
     private ByteBuffer memory;
     public Object[] objMemory;
     private Fiber currentFiber;
-    private int trapTableAddr = -1;
-    private int trapHandlerCount = 0;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
     private final ForeignFunction[] foreign;
@@ -542,14 +540,12 @@ public final class HummingbirdVM {
     public int trap(int code, long[] registers, int ip, Throwable t) {
         var handler = getTrapHandler(code);
         if (handler != -1) {
-            // ip - 1 because when this is called ip has always
-            // been advanced to the next instruction. It's simpler
-            // to do this once here than subtract one at every trap
-            // call site.
-            registers[0] = ip - 1;
+            // TODO - push ip as if it were the parameter to a function call rather than
+            // stomping r0.
+            registers[0] = ip;
             return handler;
         } else {
-            throw new HummingbirdException(ip - 1, registers, t);
+            throw new HummingbirdException(ip, registers, t);
         }
     }
 
@@ -567,6 +563,10 @@ public final class HummingbirdVM {
         // Trap table layout: sequence of integer trap codes,
         // followed by a sequence of trap handler addresses,
         // 1 address per code.
+
+        var trapTableAddr = currentFiber.trapTableAddr;
+        var trapHandlerCount = currentFiber.trapHandlerCount;
+
         if (trapTableAddr == -1 || exCode < 0) {
             return -1;
         }

@@ -18,6 +18,9 @@ public final class Fiber {
     public int returnDest;
     public int registerOffset;
 
+    public int trapTableAddr = -1;
+    public int trapHandlerCount = 0;
+
     public Fiber(HummingbirdVM vm, Executable exe, long[] registers){
         state = State.RUNNABLE;
         this.vm = vm;

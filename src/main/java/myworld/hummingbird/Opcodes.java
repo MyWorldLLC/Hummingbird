@@ -404,12 +404,12 @@ public class Opcodes {
 
     @Assembles("TRAPS")
     public static Opcode TRAPS(@Immediate Integer tableAddr, @Immediate Integer handlerCount) {
-        return new Opcode(TRAPS, tableAddr, handlerCount);
+        return new Opcode(TRAPS, tableAddr, handlerCount, new TrapsImpl());
     }
 
     @Assembles("TRAP")
     public static Opcode TRAP(@Register Integer code) {
-        return new Opcode(TRAP, registerIndex(code));
+        return new Opcode(TRAP, registerIndex(code), new TrapImpl());
     }
 
     @Assembles("PARAM")
