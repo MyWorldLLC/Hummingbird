@@ -34,7 +34,7 @@ public final class HummingbirdVM {
         runQueue = new LinkedList<>();
         trapCodes = new ArrayList<>();
 
-        debugHandler = (vm, fiber, staticValue, dynamicValue) -> {
+        debugHandler = (fiber, staticValue, dynamicValue) -> {
             System.out.println("Debug: " + staticValue + " " + dynamicValue);
         };
     }
@@ -109,42 +109,6 @@ public final class HummingbirdVM {
             ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
-                case CONST -> {
-                    ip = ins.impl().apply(ins, reg, regOffset, ip);
-                }
-                case NULL -> {
-                    objMemory[regOffset + ins.dst()] = null;
-                }
-                case ADD -> {
-                    //add(ins, reg, regOffset);
-                    ins.impl().apply(ins, reg, regOffset, ip);
-                }
-                case SUB -> {
-                    sub(ins, reg, regOffset);
-                }
-                case MUL -> {
-                    mul(ins, reg, regOffset);
-                }
-                case DIV -> {
-                    try {
-                        div(ins, reg, regOffset);
-                    } catch (ArithmeticException ex) {
-                        trap(Traps.DIV_BY_ZERO, registers, ip);
-                    }
-                }
-                case REM -> {
-                    try {
-                        rem(ins, reg, regOffset);
-                    } catch (ArithmeticException ex) {
-                        trap(Traps.DIV_BY_ZERO, registers, ip);
-                    }
-                }
-                case NEG -> {
-                    neg(ins, reg, regOffset);
-                }
-                case POW -> {
-                    pow(ins, reg, regOffset);
-                }
                 case BAND -> {
                     band(ins, reg, regOffset);
                 }
@@ -172,34 +136,10 @@ public final class HummingbirdVM {
                 case D2L -> {
                     reg[regOffset + ins.dst()] = (long) Double.longBitsToDouble(reg[regOffset + ins.src()]);
                 }
-                case GOTO -> {
-                    ip = ins.dst();
-                }
-                case JMP -> {
-                    ip = (int) reg[regOffset + ins.dst()];
-                }
-                case ICOND -> {
-                    ip = ins.impl().apply(ins, reg, regOffset, ip);
-                    //if (condLongs(ins, reg, regOffset)) {
-                    //    ip = ins.extra1();
-                    //}
-                }
                 case DCOND -> {
                     if (condDoubles(ins, reg, regOffset)) {
                         ip = ins.extra1();
                     }
-                }
-                case PARAM -> {
-                    reg[regOffset + ins.dst()] = reg[savedRegisters.callerRegisterOffset() + ins.src()];
-                }
-                case PARAMS -> {
-                    for(int i = 0; i < ins.extra(); i++){
-                        reg[regOffset + ins.dst() + i] =
-                                reg[savedRegisters.callerRegisterOffset() + ins.src() + i];
-                    }
-                }
-                case COPY -> {
-                    reg[regOffset + ins.dst()] = reg[regOffset + ins.src()];
                 }
                 case SAVE -> {
                     savedRegisters.save(reg, regOffset + ins.dst(), ins.src());
@@ -209,19 +149,6 @@ public final class HummingbirdVM {
                 }
                 case IP -> {
                     reg[regOffset + ins.dst()] = ip;
-                }
-                case CALL -> {
-                    var symbol = exe.symbols()[ins.src()];
-
-                    var callerOffset = regOffset;
-                    var callerParams = ins.extra();
-                    savedRegisters.saveCallContext(ip, regOffset, ins.dst());
-
-                    regOffset += symbol.registers();
-                    for(int i = 0; i < ins.extra1(); i++){
-                        reg[regOffset + i] = reg[callerOffset + callerParams + i];
-                    }
-                    ip = symbol.offset();
                 }
                 case DCALL -> {
                     var symbol = exe.symbols()[(int) reg[regOffset + ins.src()]];
@@ -259,32 +186,6 @@ public final class HummingbirdVM {
                     } catch (Exception e) {
                         ip = trap(e, registers, ip);
                     }
-                }
-                case RETURN -> {
-                    savedRegisters.restoreCallContext(callCtx);
-
-                    var result = callCtx.returnDest;
-                    var returnOffset = callCtx.registerOffset;
-
-                    reg[returnOffset + result] = reg[regOffset + ins.dst()];
-
-                    ip = callCtx.ip;
-                    regOffset = returnOffset;
-                }
-                case SPAWN -> {
-                    objMemory[(int) reg[regOffset + ins.dst()]] = spawn(ins.src(), registers);
-                }
-                case YIELD -> {
-                    savedRegisters.saveCallContext(ip, regOffset, 0);
-                    return;
-                }
-                case BLOCK -> {
-                    currentFiber.setState(Fiber.State.BLOCKED);
-                    savedRegisters.saveCallContext(ip, regOffset, 0);
-                    return;
-                }
-                case UNBLOCK -> {
-                    ((Fiber) objMemory[(int) reg[regOffset + ins.dst()]]).setState(Fiber.State.RUNNABLE);
                 }*/
                     /*
                     case WRITE -> {
@@ -306,34 +207,6 @@ public final class HummingbirdVM {
                             case LONG_T -> reg[regOffset + dst] = memory.getLong(ireg[regOffset + ins.src()]);
                             case DOUBLE_T -> dreg[regOffset + dst] = memory.getDouble(ireg[regOffset + ins.src()]);
                             case OBJECT_T -> oreg[regOffset + dst] = objMemory[ireg[regOffset + ins.src()]];
-                        }
-                    }
-                    case SWRITE -> {
-                        var wType = Opcodes.registerType(ins.src());
-                        var src = Opcodes.registerIndex(ins.src());
-                        var addr = ireg[ins.dst()];
-                        long value = switch (wType) {
-                            case INT_T -> ireg[regOffset + src];
-                            case LONG_T -> reg[regOffset + src];
-                            default -> 0;
-                        };
-                        switch (ins.extra()) {
-                            case BYTE_T -> memory.put(addr, (byte) value);
-                            case CHAR_T -> memory.putChar(addr, (char) value);
-                            case SHORT_T -> memory.putShort(addr, (short) value);
-                        }
-                    }
-                    case SREAD -> {
-                        var addr = ireg[regOffset + ins.src()];
-                        int value = switch (ins.extra()) {
-                            case BYTE_T -> memory.get(addr);
-                            case CHAR_T -> memory.getChar(addr);
-                            case SHORT_T -> memory.getShort(addr);
-                            default -> 0;
-                        };
-                        switch (type) {
-                            case INT_T -> ireg[regOffset + dst] = value;
-                            case LONG_T -> reg[regOffset + dst] = value;
                         }
                     }
                     case GWRITE -> {
@@ -442,49 +315,9 @@ public final class HummingbirdVM {
                     }
                     case SCOMP -> {
                         ireg[regOffset + dst] = compareStrings(oreg, regOffset + ins.src(), regOffset + ins.extra());
-                    }
-                    case TRAPS -> {
-                        trapTableAddr = dst;
-                        trapHandlerCount = ins.src();
-                    }
-                    case TRAP -> {
-                        ip = trap(ireg[regOffset + dst], registers, ip);
                     }*/
-                    /*case DEBUG -> {
-                        if(debugHandler != null){
-                            debugHandler.debug(this, currentFiber, ins.dst(), reg[regOffset + ins.src()]);
-                        }
-                    }
-            }*/
+
         }
-    }
-
-    private static void add(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] + reg[regOffset + ins.extra()];
-    }
-
-    private static void sub(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] - reg[regOffset + ins.extra()];
-    }
-
-    private static void mul(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] * reg[regOffset + ins.extra()];
-    }
-
-    private static void div(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] * reg[regOffset + ins.extra()];
-    }
-
-    private static void rem(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] % reg[regOffset + ins.extra()];
-    }
-
-    private static void neg(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = -reg[regOffset + ins.src()];
-    }
-
-    private static void pow(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = (long) Math.pow(reg[regOffset + ins.src()], reg[regOffset + ins.extra()]);
     }
 
     private static void band(Opcode ins, long[] reg, int regOffset) {
@@ -540,8 +373,9 @@ public final class HummingbirdVM {
     public int trap(int code, long[] registers, int ip, Throwable t) {
         var handler = getTrapHandler(code);
         if (handler != -1) {
-            // TODO - push ip as if it were the parameter to a function call rather than
-            // stomping r0.
+            // TODO - instead of current mechanism, spawn a fiber at the trap handler with
+            // the trap site and trapped fiber as parameters. Need to work out passing objects
+            // since we no longer have object registers (may want to bring back object registers).
             registers[0] = ip;
             return handler;
         } else {
@@ -584,6 +418,10 @@ public final class HummingbirdVM {
             }
         }
         return -1;
+    }
+
+    public DebugHandler getDebugHandler(){
+        return debugHandler;
     }
 
     public static long longFromInts(int high, int low) {

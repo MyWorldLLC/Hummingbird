@@ -48,4 +48,8 @@ public final class Fiber {
     public void restoreCallContext(){
         callStack.popCtx(this);
     }
+
+    public int callerRegisterOffset(){
+        return callStack.peekCallerRegisterOffset();
+    }
 }

@@ -2,6 +2,6 @@ package myworld.hummingbird;
 
 public interface DebugHandler {
 
-    void debug(HummingbirdVM vm, Fiber fiber, int staticValue, long dynamicValue);
+    void debug(Fiber fiber, int staticValue, long dynamicValue);
 
 }
