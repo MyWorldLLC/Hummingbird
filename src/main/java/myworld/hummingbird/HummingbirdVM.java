@@ -109,26 +109,6 @@ public final class HummingbirdVM {
             ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
-                case L2D -> {
-                    reg[regOffset + ins.dst()] = Double.doubleToLongBits((double) reg[regOffset + ins.src()]);
-                }
-                case D2L -> {
-                    reg[regOffset + ins.dst()] = (long) Double.longBitsToDouble(reg[regOffset + ins.src()]);
-                }
-                case DCOND -> {
-                    if (condDoubles(ins, reg, regOffset)) {
-                        ip = ins.extra1();
-                    }
-                }
-                case SAVE -> {
-                    savedRegisters.save(reg, regOffset + ins.dst(), ins.src());
-                }
-                case RESTORE -> {
-                    savedRegisters.restore(reg, regOffset + ins.dst(), ins.src());
-                }
-                case IP -> {
-                    reg[regOffset + ins.dst()] = ip;
-                }
                 case DCALL -> {
                     var symbol = exe.symbols()[(int) reg[regOffset + ins.src()]];
 

@@ -154,7 +154,7 @@ public class Opcodes {
 
     @Assembles("POW")
     public static Opcode POW(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(POW, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(POW, dst, registerIndex(a), registerIndex(b), new PowImpl());
     }
 
     @Assembles("BAND")
@@ -239,22 +239,47 @@ public class Opcodes {
 
     @Assembles("COPY")
     public static Opcode COPY(@Register Integer dst, @Register Integer src) {
-        return new Opcode(COPY, dst, registerIndex(src), 0, 0, new CopyImpl());
+        return new Opcode(COPY, dst, src, new CopyImpl());
     }
 
-    @Assembles("SAVE")
-    public static Opcode SAVE(@Register Integer dst, @Immediate Integer count) {
-        return new Opcode(SAVE, dst, count);
+    @Assembles("L2D")
+    public static Opcode L2D(@Register Integer dst, @Register Integer src) {
+        return new Opcode(L2D, dst, src, new L2DImpl());
     }
 
-    @Assembles("RESTORE")
-    public static Opcode RESTORE(@Register Integer dst, @Immediate Integer count) {
-        return new Opcode(RESTORE, dst, count);
+    @Assembles("D2L")
+    public static Opcode D2L(@Register Integer dst, @Register Integer src) {
+        return new Opcode(D2L, dst, src, new D2LImpl());
+    }
+
+    @Assembles("DIFLT")
+    public static Opcode DIFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new DCondImpl());
+    }
+
+    @Assembles("DIFLE")
+    public static Opcode DIFLE(@Register Integer dst, @Register Integer src, @Register Integer target){
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LE, target, new DCondImpl());
+    }
+
+    @Assembles("DIFEQ")
+    public static Opcode DIFEQ(@Register Integer dst, @Register Integer src, @Register Integer target){
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_EQ, target, new DCondImpl());
+    }
+
+    @Assembles("DIFGE")
+    public static Opcode DIFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target, new DCondImpl());
+    }
+
+    @Assembles("DIFGT")
+    public static Opcode DIFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
+        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GT, target, new DCondImpl());
     }
 
     @Assembles("IP")
     public static Opcode IP(@Register Integer dst) {
-        return new Opcode(IP, registerIndex(dst));
+        return new Opcode(IP, registerIndex(dst), new IpImpl());
     }
 
     @Assembles("CALL0")
