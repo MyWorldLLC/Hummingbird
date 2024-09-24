@@ -284,7 +284,7 @@ public class Opcodes {
 
     @Assembles("CALL0")
     public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol) {
-        return new Opcode(CALL, dst, symbol, 0, 0, new CallImpl());
+        return new Opcode(CALL, dst, symbol, new CallImpl());
     }
 
     @Assembles("CALL")
@@ -292,19 +292,34 @@ public class Opcodes {
         return new Opcode(CALL, dst, symbol, src, count, new CallImpl());
     }
 
+    @Assembles("DCALL0")
+    public static Opcode DCALL0(@Register Integer dst, @Immediate Integer symbol) {
+        return new Opcode(DCALL, dst, symbol, new DCallImpl());
+    }
+
     @Assembles("DCALL")
-    public static Opcode DCALL(@Register Integer dst) {
-        return new Opcode(DCALL, registerIndex(dst));
+    public static Opcode DCALL(@Register Integer dst, @Immediate Integer symbol, @Register Integer src, @Immediate Integer count) {
+        return new Opcode(DCALL, dst, symbol, src, count, new DCallImpl());
+    }
+
+    @Assembles("FCALL0")
+    public static Opcode FCALL0(@Immediate Integer symbol) {
+        return new Opcode(FCALL, symbol, new FCallImpl());
     }
 
     @Assembles("FCALL")
-    public static Opcode FCALL(@Immediate Integer symbol) {
-        return new Opcode(FCALL, symbol);
+    public static Opcode FCALL(@Register Integer dst, @Immediate Integer symbol, @Register Integer src, @Immediate Integer count) {
+        return new Opcode(FCALL, dst, symbol, src, count, new FCallImpl());
+    }
+
+    @Assembles("DFCALL0")
+    public static Opcode DFCALL0(@Immediate Integer symbol) {
+        return new Opcode(DFCALL, symbol, new DFCallImpl());
     }
 
     @Assembles("DFCALL")
-    public static Opcode DFCALL(@Register Integer dst) {
-        return new Opcode(DFCALL, registerIndex(dst));
+    public static Opcode DFCALL(@Register Integer dst, @Immediate Integer symbol, @Register Integer src, @Immediate Integer count) {
+        return new Opcode(DFCALL, dst, symbol, src, count, new DFCallImpl());
     }
 
     @Assembles("SPAWN")

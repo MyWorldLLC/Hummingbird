@@ -15,7 +15,7 @@ public final class HummingbirdVM {
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
-    private final ForeignFunction[] foreign;
+    public final ForeignFunction[] foreign;
 
     private DebugHandler debugHandler;
 
@@ -109,43 +109,6 @@ public final class HummingbirdVM {
             ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
-                case DCALL -> {
-                    var symbol = exe.symbols()[(int) reg[regOffset + ins.src()]];
-
-                    var callerOffset = regOffset;
-                    var callerParams = ins.extra();
-                    savedRegisters.saveCallContext(ip, regOffset, ins.dst());
-
-                    regOffset += symbol.registers();
-                    for(int i = 0; i < ins.extra1(); i++){
-                        reg[regOffset + i] = reg[callerOffset + callerParams + i];
-                    }
-                    ip = symbol.offset();
-                }
-                case FCALL -> {
-                    var symbol = exe.symbols()[ins.dst()];
-                    var func = foreign[symbol.offset()];
-
-                    savedRegisters.saveCallContext(ip, regOffset, ins.dst());
-
-                    try {
-                        func.call(this, currentFiber);
-                    } catch (Exception e) {
-                        ip = trap(e, registers, ip);
-                    }
-                }
-                case DFCALL -> {
-                    var symbol = exe.symbols()[(int) reg[regOffset + ins.dst()]];
-                    var func = foreign[symbol.offset()];
-
-                    savedRegisters.saveCallContext(ip, regOffset, ins.dst());
-
-                    try {
-                        func.call(this, currentFiber);
-                    } catch (Exception e) {
-                        ip = trap(e, registers, ip);
-                    }
-                }*/
                     /*
                     case WRITE -> {
                         var wType = Opcodes.registerType(ins.src());
@@ -277,34 +240,6 @@ public final class HummingbirdVM {
                     }*/
 
         }
-    }
-
-    private static void band(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] & reg[regOffset + ins.extra()];
-    }
-
-    private static void bor(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] | reg[regOffset + ins.extra()];
-    }
-
-    private static void bxor(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] ^ reg[regOffset + ins.extra()];
-    }
-
-    private static void bnot(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = ~reg[regOffset + ins.src()];
-    }
-
-    private static void blshift(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] << reg[regOffset + ins.extra()];
-    }
-
-    private static void brshift(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] >> reg[regOffset + ins.extra()];
-    }
-
-    private static void burshift(Opcode ins, long[] reg, int regOffset) {
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] >>> reg[regOffset + ins.extra()];
     }
 
     public String readString(int address) {
