@@ -9,12 +9,10 @@
   CALL0 ri0, %countToAMillion
   RETURN ri0
   countToAMillion:
-    SAVE ri1, 2 # save ri1, ri2
     CONST ri1, 1
     ADD ri0, ri0, ri1
     CONST ri2, 1000000
     IFLT ri0, ri2, $recurse
-    RESTORE ri1, 2
     RETURN ri0
   recurse:
     CALL0 ri0, %countToAMillion
