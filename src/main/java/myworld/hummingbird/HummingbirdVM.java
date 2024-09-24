@@ -10,7 +10,7 @@ public final class HummingbirdVM {
 
     private final Executable exe;
     private final MemoryLimits limits;
-    private ByteBuffer memory;
+    public ByteBuffer memory;
     public Object[] objMemory;
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
@@ -110,27 +110,6 @@ public final class HummingbirdVM {
             /*ip++;
             switch (ins.opcode()) {
                     /*
-                    case WRITE -> {
-                        var wType = Opcodes.registerType(ins.src());
-                        var src = Opcodes.registerIndex(ins.src());
-                        var addr = ireg[ins.dst()];
-                        switch (wType) {
-                            case INT_T -> memory.putInt(addr, ireg[regOffset + src]);
-                            case FLOAT_T -> memory.putFloat(addr, freg[regOffset + src]);
-                            case LONG_T -> memory.putLong(addr, reg[regOffset + src]);
-                            case DOUBLE_T -> memory.putDouble(addr, dreg[regOffset + src]);
-                            case OBJECT_T -> objMemory[addr] = oreg[regOffset + src];
-                        }
-                    }
-                    case READ -> {
-                        switch (type) {
-                            case INT_T -> ireg[regOffset + dst] = memory.getInt(ireg[regOffset + ins.src()]);
-                            case FLOAT_T -> freg[regOffset + dst] = memory.getFloat(ireg[regOffset + ins.src()]);
-                            case LONG_T -> reg[regOffset + dst] = memory.getLong(ireg[regOffset + ins.src()]);
-                            case DOUBLE_T -> dreg[regOffset + dst] = memory.getDouble(ireg[regOffset + ins.src()]);
-                            case OBJECT_T -> oreg[regOffset + dst] = objMemory[ireg[regOffset + ins.src()]];
-                        }
-                    }
                     case GWRITE -> {
                         var wType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());

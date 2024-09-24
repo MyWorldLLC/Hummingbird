@@ -343,23 +343,23 @@ public class Opcodes {
     }
 
     @Assembles("WRITE")
-    public static Opcode WRITE(@Register Integer dst, @Register Integer src) {
-        return new Opcode(WRITE, dst, src);
+    public static Opcode WRITE(@Register Integer dst, @Register Integer src, @Immediate Integer size) {
+        return new Opcode(WRITE, dst, src, size, new WriteImpl());
     }
 
     @Assembles("READ")
-    public static Opcode READ(@Register Integer dst, @Register Integer src) {
-        return new Opcode(READ, dst, registerIndex(src));
+    public static Opcode READ(@Register Integer dst, @Register Integer src, @Immediate Integer size) {
+        return new Opcode(READ, dst, src, size, new ReadImpl());
     }
 
-    @Assembles("SWRITE")
-    public static Opcode SWRITE(@Register Integer dst, @Register Integer src, @Immediate Integer type) {
-        return new Opcode(SWRITE, dst, src, type);
+    @Assembles("FWRITE")
+    public static Opcode FWRITE(@Register Integer dst, @Register Integer src, @Immediate Integer size, @Immediate Integer offset) {
+        return new Opcode(WRITE, dst, src, size, offset, new WriteImpl());
     }
 
-    @Assembles("SREAD")
-    public static Opcode SREAD(@Register Integer dst, @Register Integer src, @Immediate Integer type) {
-        return new Opcode(SREAD, dst, registerIndex(src), type);
+    @Assembles("FREAD")
+    public static Opcode FREAD(@Register Integer dst, @Register Integer src, @Immediate Integer size, @Immediate Integer offset) {
+        return new Opcode(READ, dst, src, size, offset, new ReadImpl());
     }
 
     @Assembles("GWRITE")
