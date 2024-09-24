@@ -159,37 +159,37 @@ public class Opcodes {
 
     @Assembles("BAND")
     public static Opcode BAND(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BAND, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BAND, dst, registerIndex(a), registerIndex(b), new BandImpl());
     }
 
     @Assembles("BOR")
     public static Opcode BOR(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BOR, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BOR, dst, registerIndex(a), registerIndex(b), new BorImpl());
     }
 
     @Assembles("BXOR")
     public static Opcode BXOR(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BXOR, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BXOR, dst, registerIndex(a), registerIndex(b), new BxorImpl());
     }
 
     @Assembles("BNOT")
     public static Opcode BNOT(@Register Integer dst, @Register Integer a){
-        return new Opcode(BNOT, dst, registerIndex(a));
+        return new Opcode(BNOT, dst, registerIndex(a), new BnotImpl());
     }
 
     @Assembles("BLSHIFT")
     public static Opcode BLSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BLSHIFT, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BLSHIFT, dst, registerIndex(a), registerIndex(b), new BlshiftImpl());
     }
 
     @Assembles("BSRSHIFT")
     public static Opcode BSRSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BSRSHIFT, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BSRSHIFT, dst, registerIndex(a), registerIndex(b), new BrshiftImpl());
     }
 
     @Assembles("BURSHIFT")
     public static Opcode BURSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BURSHIFT, dst, registerIndex(a), registerIndex(b));
+        return new Opcode(BURSHIFT, dst, registerIndex(a), registerIndex(b), new BurshiftImpl());
     }
 
     @Assembles("GOTO")

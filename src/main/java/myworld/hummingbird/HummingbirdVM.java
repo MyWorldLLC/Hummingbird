@@ -109,27 +109,6 @@ public final class HummingbirdVM {
             ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
             /*ip++;
             switch (ins.opcode()) {
-                case BAND -> {
-                    band(ins, reg, regOffset);
-                }
-                case BOR -> {
-                    bor(ins, reg, regOffset);
-                }
-                case BXOR -> {
-                    bxor(ins, reg, regOffset);
-                }
-                case BNOT -> {
-                    bnot(ins, reg, regOffset);
-                }
-                case BLSHIFT -> {
-                    blshift(ins, reg, regOffset);
-                }
-                case BSRSHIFT -> {
-                    brshift(ins, reg, regOffset);
-                }
-                case BURSHIFT -> {
-                    burshift(ins, reg, regOffset);
-                }
                 case L2D -> {
                     reg[regOffset + ins.dst()] = Double.doubleToLongBits((double) reg[regOffset + ins.src()]);
                 }
