@@ -2,6 +2,7 @@ package myworld.hummingbird;
 
 import myworld.hummingbird.instructions.*;
 
+@SuppressWarnings("unused")
 public class Opcodes {
 
     public static final int COND_LT = 0;
@@ -144,6 +145,41 @@ public class Opcodes {
     @Assembles("POW")
     public static Opcode POW(@Register Integer dst, @Register Integer a, @Register Integer b){
         return new Opcode(POW, dst, a, b, new PowImpl());
+    }
+
+    @Assembles("DADD")
+    public static Opcode DADD(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(ADD, dst, a, b, new DAddImpl());
+    }
+
+    @Assembles("DSUB")
+    public static Opcode DSUB(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(SUB, dst, a, b, new DSubImpl());
+    }
+
+    @Assembles("DMUL")
+    public static Opcode DMUL(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(MUL, dst, a, b, new DMulImpl());
+    }
+
+    @Assembles("DDIV")
+    public static Opcode DDIV(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(DIV, dst, a, b, new DDivImpl());
+    }
+
+    @Assembles("DREM")
+    public static Opcode DREM(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(REM, dst, a, b, new DRemImpl());
+    }
+
+    @Assembles("DNEG")
+    public static Opcode DNEG(@Register Integer dst, @Register Integer a){
+        return new Opcode(NEG, dst, a, new DNegImpl());
+    }
+
+    @Assembles("DPOW")
+    public static Opcode DPOW(@Register Integer dst, @Register Integer a, @Register Integer b){
+        return new Opcode(POW, dst, a, b, new DPowImpl());
     }
 
     @Assembles("BAND")

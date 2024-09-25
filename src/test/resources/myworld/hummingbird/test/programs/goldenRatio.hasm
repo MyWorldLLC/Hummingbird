@@ -1,6 +1,6 @@
 .symbols
     goldenRatio function $goldenRatio
-            float
+            double
             parameters 0
             registers 6
 
@@ -10,20 +10,27 @@
 
 .code
   goldenRatio:
-    CONST rf0, f2.0  # x
-    CONST ri0, 20    # counter
+    # ri0 = counter
+    # ri1 = const 0
+    # ri2 = const 1
+    # ri3 = x
+    # ri4 = const d1.0
+    # ri5 = const d2.0
+    # ri6 = temp
+    CONST ri0, 20    # counter (init 20)
     CONST ri1, 0     # iconst 0
     CONST ri2, 1     # iconst 1
-    CONST rf3, f1    # fconst 1
-    CONST rf4, f2.0  # fconst 2
+    CONST ri3, d2.0  # x (init 2.0)
+    CONST ri4, d1.0  # dconst 1.0
+    CONST ri5, d2.0  # dconst 2.0
 
   calc:
-    COPY  rf1, rf3       # temp = 1
-    DIV   rf1, rf1, rf0  # temp = 1/x
-    ADD   rf1, rf1, rf0  # temp = 1/x + x
-    ADD   rf1, rf1, rf3  # temp = 1/x + x + 1
-    DIV   rf1, rf1, rf4  # temp = (1/x + x + 1)/2
-    COPY  rf0, rf1       # x = temp
-    SUB   ri0, ri0, ri2
-    IFGT  ri0, ri1, $calc
-    RETURN ri0
+    COPY   ri6, ri4       # temp = 1.0
+    DDIV   ri6, ri6, ri3  # temp = 1/x
+    DADD   ri6, ri6, ri3  # temp = 1/x + x
+    DADD   ri6, ri6, ri4  # temp = 1/x + x + 1
+    DDIV   ri6, ri6, ri5  # temp = (1/x + x + 1)/2
+    COPY   ri3, ri6       # x = temp
+    SUB    ri0, ri0, ri2
+    IFGT   ri0, ri1, $calc
+    RETURN ri3

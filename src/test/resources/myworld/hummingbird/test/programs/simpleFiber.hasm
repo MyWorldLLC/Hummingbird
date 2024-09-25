@@ -1,5 +1,5 @@
 .code
-    SPAWN ro0, $fiber
+    SPAWN ri0, $fiber
     YIELD
   fiber:
     CONST ri0, 5

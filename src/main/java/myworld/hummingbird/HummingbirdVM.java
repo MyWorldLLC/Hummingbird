@@ -55,10 +55,13 @@ public final class HummingbirdVM {
         }
 
         return switch (rType) {
+            case INT -> (int) registers[0];
+            case FLOAT -> (float) Double.longBitsToDouble(registers[0]);
             case LONG -> registers[0];
+            case DOUBLE -> Double.longBitsToDouble(registers[0]);
             case OBJECT -> objMemory[(int)registers[0]];
+            case STRING -> objectToString((int)registers[0]);
             case VOID -> null;
-            default -> null; // TODO - remove obsoleted type flags
         };
     }
 
@@ -105,13 +108,6 @@ public final class HummingbirdVM {
         while (ip < instructions.length) {
             var ins = instructions[ip];
             ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
-            /*ip++;
-            switch (ins.opcode()) {
-                    /*
-                    case SCOMP -> {
-                        ireg[regOffset + dst] = compareStrings(oreg, regOffset + ins.src(), regOffset + ins.extra());
-                    }*/
-
         }
     }
 
