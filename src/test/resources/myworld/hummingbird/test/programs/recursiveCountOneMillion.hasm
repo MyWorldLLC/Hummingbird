@@ -5,15 +5,15 @@
         registers 6
 
 .code
-  CONST ri0, 0
-  CALL0 ri0, %countToAMillion
-  RETURN ri0
+  CONST r0, 0
+  CALL0 r0, %countToAMillion
+  RETURN r0
   countToAMillion:
-    CONST ri1, 1
-    ADD ri0, ri0, ri1
-    CONST ri2, 1000000
-    IFLT ri0, ri2, $recurse
-    RETURN ri0
+    CONST r1, 1
+    ADD r0, r0, r1
+    CONST r2, 1000000
+    IFLT r0, r2, $recurse
+    RETURN r0
   recurse:
-    CALL0 ri0, %countToAMillion
-    RETURN ri0
+    CALL0 r0, %countToAMillion
+    RETURN r0

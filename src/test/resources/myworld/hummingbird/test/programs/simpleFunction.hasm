@@ -5,10 +5,10 @@
         registers 6
 
 .code
-  CONST ri1, 5
-  CALL ri0, %simple, 1, 1
-  RETURN ri0
+  CONST r1, 5
+  CALL r0, %simple, 1, 1
+  RETURN r0
   simple:
-    CONST ri2, 2
-    ADD ri0, ri0, ri2
-    RETURN ri0
+    CONST r2, 2
+    ADD r0, r0, r2
+    RETURN r0

@@ -46,7 +46,7 @@ public class Assembler {
         labelUse = Pattern.compile("\\$\\w+");
         symbolName = Pattern.compile("\\D\\w+");
         symbolUse = Pattern.compile("%\\D\\w+");
-        register = Pattern.compile("r[ifldso]\\d+");
+        register = Pattern.compile("r\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
         floatLiteral = Pattern.compile("[FfDd]-?\\d*((\\.)?\\d+)?([eE]-?\\d+)?");
@@ -313,17 +313,8 @@ public class Assembler {
         try{
             var sequence = consume(asm, register);
             if(sequence != null) {
-                var type = switch (sequence.charAt(1)){
-                    case 'i' -> TypeFlag.INT;
-                    case 'f' -> TypeFlag.FLOAT;
-                    case 'l' -> TypeFlag.LONG;
-                    case 'd' -> TypeFlag.DOUBLE;
-                    case 'o' -> TypeFlag.OBJECT;
-                    default -> TypeFlag.INT;
-                };
-                var str = sequence.subSequence(2, sequence.length()).toString(); // Drop leading 'rt'
-                var index = Integer.parseInt(str);
-                return Opcodes.encodeRegisterOperand(type, index);
+                var str = sequence.subSequence(1, sequence.length()).toString(); // Drop leading 'r'
+                return Integer.parseInt(str);
             }
         }catch (Exception e){}
         throw new AssemblyException("Invalid register reference: " + asm.debug(10));

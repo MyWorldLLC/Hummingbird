@@ -482,14 +482,6 @@ public class Opcodes {
         return new Opcode(DEBUG, sentinel, src, new DebugImpl());
     }
 
-    public static int encodeRegisterOperand(TypeFlag type, int reg){
-        return encodeOpcodeType(type.ordinal(), reg);
-    }
-
-    public static int encodeOpcodeType(int type, int opcode){
-        return (type << 24) | opcode;
-    }
-
     public static int highBits(long l){
         return (int) (l >>> 32);
     }
