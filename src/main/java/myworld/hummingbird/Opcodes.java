@@ -4,19 +4,12 @@ import myworld.hummingbird.instructions.*;
 
 public class Opcodes {
 
-    public static final int INT_T = 0;
-    public static final int FLOAT_T = 1;
-    public static final int LONG_T = 2;
-    public static final int DOUBLE_T = 3;
-    public static final int OBJECT_T = 4;
-
     public static final int COND_LT = 0;
     public static final int COND_LE = 1;
     public static final int COND_EQ = 2;
     public static final int COND_GE = 3;
     public static final int COND_GT = 4;
     public static final int COND_NULL = 5;
-
 
     // ========= CONST =========
     public static final int CONST = 0x00;
@@ -75,10 +68,6 @@ public class Opcodes {
     // ========= Memory ========= // TODO - opcode renumbering
     public static final int WRITE = 0x25;
     public static final int READ = 0x26;
-    public static final int SWRITE = 0x27;
-    public static final int SREAD = 0x28;
-    public static final int GWRITE = 0x29;
-    public static final int GREAD = 0x2A;
     public static final int MEM_COPY = 0x2B;
     public static final int OBJ_COPY = 0x2C;
     public static final int ALLOCATED = 0x2D;
@@ -119,77 +108,77 @@ public class Opcodes {
 
     @Assembles("NULL")
     public static Opcode NULL(@Register Integer dst){
-        return new Opcode(NULL, registerIndex(dst), new NullImpl());
+        return new Opcode(NULL, dst, new NullImpl());
     }
 
     @Assembles("ADD")
     public static Opcode ADD(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(ADD, dst, registerIndex(a), registerIndex(b), new AddImpl());
+        return new Opcode(ADD, dst, a, b, new AddImpl());
     }
 
     @Assembles("SUB")
     public static Opcode SUB(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(SUB, dst, registerIndex(a), registerIndex(b), new SubImpl());
+        return new Opcode(SUB, dst, a, b, new SubImpl());
     }
 
     @Assembles("MUL")
     public static Opcode MUL(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(MUL, dst, registerIndex(a), registerIndex(b), new MulImpl());
+        return new Opcode(MUL, dst, a, b, new MulImpl());
     }
 
     @Assembles("DIV")
     public static Opcode DIV(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(DIV, dst, registerIndex(a), registerIndex(b), new DivImpl());
+        return new Opcode(DIV, dst, a, b, new DivImpl());
     }
 
     @Assembles("REM")
     public static Opcode REM(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(REM, dst, registerIndex(a), registerIndex(b), new RemImpl());
+        return new Opcode(REM, dst, a, b, new RemImpl());
     }
 
     @Assembles("NEG")
     public static Opcode NEG(@Register Integer dst, @Register Integer a){
-        return new Opcode(NEG, dst, registerIndex(a), new NegImpl());
+        return new Opcode(NEG, dst, a, new NegImpl());
     }
 
     @Assembles("POW")
     public static Opcode POW(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(POW, dst, registerIndex(a), registerIndex(b), new PowImpl());
+        return new Opcode(POW, dst, a, b, new PowImpl());
     }
 
     @Assembles("BAND")
     public static Opcode BAND(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BAND, dst, registerIndex(a), registerIndex(b), new BandImpl());
+        return new Opcode(BAND, dst, a, b, new BandImpl());
     }
 
     @Assembles("BOR")
     public static Opcode BOR(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BOR, dst, registerIndex(a), registerIndex(b), new BorImpl());
+        return new Opcode(BOR, dst, a, b, new BorImpl());
     }
 
     @Assembles("BXOR")
     public static Opcode BXOR(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BXOR, dst, registerIndex(a), registerIndex(b), new BxorImpl());
+        return new Opcode(BXOR, dst, a, b, new BxorImpl());
     }
 
     @Assembles("BNOT")
     public static Opcode BNOT(@Register Integer dst, @Register Integer a){
-        return new Opcode(BNOT, dst, registerIndex(a), new BnotImpl());
+        return new Opcode(BNOT, dst, a, new BnotImpl());
     }
 
     @Assembles("BLSHIFT")
     public static Opcode BLSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BLSHIFT, dst, registerIndex(a), registerIndex(b), new BlshiftImpl());
+        return new Opcode(BLSHIFT, dst, a, b, new BlshiftImpl());
     }
 
     @Assembles("BSRSHIFT")
     public static Opcode BSRSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BSRSHIFT, dst, registerIndex(a), registerIndex(b), new BrshiftImpl());
+        return new Opcode(BSRSHIFT, dst, a, b, new BrshiftImpl());
     }
 
     @Assembles("BURSHIFT")
     public static Opcode BURSHIFT(@Register Integer dst, @Register Integer a, @Register Integer b){
-        return new Opcode(BURSHIFT, dst, registerIndex(a), registerIndex(b), new BurshiftImpl());
+        return new Opcode(BURSHIFT, dst, a, b, new BurshiftImpl());
     }
 
     @Assembles("GOTO")
@@ -199,37 +188,37 @@ public class Opcodes {
 
     @Assembles("JMP")
     public static Opcode JMP(@Register Integer dst){
-        return new Opcode(JMP, registerIndex(dst), new JmpImpl());
+        return new Opcode(JMP, dst, new JmpImpl());
     }
 
     @Assembles("IFLT")
-    public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new ICondImpl());
+    public static Opcode IFLT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_LT, target, new ICondImpl());
     }
 
     @Assembles("IFLE")
-    public static Opcode IFLE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LE, target, new ICondImpl());
+    public static Opcode IFLE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_LE, target, new ICondImpl());
     }
 
     @Assembles("IFEQ")
-    public static Opcode IFEQ(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_EQ, target, new ICondImpl());
+    public static Opcode IFEQ(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_EQ, target, new ICondImpl());
     }
 
     @Assembles("IFGE")
-    public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target, new ICondImpl());
+    public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_GE, target, new ICondImpl());
     }
 
     @Assembles("IFGT")
-    public static Opcode IFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GT, target, new ICondImpl());
+    public static Opcode IFGT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_GT, target, new ICondImpl());
     }
 
     @Assembles("IFNULL")
-    public static Opcode IFNULL(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), encodeRegisterOperand(COND_NULL, registerIndex(src)), target);
+    public static Opcode IFNULL(@Register Integer dst, @Immediate Integer target){
+        return new Opcode(COND_NULL, dst, target);
     }
 
     @Assembles("RETURN")
@@ -253,33 +242,33 @@ public class Opcodes {
     }
 
     @Assembles("DIFLT")
-    public static Opcode DIFLT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LT, target, new DCondImpl());
+    public static Opcode DIFLT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_LT, target, new DCondImpl());
     }
 
     @Assembles("DIFLE")
-    public static Opcode DIFLE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_LE, target, new DCondImpl());
+    public static Opcode DIFLE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_LE, target, new DCondImpl());
     }
 
     @Assembles("DIFEQ")
-    public static Opcode DIFEQ(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_EQ, target, new DCondImpl());
+    public static Opcode DIFEQ(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_EQ, target, new DCondImpl());
     }
 
     @Assembles("DIFGE")
-    public static Opcode DIFGE(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GE, target, new DCondImpl());
+    public static Opcode DIFGE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_GE, target, new DCondImpl());
     }
 
     @Assembles("DIFGT")
-    public static Opcode DIFGT(@Register Integer dst, @Register Integer src, @Register Integer target){
-        return new Opcode(conditionType(dst), registerIndex(dst), registerIndex(src), COND_GT, target, new DCondImpl());
+    public static Opcode DIFGT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_GT, target, new DCondImpl());
     }
 
     @Assembles("IP")
     public static Opcode IP(@Register Integer dst) {
-        return new Opcode(IP, registerIndex(dst), new IpImpl());
+        return new Opcode(IP, dst, new IpImpl());
     }
 
     @Assembles("CALL0")
@@ -324,7 +313,7 @@ public class Opcodes {
 
     @Assembles("SPAWN")
     public static Opcode SPAWN(@Register Integer dst, @Immediate Integer src){
-        return new Opcode(SPAWN, registerIndex(dst), src, 0, 0, new SpawnImpl());
+        return new Opcode(SPAWN, dst, src, new SpawnImpl());
     }
 
     @Assembles("YIELD")
@@ -362,16 +351,6 @@ public class Opcodes {
         return new Opcode(READ, dst, src, size, offset, new ReadImpl());
     }
 
-    @Assembles("GWRITE")
-    public static Opcode GWRITE(@Register Integer dst, @Register Integer src, @Register Integer guard, @Immediate Integer sentinel) {
-        return new Opcode(GWRITE, dst, src, guard, sentinel.byteValue());
-    }
-
-    @Assembles("GREAD")
-    public static Opcode GREAD(@Register Integer dst, @Register Integer src, @Register Integer guard) {
-        return new Opcode(GREAD, dst, registerIndex(src), registerIndex(guard));
-    }
-
     @Assembles("MEM_COPY")
     public static Opcode MEM_COPY(@Register Integer dst, @Register Integer src, @Register Integer end) {
         return new Opcode(MEM_COPY, dst, src, end, new MemCopyImpl());
@@ -403,43 +382,43 @@ public class Opcodes {
     }
 
     @Assembles("STR")
-    public static Opcode STR(@Register Integer dst, @Register Integer src) {
-        return new Opcode(STR, registerIndex(dst), src);
+    public static Opcode STR(@Register Integer dst, @Register Integer src, @Immediate Integer type) {
+        return new Opcode(STR, dst, src, type, new StrImpl());
     }
 
     @Assembles("STR_LEN")
     public static Opcode STR_LEN(@Register Integer dst, @Register Integer src) {
-        return new Opcode(STR_LEN, registerIndex(dst), registerIndex(src));
+        return new Opcode(STR_LEN, dst, src, new StrLenImpl());
     }
 
     @Assembles("CHAR_AT")
-    public static Opcode CHAR_AT(@Register Integer dst, @Register Integer src, @Register Integer extra) {
-        return new Opcode(CHAR_AT, registerIndex(dst), registerIndex(src), registerIndex(extra));
+    public static Opcode CHAR_AT(@Register Integer dst, @Register Integer src, @Register Integer index) {
+        return new Opcode(CHAR_AT, dst, src, index, new CharAtImpl());
     }
 
     @Assembles("TO_CHARS")
     public static Opcode TO_CHARS(@Register Integer dst, @Register Integer src) {
-        return new Opcode(TO_CHARS, registerIndex(dst), registerIndex(src));
+        return new Opcode(TO_CHARS, dst, src, new ToCharsImpl());
     }
 
     @Assembles("FROM_CHARS")
     public static Opcode FROM_CHARS(@Register Integer dst, @Register Integer src) {
-        return new Opcode(FROM_CHARS, registerIndex(dst), registerIndex(src));
+        return new Opcode(FROM_CHARS, dst, src, new FromCharsImpl());
     }
 
     @Assembles("CONCAT")
     public static Opcode CONCAT(@Register Integer dst, @Register Integer src) {
-        return new Opcode(CONCAT, registerIndex(dst), registerIndex(src));
+        return new Opcode(CONCAT, dst, src, new ConcatImpl());
     }
 
     @Assembles("SUB_STR")
     public static Opcode SUB_STR(@Register Integer dst, @Register Integer src, @Register Integer start, @Register Integer end) {
-        return new Opcode(SUB_STR, registerIndex(dst), registerIndex(src), registerIndex(start), registerIndex(end));
+        return new Opcode(SUB_STR, dst, src, start, end, new SubStrImpl());
     }
 
     @Assembles("SCOMP")
     public static Opcode SCOMP(@Register Integer dst, @Register Integer a, @Register Integer b) {
-        return new Opcode(SCOMP, registerIndex(dst), registerIndex(a), registerIndex(b));
+        return new Opcode(SCOMP, dst, a, b, new SCompImpl());
     }
 
     @Assembles("TRAPS")
@@ -449,7 +428,7 @@ public class Opcodes {
 
     @Assembles("TRAP")
     public static Opcode TRAP(@Register Integer code) {
-        return new Opcode(TRAP, registerIndex(code), new TrapImpl());
+        return new Opcode(TRAP, code, new TrapImpl());
     }
 
     @Assembles("PARAMS")
@@ -462,20 +441,8 @@ public class Opcodes {
         return new Opcode(DEBUG, sentinel, src, new DebugImpl());
     }
 
-    public static int registerType(int reg){
-        return (reg >> 24) & 0xFF;
-    }
-
-    public static int registerIndex(int reg){
-        return 0x00FFFFFF & reg;
-    }
-
     public static int encodeRegisterOperand(TypeFlag type, int reg){
         return encodeOpcodeType(type.ordinal(), reg);
-    }
-
-    public static int encodeRegisterOperand(int flags, int reg){
-        return (flags << 24) | reg;
     }
 
     public static int encodeOpcodeType(int type, int opcode){
@@ -490,37 +457,8 @@ public class Opcodes {
         return (int) l;
     }
 
-    private static int conditionType(int dstReg){
-        return switch (registerType(dstReg)){
-            case INT_T -> ICOND;
-            case DOUBLE_T -> DCOND;
-            default -> 0;
-        };
-    }
-
-
-
-    public static long pack(int opcode, int ra, int rb, int rc, int immediate){
-        return ((long) opcode << 56) | ((long) ra << 48) | ((long) rb << 40) | ((long) rc << 32) | immediate;
-    }
-
     public static int opcode(long opcode){
         return (int)((opcode >> 56) & 0xFF);
     }
 
-    public static int ra(long opcode){
-        return (int)((opcode >> 48) & 0xFF);
-    }
-
-    public static int rb(long opcode){
-        return (int)((opcode >> 40) & 0xFF);
-    }
-
-    public static int rc(long opcode){
-        return (int)((opcode >> 32) & 0xFF);
-    }
-
-    public static int immediate(long opcode){
-        return (int)(opcode & 0xFF);
-    }
 }

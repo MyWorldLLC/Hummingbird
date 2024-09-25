@@ -4,8 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 
-import static myworld.hummingbird.Opcodes.*;
-
 public final class HummingbirdVM {
 
     private final Executable exe;
@@ -110,56 +108,6 @@ public final class HummingbirdVM {
             /*ip++;
             switch (ins.opcode()) {
                     /*
-                    case STR -> {
-                        var sType = Opcodes.registerType(ins.src());
-                        var src = Opcodes.registerIndex(ins.src());
-                        switch (sType) {
-                            case INT_T -> oreg[regOffset + dst] = Integer.toString(ireg[regOffset + src]);
-                            case FLOAT_T -> oreg[regOffset + dst] = Float.toString(freg[regOffset + src]);
-                            case LONG_T -> oreg[regOffset + dst] = Long.toString(reg[regOffset + src]);
-                            case DOUBLE_T -> oreg[regOffset + dst] = Double.toString(dreg[regOffset + src]);
-                            case OBJECT_T -> oreg[regOffset + dst] = objectToString(oreg[regOffset + src]);
-                        }
-                    }
-                    case STR_LEN -> {
-                        if (oreg[regOffset + ins.src()] instanceof String s) {
-                            ireg[regOffset + dst] = s.length();
-                        } else {
-                            ireg[regOffset + dst] = 0;
-                        }
-                    }
-                    case CHAR_AT -> {
-                        if (oreg[regOffset + ins.src()] instanceof String s) {
-                            ireg[regOffset + dst] = s.charAt(ireg[regOffset + ins.extra()]);
-                        } else {
-                            ireg[regOffset + dst] = 0;
-                        }
-                    }
-                    case TO_CHARS -> {
-                        var charBuf = memory.asCharBuffer();
-                        var address = ireg[regOffset + dst];
-                        if (oreg[regOffset + ins.src()] instanceof String s) {
-                            var chars = s.toCharArray();
-                            memory.putInt(address, chars.length);
-                            charBuf.put((address + 4) / 2, chars);
-                        }
-                    }
-                    case FROM_CHARS -> {
-                        var address = ireg[regOffset + ins.src()];
-                        oreg[regOffset + dst] = readString(address);
-                    }
-                    case CONCAT -> {
-                        var a = oreg[regOffset + ins.src()];
-                        var b = oreg[regOffset + ins.extra()];
-                        oreg[regOffset + dst] = objectToString(a) + objectToString(b);
-                    }
-                    case SUB_STR -> {
-                        var start = ireg[regOffset + ins.extra()];
-                        var end = ireg[regOffset + ins.extra1()];
-                        var str = objectToString(oreg[regOffset + ins.src()]);
-
-                        oreg[regOffset + dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
-                    }
                     case SCOMP -> {
                         ireg[regOffset + dst] = compareStrings(oreg, regOffset + ins.src(), regOffset + ins.extra());
                     }*/
@@ -175,6 +123,10 @@ public final class HummingbirdVM {
         char[] characters = new char[length];
         memory.slice(address, length * 2).asCharBuffer().get(characters);
         return new String(characters);
+    }
+
+    public String objectToString(int address){
+        return objectToString(objMemory[address]);
     }
 
     public String objectToString(Object obj) {
@@ -245,75 +197,6 @@ public final class HummingbirdVM {
 
     public static long longFromInts(int high, int low) {
         return ((long) high << 32) | ((long) low);
-    }
-
-    private static boolean condLongs(Opcode ins, long[] reg, int regOffset) {
-        var dst = regOffset + ins.dst();
-        var src = regOffset + ins.src();
-        switch (ins.extra()) {
-            case COND_LT -> {
-                return reg[dst] < reg[src];
-            }
-            case COND_LE -> {
-                return reg[dst] <= reg[src];
-            }
-            case COND_EQ -> {
-                return reg[dst] == reg[src];
-            }
-            case COND_GE -> {
-                return reg[dst] >= reg[src];
-            }
-            case COND_GT -> {
-                return reg[dst] > reg[src];
-            }
-        }
-        return false;
-    }
-
-    private static boolean condDoubles(Opcode ins, long[] reg, int regOffset) {
-        var dst = regOffset + ins.dst();
-        var src = regOffset + ins.src();
-        var a = Double.longBitsToDouble(reg[dst]);
-        var b = Double.longBitsToDouble(reg[src]);
-        switch (ins.extra()) {
-            case COND_LT -> {
-                return a < b;
-            }
-            case COND_LE -> {
-                return a <= b;
-            }
-            case COND_EQ -> {
-                return a == b;
-            }
-            case COND_GE -> {
-                return a >= b;
-            }
-            case COND_GT -> {
-                return a > b;
-            }
-        }
-        return false;
-    }
-
-    private static int compareStrings(Object[] oreg, int a, int b) {
-        var objA = oreg[a];
-        var objB = oreg[b];
-        if (objA instanceof String strA && objB instanceof String strB) {
-            return strA.compareTo(strB);
-        }
-        return Integer.MAX_VALUE;
-    }
-
-    private static boolean condObjects(int cond, long[] registers, int dst, int src) {
-        switch (cond) {
-            case COND_EQ -> {
-                //return registers.oreg()[dst] == registers.oreg()[src];
-            }
-            case COND_NULL -> {
-                //return registers.oreg()[dst] == null;
-            }
-        }
-        return false;
     }
 
     private static long[] allocateRegisters(int l) {
