@@ -9,7 +9,7 @@ import static myworld.hummingbird.Opcodes.*;
 public final class HummingbirdVM {
 
     private final Executable exe;
-    private final MemoryLimits limits;
+    public final MemoryLimits limits;
     public ByteBuffer memory;
     public Object[] objMemory;
     private Fiber currentFiber;
@@ -110,60 +110,6 @@ public final class HummingbirdVM {
             /*ip++;
             switch (ins.opcode()) {
                     /*
-                    case GWRITE -> {
-                        var wType = Opcodes.registerType(ins.src());
-                        var src = Opcodes.registerIndex(ins.src());
-                        var addr = ireg[regOffset + ins.dst()];
-                        memory.put(ireg[regOffset + ins.extra()], (byte) ins.extra1());
-                        switch (wType) {
-                            case INT_T -> memory.putInt(addr, ireg[regOffset + src]);
-                            case FLOAT_T -> memory.putFloat(addr, freg[regOffset + src]);
-                            case LONG_T -> memory.putLong(addr, reg[regOffset + src]);
-                            case DOUBLE_T -> memory.putDouble(addr, dreg[regOffset + src]);
-                            case OBJECT_T -> objMemory[addr] = oreg[regOffset + src];
-                        }
-                    }
-                    case GREAD -> {
-                        var guard = memory.get(ireg[regOffset + ins.extra()]);
-                        if (guard != 0) {
-                            ip = ins.extra1();
-                        }
-                        switch (type) {
-                            case INT_T -> ireg[regOffset + dst] = memory.getInt(ireg[regOffset + ins.src()]);
-                            case FLOAT_T -> freg[regOffset + dst] = memory.getFloat(ireg[regOffset + ins.src()]);
-                            case LONG_T -> reg[regOffset + dst] = memory.getLong(ireg[regOffset + ins.src()]);
-                            case DOUBLE_T -> dreg[regOffset + dst] = memory.getDouble(ireg[regOffset + ins.src()]);
-                            case OBJECT_T -> oreg[regOffset + dst] = objMemory[ireg[regOffset + ins.src()]];
-                        }
-                    }
-                    case MEM_COPY -> {
-                        var start = ireg[regOffset + ins.src()];
-                        var end = ireg[regOffset + ins.extra()];
-                        memory.put(ireg[regOffset + dst], memory.slice(start, end), 0, end - start);
-                    }
-                    case OBJ_COPY -> {
-                        var start = ireg[regOffset + ins.src()];
-                        var end = ireg[regOffset + ins.extra()];
-                        System.arraycopy(objMemory, start, objMemory, ireg[regOffset + dst], end - start);
-                    }
-                    case ALLOCATED -> {
-                        switch (ins.src()) {
-                            case OBJECT_T -> ireg[regOffset + dst] = objMemory.length;
-                            default -> ireg[regOffset + dst] = memory.capacity();
-                        }
-                    }
-                    case RESIZE -> {
-                        var size = Math.min(ireg[regOffset + ins.dst()], limits.bytes());
-                        var next = ByteBuffer.allocate(size);
-                        next.put(0, memory, 0, Math.min(size, memory.capacity()));
-                        memory = next;
-                    }
-                    case OBJ_RESIZE -> {
-                        var size = Math.min(ireg[regOffset + ins.dst()], limits.objects());
-                        var next = new Object[size];
-                        System.arraycopy(objMemory, 0, next, 0, Math.min(size, objMemory.length));
-                        objMemory = next;
-                    }
                     case STR -> {
                         var sType = Opcodes.registerType(ins.src());
                         var src = Opcodes.registerIndex(ins.src());

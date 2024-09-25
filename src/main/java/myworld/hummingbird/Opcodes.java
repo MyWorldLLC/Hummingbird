@@ -374,27 +374,32 @@ public class Opcodes {
 
     @Assembles("MEM_COPY")
     public static Opcode MEM_COPY(@Register Integer dst, @Register Integer src, @Register Integer end) {
-        return new Opcode(MEM_COPY, registerIndex(dst), registerIndex(src), registerIndex(end));
+        return new Opcode(MEM_COPY, dst, src, end, new MemCopyImpl());
     }
 
     @Assembles("OBJ_COPY")
     public static Opcode OBJ_COPY(@Register Integer dst, @Register Integer src, @Register Integer end) {
-        return new Opcode(OBJ_COPY, registerIndex(dst), registerIndex(src), registerIndex(end));
+        return new Opcode(OBJ_COPY, dst, src, end, new ObjCopyImpl());
     }
 
     @Assembles("ALLOCATED")
-    public static Opcode ALLOCATED(@Register Integer dst, @Immediate Integer type) {
-        return new Opcode(ALLOCATED, registerIndex(dst), type);
+    public static Opcode ALLOCATED(@Register Integer dst) {
+        return new Opcode(ALLOCATED, dst, new AllocatedImpl());
+    }
+
+    @Assembles("OBJ_ALLOCATED")
+    public static Opcode OBJ_ALLOCATED(@Register Integer dst) {
+        return new Opcode(ALLOCATED, dst, new ObjAllocatedImpl());
     }
 
     @Assembles("RESIZE")
-    public static Opcode RESIZE(@Register Integer dst) {
-        return new Opcode(RESIZE, registerIndex(dst));
+    public static Opcode RESIZE(@Register Integer dst, @Register Integer size) {
+        return new Opcode(RESIZE, dst, size, new ResizeImpl());
     }
 
     @Assembles("OBJ_RESIZE")
-    public static Opcode OBJ_RESIZE(@Register Integer dst) {
-        return new Opcode(OBJ_RESIZE, registerIndex(dst));
+    public static Opcode OBJ_RESIZE(@Register Integer dst, @Register Integer size) {
+        return new Opcode(OBJ_RESIZE, dst, size, new ObjResizeImpl());
     }
 
     @Assembles("STR")
