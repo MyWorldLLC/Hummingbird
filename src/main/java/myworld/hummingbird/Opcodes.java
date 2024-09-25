@@ -1,6 +1,11 @@
 package myworld.hummingbird;
 
 import myworld.hummingbird.instructions.*;
+import myworld.hummingbird.instructions.arithmetic.*;
+import myworld.hummingbird.instructions.bitwise.*;
+import myworld.hummingbird.instructions.flow.*;
+import myworld.hummingbird.instructions.memory.*;
+import myworld.hummingbird.instructions.string.*;
 
 @SuppressWarnings("unused")
 public class Opcodes {
