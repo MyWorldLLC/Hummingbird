@@ -99,6 +99,10 @@ public final class HummingbirdVM {
         return null;
     }
 
+    public void enqueue(Fiber fiber){
+        runQueue.add(fiber);
+    }
+
     public void run(Fiber fiber) throws HummingbirdException {
 
         fiber.restoreCallContext();
