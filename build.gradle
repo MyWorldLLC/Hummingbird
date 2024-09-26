@@ -1,4 +1,5 @@
 apply plugin: 'java-library'
+apply plugin: 'maven-publish'
 
 repositories {
     mavenCentral()
@@ -8,6 +9,9 @@ configurations {
     jmh
     profiling
 }
+
+group = 'myworld'
+version = '0.0.1-SNAPSHOT'
 
 dependencies {
 
@@ -101,4 +105,20 @@ task runProfiler(type:JavaExec) {
     mainClass = 'myworld.hummingbird.profiling.Profiler'
 
     classpath = sourceSets.profiling.runtimeClasspath + sourceSets.profiling.compileClasspath
+}
+
+publishing {
+    publications {
+        hummingbird(MavenPublication) {
+            groupId = "${project.group}"
+            artifactId = 'hummingbird'
+            version = "${project.version}"
+
+            from components.java
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
 }
