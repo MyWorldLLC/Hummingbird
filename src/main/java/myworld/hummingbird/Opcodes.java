@@ -29,73 +29,75 @@ public class Opcodes {
     public static final int REM = 0x06;
     public static final int NEG = 0x07;
     public static final int POW = 0x08;
+    public static final int ABS = 0x09;
+    public static final int CADD = 0x0A;
 
     // ========= Bitwise =========
-    public static final int BAND = 0x09;
-    public static final int BOR = 0x0A;
-    public static final int BXOR = 0x0B;
-    public static final int BNOT = 0x0C;
-    public static final int BLSHIFT = 0x0D;
-    public static final int BSRSHIFT = 0x0E;
-    public static final int BURSHIFT = 0x0F;
+    public static final int BAND = 0x0B;
+    public static final int BOR = 0x0C;
+    public static final int BXOR = 0x0D;
+    public static final int BNOT = 0x0E;
+    public static final int BLSHIFT = 0x0F;
+    public static final int BSRSHIFT = 0x10;
+    public static final int BURSHIFT = 0x11;
 
     // ========= Conversion =========
-    public static final int L2D = 0x10;
-    public static final int D2L = 0x11;
+    public static final int L2D = 0x12;
+    public static final int D2L = 0x13;
 
     // ========= Flow =========
-    public static final int GOTO = 0x12;
-    public static final int JMP = 0x13;
-    public static final int ICOND = 0x14;
-    public static final int DCOND = 0x15;
+    public static final int GOTO = 0x14;
+    public static final int JMP = 0x15;
+    public static final int ICOND = 0x16;
+    public static final int DCOND = 0x17;
 
     // ========= Registers =========
 
-    public static final int PARAM = 0x16;
-    public static final int PARAMS = 0x17;
-    public static final int COPY = 0x18;
-    public static final int SAVE = 0x19;
-    public static final int RESTORE = 0x1A;
-    public static final int IP = 0x1B;
+    public static final int PARAM = 0x18;
+    public static final int PARAMS = 0x19;
+    public static final int COPY = 0x1A;
+    public static final int SAVE = 0x1B;
+    public static final int RESTORE = 0x1C;
+    public static final int IP = 0x1D;
 
     // ========= Calls =========
-    public static final int CALL = 0x1C;
-    public static final int DCALL = 0x1D;
-    public static final int FCALL = 0x1E;
-    public static final int DFCALL = 0x1F;
-    public static final int RETURN = 0x20;
+    public static final int CALL = 0x1E;
+    public static final int DCALL = 0x1F;
+    public static final int FCALL = 0x20;
+    public static final int DFCALL = 0x21;
+    public static final int RETURN = 0x22;
 
     // ========= Fibers =========
-    public static final int SPAWN = 0x21;
-    public static final int YIELD = 0x22;
-    public static final int BLOCK = 0x23;
-    public static final int UNBLOCK = 0x24;
+    public static final int SPAWN = 0x23;
+    public static final int YIELD = 0x24;
+    public static final int BLOCK = 0x25;
+    public static final int UNBLOCK = 0x26;
 
-    // ========= Memory ========= // TODO - opcode renumbering
-    public static final int WRITE = 0x25;
-    public static final int READ = 0x26;
-    public static final int MEM_COPY = 0x2B;
-    public static final int OBJ_COPY = 0x2C;
-    public static final int ALLOCATED = 0x2D;
-    public static final int RESIZE = 0x2E;
-    public static final int OBJ_RESIZE = 0x2F;
+    // ========= Memory =========
+    public static final int WRITE = 0x27;
+    public static final int READ = 0x28;
+    public static final int MEM_COPY = 0x29;
+    public static final int OBJ_COPY = 0x2A;
+    public static final int ALLOCATED = 0x2B;
+    public static final int RESIZE = 0x2C;
+    public static final int OBJ_RESIZE = 0x2D;
 
     // ========= Strings =========
-    public static final int STR = 0x30;
-    public static final int STR_LEN = 0x31;
-    public static final int CHAR_AT = 0x32;
-    public static final int TO_CHARS = 0x33;
-    public static final int FROM_CHARS = 0x34;
-    public static final int CONCAT = 0x35;
-    public static final int SUB_STR = 0x36;
-    public static final int SCOMP = 0x37;
+    public static final int STR = 0x2E;
+    public static final int STR_LEN = 0x2F;
+    public static final int CHAR_AT = 0x30;
+    public static final int TO_CHARS = 0x31;
+    public static final int FROM_CHARS = 0x32;
+    public static final int CONCAT = 0x33;
+    public static final int SUB_STR = 0x34;
+    public static final int SCOMP = 0x35;
 
     // ========= Exceptions =========
-    public static final int TRAPS = 0x38;
-    public static final int TRAP = 0x39;
+    public static final int TRAPS = 0x36;
+    public static final int TRAP = 0x37;
 
     // ========= Debug =========
-    public static final int DEBUG = 0x3B;
+    public static final int DEBUG = 0x38;
 
     @Assembles("CONST")
     public static Opcode CONST(@Register Integer dst, @Immediate Object src){
@@ -152,6 +154,16 @@ public class Opcodes {
         return new Opcode(POW, dst, a, b, new PowImpl());
     }
 
+    @Assembles("ABS")
+    public static Opcode ABS(@Register Integer dst, @Register Integer a){
+        return new Opcode(ABS, dst, a, new AbsImpl());
+    }
+
+    @Assembles("CADD")
+    public static Opcode CADD(@Register Integer dst, @Register Integer a, @Immediate Long value){
+        return new Opcode(CADD, dst, a, new CAddImpl(value));
+    }
+
     @Assembles("DADD")
     public static Opcode DADD(@Register Integer dst, @Register Integer a, @Register Integer b){
         return new Opcode(ADD, dst, a, b, new DAddImpl());
@@ -185,6 +197,16 @@ public class Opcodes {
     @Assembles("DPOW")
     public static Opcode DPOW(@Register Integer dst, @Register Integer a, @Register Integer b){
         return new Opcode(POW, dst, a, b, new DPowImpl());
+    }
+
+    @Assembles("DABS")
+    public static Opcode DABS(@Register Integer dst, @Register Integer a){
+        return new Opcode(ABS, dst, a, new DAbsImpl());
+    }
+
+    @Assembles("DCADD")
+    public static Opcode DCADD(@Register Integer dst, @Register Integer a, @Immediate Double value){
+        return new Opcode(CADD, dst, a, new DCAddImpl(value));
     }
 
     @Assembles("BAND")
