@@ -16,6 +16,7 @@ public class DCondImpl implements OpcodeImpl {
             case COND_LT -> Double.longBitsToDouble(reg[dst]) < Double.longBitsToDouble(reg[src]);
             case COND_LE -> Double.longBitsToDouble(reg[dst]) <= Double.longBitsToDouble(reg[src]);
             case COND_EQ -> Double.longBitsToDouble(reg[dst]) == Double.longBitsToDouble(reg[src]);
+            case COND_NE -> Double.longBitsToDouble(reg[dst]) != Double.longBitsToDouble(reg[src]);
             case COND_GE -> Double.longBitsToDouble(reg[dst]) >= Double.longBitsToDouble(reg[src]);
             case COND_GT -> Double.longBitsToDouble(reg[dst]) > Double.longBitsToDouble(reg[src]);
             default -> false;

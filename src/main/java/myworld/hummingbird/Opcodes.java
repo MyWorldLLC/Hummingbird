@@ -13,9 +13,10 @@ public class Opcodes {
     public static final int COND_LT = 0;
     public static final int COND_LE = 1;
     public static final int COND_EQ = 2;
-    public static final int COND_GE = 3;
-    public static final int COND_GT = 4;
-    public static final int COND_NULL = 5;
+    public static final int COND_NE = 3;
+    public static final int COND_GE = 4;
+    public static final int COND_GT = 5;
+    public static final int COND_NULL = 6;
 
     // ========= CONST =========
     public static final int CONST = 0x00;
@@ -269,6 +270,11 @@ public class Opcodes {
         return new Opcode(ICOND, dst, src, COND_EQ, target, new ICondImpl());
     }
 
+    @Assembles("IFNE")
+    public static Opcode IFNE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_NE, target, new ICondImpl());
+    }
+
     @Assembles("IFGE")
     public static Opcode IFGE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
         return new Opcode(ICOND, dst, src, COND_GE, target, new ICondImpl());
@@ -317,6 +323,11 @@ public class Opcodes {
     @Assembles("DIFEQ")
     public static Opcode DIFEQ(@Register Integer dst, @Register Integer src, @Immediate Integer target){
         return new Opcode(DCOND, dst, src, COND_EQ, target, new DCondImpl());
+    }
+
+    @Assembles("DIFNE")
+    public static Opcode DIFNE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_NE, target, new DCondImpl());
     }
 
     @Assembles("DIFGE")

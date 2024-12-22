@@ -17,6 +17,7 @@ public class ICondImpl implements OpcodeImpl {
             case COND_LT -> reg[dst] < reg[src];
             case COND_LE -> reg[dst] <= reg[src];
             case COND_EQ -> reg[dst] == reg[src];
+            case COND_NE -> reg[dst] != reg[src];
             case COND_GE -> reg[dst] >= reg[src];
             case COND_GT -> reg[dst] > reg[src];
             default -> false;
