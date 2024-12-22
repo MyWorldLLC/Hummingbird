@@ -19,6 +19,7 @@ public class TestPrograms {
     public final HummingbirdVM simpleFunction = load("myworld/hummingbird/test/programs/simpleFunction.hasm");
     public final HummingbirdVM simpleFiber = load("myworld/hummingbird/test/programs/simpleFiber.hasm");
     public final HummingbirdVM recursiveCountOneMillion = load("myworld/hummingbird/test/programs/recursiveCountOneMillion.hasm");
+    public final HummingbirdVM mathBench = load("myworld/hummingbird/test/programs/mathBench.hasm");
 
     public Map<String, Callable<Object>> javaTestPrograms(){
         var programs = new HashMap<String, Callable<Object>>();
@@ -40,6 +41,7 @@ public class TestPrograms {
         programs.put("simpleFunction", simpleFunction);
         programs.put("recursiveCountOneMillion", recursiveCountOneMillion);
         programs.put("goldenRatio", goldenRatio);
+        programs.put("mathBench", mathBench);
 
         return programs;
     }

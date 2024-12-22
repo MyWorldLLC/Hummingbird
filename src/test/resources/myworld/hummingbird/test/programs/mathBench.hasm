@@ -1,0 +1,36 @@
+# Trivial numeric speed test, borrowed from https://github.com/DNS/benchmark-language/blob/master/test.java
+.code
+  # int i = 0;
+  # double x = 1.0;
+  # for(i = 0; i<99999999; i++){
+  #   x = (i + i + 2 * i + 1 - 0.379)/x;
+  # }
+  # return x;
+  # r0 = x
+  # r1 = 1
+  # r2 = 2
+  # r3 = 0.379
+  # r4 = 99999999
+  # r5 = i
+  # r6 = accumulator
+
+  CONST r0, d1.0
+  CONST r1, 1
+  CONST r2, 2
+  CONST r3, d0.379
+  CONST r4, 99999999
+  CONST r5, 0
+
+  loop:
+  IFGE r5, r4, $end
+  MUL r6, r2, r5 # r6 = 2 * i
+  ADD r6, r6, r5 # r6 = i + 2 * i
+  ADD r6, r6, r5 # r6 = i + i + 2 * i
+  ADD r6, r6, r1 # r6 = i + i + 2 * i + 1
+  L2D r6, r6
+  DSUB r6, r6, r3 # r6 = i + i + 2 * i + 1 - 0.379
+  DDIV r0, r6, r0 # x = (i + i + 2 * i + 1 - 0.379)/x
+  ADD r5, r5, r1  # i++
+  GOTO $loop
+  end:
+  RETURN r0
