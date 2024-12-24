@@ -287,7 +287,42 @@ public class Opcodes {
 
     @Assembles("IFNULL")
     public static Opcode IFNULL(@Register Integer dst, @Immediate Integer target){
-        return new Opcode(COND_NULL, dst, target);
+        return new Opcode(COND_NULL, dst, target, new IfNullImpl());
+    }
+
+    @Assembles("TIFLT")
+    public static Opcode TIFLT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_LT, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFLE")
+    public static Opcode TIFLE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_LE, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFEQ")
+    public static Opcode TIFEQ(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_EQ, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFNE")
+    public static Opcode TIFNE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_NE, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFGE")
+    public static Opcode TIFGE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_GE, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFGT")
+    public static Opcode TIFGT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(ICOND, dst, src, COND_GT, target, new ICondImpl(false));
+    }
+
+    @Assembles("TIFNULL")
+    public static Opcode TIFNULL(@Register Integer dst, @Immediate Integer target){
+        return new Opcode(COND_NULL, dst, target, new IfNullImpl(false));
     }
 
     @Assembles("RETURN")
@@ -338,6 +373,36 @@ public class Opcodes {
     @Assembles("DIFGT")
     public static Opcode DIFGT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
         return new Opcode(DCOND, dst, src, COND_GT, target, new DCondImpl());
+    }
+
+    @Assembles("TDIFLT")
+    public static Opcode TDIFLT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_LT, target, new DCondImpl(false));
+    }
+
+    @Assembles("TDIFLE")
+    public static Opcode TDIFLE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_LE, target, new DCondImpl(false));
+    }
+
+    @Assembles("TDIFEQ")
+    public static Opcode TDIFEQ(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_EQ, target, new DCondImpl(false));
+    }
+
+    @Assembles("TDIFNE")
+    public static Opcode TDIFNE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_NE, target, new DCondImpl(false));
+    }
+
+    @Assembles("TDIFGE")
+    public static Opcode TDIFGE(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_GE, target, new DCondImpl(false));
+    }
+
+    @Assembles("TDIFGT")
+    public static Opcode TDIFGT(@Register Integer dst, @Register Integer src, @Immediate Integer target){
+        return new Opcode(DCOND, dst, src, COND_GT, target, new DCondImpl(false));
     }
 
     @Assembles("IP")

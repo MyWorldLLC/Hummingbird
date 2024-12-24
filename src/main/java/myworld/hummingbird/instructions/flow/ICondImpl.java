@@ -8,6 +8,20 @@ import static myworld.hummingbird.Opcodes.*;
 
 public class ICondImpl implements OpcodeImpl {
 
+    private final boolean jump;
+
+    public ICondImpl(){
+        this(true);
+    }
+
+    public ICondImpl(boolean jumpMode){
+        jump = jumpMode;
+    }
+
+    public boolean isJumpMode(){
+        return jump;
+    }
+
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var dst = regOffset + ins.dst();
@@ -22,8 +36,13 @@ public class ICondImpl implements OpcodeImpl {
             case COND_GT -> reg[dst] > reg[src];
             default -> false;
         };
-        if(result){
-            return ins.extra1();
+
+        if(jump){
+            if(result){
+                return ins.extra1();
+            }
+        }else{
+            reg[ins.extra1()] = result ? 1 : 0;
         }
         return ip + 1;
     }
