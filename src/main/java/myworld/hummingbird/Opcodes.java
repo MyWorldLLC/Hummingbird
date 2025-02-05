@@ -330,6 +330,11 @@ public class Opcodes {
         return new Opcode(RETURN, value, 0, 0, 0, new ReturnImpl());
     }
 
+    @Assembles("MRETURN")
+    public static Opcode MRETURN(@Register Integer value, @Immediate Integer count){
+        return new Opcode(RETURN, value, count, 0, 0, new MReturnImpl());
+    }
+
     @Assembles("COPY")
     public static Opcode COPY(@Register Integer dst, @Register Integer src) {
         return new Opcode(COPY, dst, src, new CopyImpl());
