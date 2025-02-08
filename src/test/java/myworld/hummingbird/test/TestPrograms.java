@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import static myworld.hummingbird.test.TestPrograms.DCOp.*;
+
 public class TestPrograms {
 
     public final HummingbirdVM countOneMillion = load("myworld/hummingbird/test/programs/countOneMillion.hasm");
@@ -26,7 +28,7 @@ public class TestPrograms {
 
         programs.put("countOneMillion", this::countOneMillion);
         programs.put("returnConstant", this::returnConstant);
-        programs.put("decodeExperiment", decodeExperiment());
+        programs.put("decodeChainedDispatch", decodeChainedDispatch());
 
         return programs;
     }
@@ -87,13 +89,76 @@ public class TestPrograms {
         return 1000;
     }
 
-    record DCOp(int op, int immediates, int dst, int src, int op1){}
+    private interface DCOpImpl {
+
+        int exec(DCOp[] program, int[] registers, int ip);
+
+    }
+
+    private class IFLT implements DCOpImpl {
+
+        @Override
+        public int exec(DCOp[] program, int[] registers, int ip) {
+            var op = program[ip];
+            var t1 = decodeOp(op.immediates, DST_MASK, op.dst, registers);
+            var t2 = decodeOp(op.immediates, SRC_MASK, op.src, registers);
+            if(t1 < t2){
+                ip = decodeOp(op.immediates, OP_MASK, op.op1, registers);
+            }else{
+                ip++;
+            }
+            return ip;
+        }
+    }
+
+    private class ADD implements DCOpImpl {
+
+        @Override
+        public int exec(DCOp[] program, int[] registers, int ip) {
+            var op = program[ip];
+            var dst = op.dst;
+            var src = decodeOp(op.immediates, SRC_MASK, op.src, registers);
+            var op1 = decodeOp(op.immediates, OP_MASK, op.op1, registers);
+            registers[dst] = src + op1;
+            return program[ip + 1].impl.exec(program, registers, ip + 1);
+        }
+
+    }
+
+    private class GOTO implements DCOpImpl {
+
+        @Override
+        public int exec(DCOp[] program, int[] registers, int ip) {
+            var op = program[ip];
+            return decodeOp(op.immediates, DST_MASK, op.dst, registers);
+        }
+    }
+
+    private class RETURN implements DCOpImpl {
+
+        @Override
+        public int exec(DCOp[] program, int[] registers, int ip) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    record DCOp(int op, int immediates, int dst, int src, int op1, DCOpImpl impl){
+
+        static final int IFLT = 0;
+        static final int ADD = 1;
+        static final int GOTO = 2;
+        static final int RETURN = 3;
+
+        static final int DST_MASK = 0b100;
+        static final int SRC_MASK = 0b010;
+        static final int OP_MASK = 0b001;
+    }
 
     private static int decodeOp(int immediates, int mask, int payload, int[] registers){
         return (immediates & mask) == 0 ? registers[payload] : payload;
     }
 
-    public Callable<Object> decodeExperiment(){
+    public Callable<Object> decodeChainedDispatch(){
 
         // Opcodes:
         // 0 - IFLT
@@ -105,20 +170,11 @@ public class TestPrograms {
         // 0 - register
         // 1 - immediate
 
-        final int IFLT = 0;
-        final int ADD = 1;
-        final int GOTO = 2;
-        final int RETURN = 3;
-
-        final int DST_MASK = 0b100;
-        final int SRC_MASK = 0b010;
-        final int OP_MASK = 0b001;
-
         var program = new DCOp[]{
-                new DCOp(IFLT, SRC_MASK | OP_MASK, 0, 1000000, 3),
-                new DCOp(ADD, OP_MASK, 0, 0, 1),
-                new DCOp(GOTO, DST_MASK, 0, 0, 0),
-                new DCOp(RETURN, 0, 0, 0, 0)
+                new DCOp(ADD, OP_MASK, 0, 0, 1, new ADD()),
+                new DCOp(DCOp.IFLT, DCOp.SRC_MASK | OP_MASK, 0, 1000000, 0, new IFLT()),
+                //new DCOp(GOTO, DST_MASK, 0, 0, 0, new GOTO()),
+                new DCOp(RETURN, 0, 0, 0, 0, new RETURN())
         };
 
         return () -> {
@@ -127,32 +183,9 @@ public class TestPrograms {
             int ip = 0;
             while(ip < program.length){
                 var op = program[ip];
-                switch (op.op()){
-                    case IFLT -> {
-                        var t1 = decodeOp(op.immediates, DST_MASK, op.dst, registers);
-                        var t2 = decodeOp(op.immediates, SRC_MASK, op.src, registers);
-                        if(t1 >= t2){
-                            ip = decodeOp(op.immediates, OP_MASK, op.op1, registers);
-                        }else{
-                            ip++;
-                        }
-                    }
-                    case ADD -> {
-                        var dst = op.dst;
-                        var src = decodeOp(op.immediates, SRC_MASK, op.src, registers);
-                        var op1 = decodeOp(op.immediates, OP_MASK, op.op1, registers);
-                        registers[dst] = src + op1;
-                        ip++;
-                    }
-                    case GOTO -> {
-                        ip = decodeOp(op.immediates, DST_MASK, op.dst, registers);
-                    }
-                    case RETURN -> {
-                        return decodeOp(op.immediates, DST_MASK, op.dst, registers);
-                    }
-                }
+                ip = op.impl.exec(program, registers, ip);
             }
-            return -1;
+            return registers[0];
         };
     }
 
