@@ -91,19 +91,19 @@ public class TestPrograms {
 
     private interface DCOpImpl {
 
-        int exec(DCOp[] program, int[] registers, int ip);
+        int exec(DCOp[] program, int[] registers, int[] memory, int ip);
 
     }
 
     private class IFLT implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int ip) {
+        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            var t1 = decodeOp(op.immediates, DST_MASK, op.dst, registers);
-            var t2 = decodeOp(op.immediates, SRC_MASK, op.src, registers);
+            var t1 = decodeOp(op.immediates, REG_DST, op.dst, registers, memory);
+            var t2 = decodeOp(op.immediates, REG_SRC, op.src, registers, memory);
             if(t1 < t2){
-                ip = decodeOp(op.immediates, OP_MASK, op.op1, registers);
+                ip = decodeOp(op.immediates, REG_OP1, op.op1, registers, memory);
             }else{
                 ip++;
             }
@@ -114,13 +114,13 @@ public class TestPrograms {
     private class ADD implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int ip) {
+        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
             var dst = op.dst;
-            var src = decodeOp(op.immediates, SRC_MASK, op.src, registers);
-            var op1 = decodeOp(op.immediates, OP_MASK, op.op1, registers);
+            var src = decodeOp(op.immediates, REG_SRC, op.src, registers, memory);
+            var op1 = decodeOp(op.immediates, REG_OP1, op.op1, registers, memory);
             registers[dst] = src + op1;
-            return program[ip + 1].impl.exec(program, registers, ip + 1);
+            return program[ip + 1].impl.exec(program, registers, null, ip + 1);
         }
 
     }
@@ -128,16 +128,16 @@ public class TestPrograms {
     private class GOTO implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int ip) {
+        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            return decodeOp(op.immediates, DST_MASK, op.dst, registers);
+            return decodeOp(op.immediates, REG_DST, op.dst, registers, memory);
         }
     }
 
     private class RETURN implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int ip) {
+        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             return Integer.MAX_VALUE;
         }
     }
@@ -149,13 +149,30 @@ public class TestPrograms {
         static final int GOTO = 2;
         static final int RETURN = 3;
 
-        static final int DST_MASK = 0b100;
-        static final int SRC_MASK = 0b010;
-        static final int OP_MASK = 0b001;
+        static final int DST_MASK = 0b11_00_00;
+        static final int SRC_MASK = 0b00_11_00;
+        static final int OP_MASK = 0b00_00_11;
+
+        static final int REG_DST = 2 * 2;
+        static final int REG_SRC = 1 * 2;
+        static final int REG_OP1 = 0 * 2;
+
+        static final int OP_REG = 0b00;
+        static final int OP_IMM = 0b01;
+        static final int OP_MEM = 0b10;
     }
 
-    private static int decodeOp(int immediates, int mask, int payload, int[] registers){
-        return (immediates & mask) == 0 ? registers[payload] : payload;
+    static int encodeOp(int opType, int register){
+        return opType << register;
+    }
+
+    private static int decodeOp(int operandTypes, int register, int payload, int[] registers, int[] memory){
+        return switch ((operandTypes >> register) & 0b11){
+            case OP_REG -> registers[payload];
+            case OP_IMM -> payload;
+            case OP_MEM -> memory[payload];
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     public Callable<Object> decodeChainedDispatch(){
@@ -171,8 +188,8 @@ public class TestPrograms {
         // 1 - immediate
 
         var program = new DCOp[]{
-                new DCOp(ADD, OP_MASK, 0, 0, 1, new ADD()),
-                new DCOp(DCOp.IFLT, DCOp.SRC_MASK | OP_MASK, 0, 1000000, 0, new IFLT()),
+                new DCOp(ADD, encodeOp(OP_IMM, REG_OP1), 0, 0, 1, new ADD()),
+                new DCOp(DCOp.IFLT, encodeOp(OP_IMM, REG_SRC) | encodeOp(OP_IMM, REG_OP1), 0, 1000000, 0, new IFLT()),
                 //new DCOp(GOTO, DST_MASK, 0, 0, 0, new GOTO()),
                 new DCOp(RETURN, 0, 0, 0, 0, new RETURN())
         };
@@ -183,7 +200,7 @@ public class TestPrograms {
             int ip = 0;
             while(ip < program.length){
                 var op = program[ip];
-                ip = op.impl.exec(program, registers, ip);
+                ip = op.impl.exec(program, registers, null, ip);
             }
             return registers[0];
         };
