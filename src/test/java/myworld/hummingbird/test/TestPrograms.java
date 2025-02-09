@@ -100,10 +100,10 @@ public class TestPrograms {
         @Override
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            var t1 = decodeOp(op.immediates, REG_DST, op.dst, registers, memory);
-            var t2 = decodeOp(op.immediates, REG_SRC, op.src, registers, memory);
+            var t1 = decodeOp(op.opFlags, REG_DST, op.dst, registers, memory);
+            var t2 = decodeOp(op.opFlags, REG_SRC, op.src, registers, memory);
             if(t1 < t2){
-                ip = decodeOp(op.immediates, REG_OP1, op.op1, registers, memory);
+                ip = decodeOp(op.opFlags, REG_OP1, op.op1, registers, memory);
             }else{
                 ip++;
             }
@@ -117,8 +117,8 @@ public class TestPrograms {
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
             var dst = op.dst;
-            var src = decodeOp(op.immediates, REG_SRC, op.src, registers, memory);
-            var op1 = decodeOp(op.immediates, REG_OP1, op.op1, registers, memory);
+            var src = decodeOp(op.opFlags, REG_SRC, op.src, registers, memory);
+            var op1 = decodeOp(op.opFlags, REG_OP1, op.op1, registers, memory);
             registers[dst] = src + op1;
             return program[ip + 1].impl.exec(program, registers, null, ip + 1);
         }
@@ -130,7 +130,7 @@ public class TestPrograms {
         @Override
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            return decodeOp(op.immediates, REG_DST, op.dst, registers, memory);
+            return decodeOp(op.opFlags, REG_DST, op.dst, registers, memory);
         }
     }
 
@@ -142,16 +142,7 @@ public class TestPrograms {
         }
     }
 
-    record DCOp(int op, int immediates, int dst, int src, int op1, DCOpImpl impl){
-
-        static final int IFLT = 0;
-        static final int ADD = 1;
-        static final int GOTO = 2;
-        static final int RETURN = 3;
-
-        static final int DST_MASK = 0b11_00_00;
-        static final int SRC_MASK = 0b00_11_00;
-        static final int OP_MASK = 0b00_00_11;
+    record DCOp(DCOpImpl impl, int opFlags, int dst, int src, int op1){
 
         static final int REG_DST = 2 * 2;
         static final int REG_SRC = 1 * 2;
@@ -188,10 +179,10 @@ public class TestPrograms {
         // 1 - immediate
 
         var program = new DCOp[]{
-                new DCOp(ADD, encodeOp(OP_IMM, REG_OP1), 0, 0, 1, new ADD()),
-                new DCOp(DCOp.IFLT, encodeOp(OP_IMM, REG_SRC) | encodeOp(OP_IMM, REG_OP1), 0, 1000000, 0, new IFLT()),
+                new DCOp(new ADD(), encodeOp(OP_IMM, REG_OP1), 0, 0, 1),
+                new DCOp(new IFLT(), encodeOp(OP_IMM, REG_SRC) | encodeOp(OP_IMM, REG_OP1), 0, 1000000, 0),
                 //new DCOp(GOTO, DST_MASK, 0, 0, 0, new GOTO()),
-                new DCOp(RETURN, 0, 0, 0, 0, new RETURN())
+                new DCOp(new RETURN(), 0, 0, 0, 0)
         };
 
         return () -> {
