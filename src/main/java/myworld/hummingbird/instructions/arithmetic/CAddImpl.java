@@ -13,9 +13,9 @@ public class CAddImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] + value;
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        // TODO
+        registers[ins.dst()] = registers[ins.src()] + (int) value;
+        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
     }
 }

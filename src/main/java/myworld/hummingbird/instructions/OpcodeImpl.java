@@ -5,32 +5,30 @@ import myworld.hummingbird.HummingbirdException;
 import myworld.hummingbird.Opcode;
 
 public interface OpcodeImpl {
-    int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions);
+    int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip);
 
-    static int chainNext(Fiber fiber, int regOffset, int ip, Opcode[] instructions){
+    static int chainNext(Opcode[] instructions, Fiber fiber, int[] registers, int regOffset, int ip){
         try{
             var next = instructions[ip + 1];
-            return next.impl().apply(fiber, next, regOffset, ip + 1, instructions);
+            return next.impl().apply(instructions, fiber, next, registers, regOffset, ip + 1);
         }catch (HummingbirdException e){
             throw e;
         }catch (Throwable t){
-            return fiber.vm.trap(t, fiber.registers, ip);
+            return fiber.vm.trap(t, registers, ip);
         }
 
     }
 
-    static int dispatchCall(Fiber fiber, Opcode ins, int regOffset, int ip, int symbolIndex){
+    static int dispatchCall(Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip, int symbolIndex){
         var symbol = fiber.exe.symbols()[symbolIndex];
 
         var callerOffset = regOffset;
         var callerParams = ins.extra();
         fiber.saveCallContext(ip + 1, regOffset, ins.dst());
 
-        var reg = fiber.registers;
-
         regOffset += symbol.registers();
         for(int i = 0; i < ins.extra1(); i++){
-            reg[regOffset + i] = reg[callerOffset + callerParams + i];
+            registers[i] = registers[callerOffset + callerParams + i];
         }
 
         fiber.registerOffset = regOffset;
@@ -39,7 +37,7 @@ public interface OpcodeImpl {
         return ip;
     }
 
-    static int foreignCall(Fiber fiber, Opcode ins, int regOffset, int ip, int symbolIndex){
+    static int foreignCall(Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip, int symbolIndex){
         var symbol = fiber.exe.symbols()[symbolIndex];
         var func = fiber.vm.foreign[symbol.offset()];
 
@@ -49,7 +47,7 @@ public interface OpcodeImpl {
         try {
             func.call(fiber.vm, fiber);
         } catch (Exception e) {
-            ip = fiber.vm.trap(e, fiber.registers, ip);
+            ip = fiber.vm.trap(e, registers, ip);
         }
         return ip;
     }

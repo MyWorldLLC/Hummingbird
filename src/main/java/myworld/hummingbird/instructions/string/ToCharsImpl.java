@@ -6,13 +6,13 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ToCharsImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        
         var memory = fiber.vm.memory;
         var charBuf = memory.asCharBuffer();
 
-        var dst = (int) reg[regOffset + ins.dst()];
-        var src = (int) reg[regOffset + ins.src()];
+        var dst = (int) registers[ins.dst()];
+        var src = (int) registers[ins.src()];
 
         if (fiber.vm.objMemory[src] instanceof String s) {
             var chars = s.toCharArray();
@@ -22,6 +22,6 @@ public class ToCharsImpl implements OpcodeImpl {
             memory.putInt(dst, -1);
         }
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
     }
 }

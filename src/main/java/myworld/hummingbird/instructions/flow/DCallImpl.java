@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DCallImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        return OpcodeImpl.dispatchCall(fiber, ins, regOffset, ip, (int) fiber.registers[regOffset + ins.src()]);
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        return OpcodeImpl.dispatchCall(fiber, ins, registers, regOffset, ip, (int) registers[ins.src()]);
     }
 }

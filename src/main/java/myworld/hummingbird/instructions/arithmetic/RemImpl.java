@@ -7,13 +7,13 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class RemImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        
         try {
-            reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] % reg[regOffset + ins.extra()];
+            registers[ins.dst()] = registers[ins.src()] % registers[ins.extra()];
         } catch (ArithmeticException ex) {
-            fiber.vm.trap(Traps.DIV_BY_ZERO, reg, ip);
+            fiber.vm.trap(Traps.DIV_BY_ZERO, registers, ip);
         }
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
     }
 }

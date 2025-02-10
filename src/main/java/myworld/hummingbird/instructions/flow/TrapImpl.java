@@ -7,9 +7,8 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class TrapImpl implements OpcodeImpl {
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var registers = fiber.registers;
-        return fiber.vm.trap((int)registers[regOffset + ins.dst()], registers, ip);
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        return fiber.vm.trap((int)registers[ins.dst()], registers, ip);
     }
 
 }

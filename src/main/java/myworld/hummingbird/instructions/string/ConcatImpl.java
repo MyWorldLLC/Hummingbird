@@ -6,17 +6,17 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ConcatImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
 
-        var reg = fiber.registers;
+        
         var vm = fiber.vm;
 
-        var dst = (int) reg[regOffset + ins.dst()];
-        var a = (int) reg[regOffset + ins.src()];
-        var b = (int) reg[regOffset + ins.extra()];
+        var dst = (int) registers[ins.dst()];
+        var a = (int) registers[ins.src()];
+        var b = (int) registers[ins.extra()];
 
         vm.objMemory[dst] = vm.objectToString(a) + vm.objectToString(b);
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
     }
 }

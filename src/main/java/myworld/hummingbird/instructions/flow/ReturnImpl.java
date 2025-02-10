@@ -6,15 +6,16 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ReturnImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
 
         fiber.restoreCallContext();
+        // TODO
 
         var result = fiber.returnDest;
         var returnOffset = fiber.registerOffset;
-        var reg = fiber.registers;
+        
 
-        reg[returnOffset + result] = reg[regOffset + ins.dst()];
+        registers[returnOffset + result] = registers[ins.dst()];
 
         return fiber.ip;
     }

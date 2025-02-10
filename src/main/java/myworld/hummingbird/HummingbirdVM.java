@@ -65,11 +65,11 @@ public final class HummingbirdVM {
         };
     }
 
-    public Fiber spawn(Symbol entry, long[] initialState) {
+    public Fiber spawn(Symbol entry, int[] initialState) {
         return spawn(entry != null ? entry.offset() : 0, initialState);
     }
 
-    public Fiber spawn(int entry, long[] initialState) {
+    public Fiber spawn(int entry, int[] initialState) {
         var registers = allocateRegisters( // TODO - variable size register file
                 2000
         );
@@ -111,7 +111,7 @@ public final class HummingbirdVM {
         var instructions = exe.code();
         while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+            ip = ins.impl().apply(instructions, fiber, ins, fiber.registers, fiber.registerOffset, ip);
         }
     }
 
@@ -133,15 +133,15 @@ public final class HummingbirdVM {
         return obj == null ? "null" : obj.toString();
     }
 
-    public int trap(Throwable t, long[] registers, int ip) {
+    public int trap(Throwable t, int[] registers, int ip) {
         return trap(getTrapCode(t), registers, ip, t);
     }
 
-    public int trap(int code, long[] registers, int ip) {
+    public int trap(int code, int[] registers, int ip) {
         return trap(code, registers, ip, null);
     }
 
-    public int trap(int code, long[] registers, int ip, Throwable t) {
+    public int trap(int code, int[] registers, int ip, Throwable t) {
         var handler = getTrapHandler(code);
         if (handler != -1) {
             // TODO - Invoke trap handler like a normal function, passing the ip as a parameter
@@ -198,11 +198,11 @@ public final class HummingbirdVM {
         return ((long) high << 32) | ((long) low);
     }
 
-    private static long[] allocateRegisters(int l) {
-        return new long[l];
+    private static int[] allocateRegisters(int l) {
+        return new int[l];
     }
 
-    public static void copyRegisters(long[] from, long[] to) {
+    public static void copyRegisters(int[] from, int[] to) {
         System.arraycopy(from, 0, to, 0, from.length);
     }
 

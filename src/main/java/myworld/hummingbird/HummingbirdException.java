@@ -3,12 +3,12 @@ package myworld.hummingbird;
 public class HummingbirdException extends RuntimeException {
 
     private final int ip;
-    private final long[] registers;
+    private final int[] registers;
 
-    public HummingbirdException(int ip, long[] registers, Throwable t){
+    public HummingbirdException(int ip, int[] registers, Throwable t){
         this(null, ip, registers, t);
     }
-    public HummingbirdException(String msg, int ip, long[] registers, Throwable t){
+    public HummingbirdException(String msg, int ip, int[] registers, Throwable t){
         super(msg, t);
         this.ip = ip;
         this.registers = registers;
@@ -18,7 +18,7 @@ public class HummingbirdException extends RuntimeException {
         return ip;
     }
 
-    public long[] getRegisters(){
+    public int[] getRegisters(){
         return registers;
     }
 }

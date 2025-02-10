@@ -8,7 +8,7 @@ public final class Fiber {
     }
 
     protected State state;
-    public final long[] registers;
+    public final int[] registers;
     private final IntStack callStack;
 
     public final HummingbirdVM vm;
@@ -21,7 +21,7 @@ public final class Fiber {
     public int trapTableAddr = -1;
     public int trapHandlerCount = 0;
 
-    public Fiber(HummingbirdVM vm, Executable exe, long[] registers){
+    public Fiber(HummingbirdVM vm, Executable exe, int[] registers){
         state = State.RUNNABLE;
         this.vm = vm;
         this.exe = exe;
@@ -37,7 +37,7 @@ public final class Fiber {
         return state;
     }
 
-    public long[] getRegisters() {
+    public int[] getRegisters() {
         return registers;
     }
 

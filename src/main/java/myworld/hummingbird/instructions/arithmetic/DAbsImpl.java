@@ -6,13 +6,13 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DAbsImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
-        reg[regOffset + ins.dst()] = Double.doubleToLongBits(
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        // TODO
+        registers[ins.dst()] = (int) Double.doubleToLongBits(
                 Math.abs(
-                        Double.longBitsToDouble(reg[regOffset + ins.src()])
+                        Double.longBitsToDouble(registers[ins.src()])
                 )
         );
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
     }
 }

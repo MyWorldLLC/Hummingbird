@@ -23,17 +23,17 @@ public class DCondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var dst = regOffset + ins.dst();
-        var src = regOffset + ins.src();
-        var reg = fiber.registers;
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+        var dst = ins.dst();
+        var src = ins.src();
+        
         var result = switch (ins.extra()) {
-            case COND_LT -> Double.longBitsToDouble(reg[dst]) < Double.longBitsToDouble(reg[src]);
-            case COND_LE -> Double.longBitsToDouble(reg[dst]) <= Double.longBitsToDouble(reg[src]);
-            case COND_EQ -> Double.longBitsToDouble(reg[dst]) == Double.longBitsToDouble(reg[src]);
-            case COND_NE -> Double.longBitsToDouble(reg[dst]) != Double.longBitsToDouble(reg[src]);
-            case COND_GE -> Double.longBitsToDouble(reg[dst]) >= Double.longBitsToDouble(reg[src]);
-            case COND_GT -> Double.longBitsToDouble(reg[dst]) > Double.longBitsToDouble(reg[src]);
+            case COND_LT -> Double.longBitsToDouble(registers[dst]) < Double.longBitsToDouble(registers[src]);
+            case COND_LE -> Double.longBitsToDouble(registers[dst]) <= Double.longBitsToDouble(registers[src]);
+            case COND_EQ -> Double.longBitsToDouble(registers[dst]) == Double.longBitsToDouble(registers[src]);
+            case COND_NE -> Double.longBitsToDouble(registers[dst]) != Double.longBitsToDouble(registers[src]);
+            case COND_GE -> Double.longBitsToDouble(registers[dst]) >= Double.longBitsToDouble(registers[src]);
+            case COND_GT -> Double.longBitsToDouble(registers[dst]) > Double.longBitsToDouble(registers[src]);
             default -> false;
         };
 
@@ -42,7 +42,7 @@ public class DCondImpl implements OpcodeImpl {
                 return ins.extra1();
             }
         }else{
-            reg[ins.extra1()] = result ? 1 : 0;
+            registers[ins.extra1()] = result ? 1 : 0;
         }
         return ip + 1;
     }
