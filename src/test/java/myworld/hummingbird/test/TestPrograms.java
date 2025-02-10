@@ -100,10 +100,10 @@ public class TestPrograms {
         @Override
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            var t1 = decodeOp(op.opFlags, REG_DST, op.dst, registers, memory);
-            var t2 = decodeOp(op.opFlags, REG_SRC, op.src, registers, memory);
+            var t1 = decodeOp(op.opFlags, R0, op.dst, registers, memory);
+            var t2 = decodeOp(op.opFlags, R1, op.src, registers, memory);
             if(t1 < t2){
-                ip = decodeOp(op.opFlags, REG_OP1, op.op1, registers, memory);
+                ip = decodeOp(op.opFlags, R2, op.op1, registers, memory);
             }else{
                 ip++;
             }
@@ -117,8 +117,8 @@ public class TestPrograms {
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
             var dst = op.dst;
-            var src = decodeOp(op.opFlags, REG_SRC, op.src, registers, memory);
-            var op1 = decodeOp(op.opFlags, REG_OP1, op.op1, registers, memory);
+            var src = decodeOp(op.opFlags, R1, op.src, registers, memory);
+            var op1 = decodeOp(op.opFlags, R2, op.op1, registers, memory);
             registers[dst] = src + op1;
             return program[ip + 1].impl.exec(program, registers, null, ip + 1);
         }
@@ -130,7 +130,7 @@ public class TestPrograms {
         @Override
         public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
             var op = program[ip];
-            return decodeOp(op.opFlags, REG_DST, op.dst, registers, memory);
+            return decodeOp(op.opFlags, R0, op.dst, registers, memory);
         }
     }
 
@@ -144,9 +144,22 @@ public class TestPrograms {
 
     record DCOp(DCOpImpl impl, int opFlags, int dst, int src, int op1){
 
-        static final int REG_DST = 2 * 2;
-        static final int REG_SRC = 1 * 2;
-        static final int REG_OP1 = 0 * 2;
+        static final int R0 = 0 * 2;
+        static final int R1 = 1 * 2;
+        static final int R2 = 2 * 2;
+        static final int R3 = 3 * 2;
+        static final int R4 = 4 * 2;
+        static final int R5 = 5 * 2;
+        static final int R6 = 6 * 2;
+        static final int R7 = 7 * 2;
+        static final int R8 = 8 * 2;
+        static final int R9 = 9 * 2;
+        static final int R10 = 10 * 2;
+        static final int R11 = 11 * 2;
+        static final int R12 = 12 * 2;
+        static final int R13 = 13 * 2;
+        static final int RBP = 14 * 2;
+        static final int RSP = 15 * 2;
 
         static final int OP_REG = 0b00;
         static final int OP_IMM = 0b01;
@@ -179,14 +192,14 @@ public class TestPrograms {
         // 1 - immediate
 
         var program = new DCOp[]{
-                new DCOp(new ADD(), encodeOp(OP_IMM, REG_OP1), 0, 0, 1),
-                new DCOp(new IFLT(), encodeOp(OP_IMM, REG_SRC) | encodeOp(OP_IMM, REG_OP1), 0, 1000000, 0),
+                new DCOp(new ADD(), encodeOp(OP_IMM, R2), 0, 0, 1),
+                new DCOp(new IFLT(), encodeOp(OP_IMM, R1) | encodeOp(OP_IMM, R2), 0, 1000000, 0),
                 //new DCOp(GOTO, DST_MASK, 0, 0, 0, new GOTO()),
                 new DCOp(new RETURN(), 0, 0, 0, 0)
         };
 
         return () -> {
-            var registers = new int[1];
+            var registers = new int[16];
 
             int ip = 0;
             while(ip < program.length){
