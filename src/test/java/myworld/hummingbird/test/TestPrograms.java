@@ -1,5 +1,6 @@
 package myworld.hummingbird.test;
 
+import myworld.hummingbird.HummingbirdException;
 import myworld.hummingbird.HummingbirdVM;
 import myworld.hummingbird.assembler.Assembler;
 
@@ -91,15 +92,25 @@ public class TestPrograms {
 
     private interface DCOpImpl {
 
-        int exec(DCOp[] program, int[] registers, int[] memory, int ip);
+        int exec(DCOp[] program, DCOp op, int[] registers, int[] memory, int ip);
 
+    }
+
+    private static int chainNext(DCOp[] program, int[] registers, int[] memory, int ip){
+        try{
+            var next = program[ip + 1];
+            return next.impl().exec(program, next, registers, memory, ip + 1);
+        }catch (HummingbirdException e){
+            throw e;
+        }catch (Throwable t){
+            return Integer.MAX_VALUE;
+        }
     }
 
     private class IFLT implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
-            var op = program[ip];
+        public int exec(DCOp[] program, DCOp op, int[] registers, int[] memory, int ip) {
             var t1 = decodeOp(op.opFlags, R0, op.dst, registers, memory);
             var t2 = decodeOp(op.opFlags, R1, op.src, registers, memory);
             if(t1 < t2){
@@ -114,13 +125,12 @@ public class TestPrograms {
     private class ADD implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
-            var op = program[ip];
+        public int exec(DCOp[] program, DCOp op, int[] registers, int[] memory, int ip) {
             var dst = op.dst;
             var src = decodeOp(op.opFlags, R1, op.src, registers, memory);
             var op1 = decodeOp(op.opFlags, R2, op.op1, registers, memory);
             registers[dst] = src + op1;
-            return program[ip + 1].impl.exec(program, registers, null, ip + 1);
+            return chainNext(program, registers, null, ip);
         }
 
     }
@@ -128,8 +138,7 @@ public class TestPrograms {
     private class GOTO implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
-            var op = program[ip];
+        public int exec(DCOp[] program, DCOp op, int[] registers, int[] memory, int ip) {
             return decodeOp(op.opFlags, R0, op.dst, registers, memory);
         }
     }
@@ -137,7 +146,7 @@ public class TestPrograms {
     private class RETURN implements DCOpImpl {
 
         @Override
-        public int exec(DCOp[] program, int[] registers, int[] memory, int ip) {
+        public int exec(DCOp[] program, DCOp op, int[] registers, int[] memory, int ip) {
             return Integer.MAX_VALUE;
         }
     }
@@ -193,7 +202,7 @@ public class TestPrograms {
             int ip = 0;
             while(ip < program.length){
                 var op = program[ip];
-                ip = op.impl.exec(program, registers, null, ip);
+                ip = op.impl.exec(program, op, registers, null, ip);
             }
             return registers[0];
         };
