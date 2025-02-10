@@ -144,9 +144,8 @@ public final class HummingbirdVM {
     public int trap(int code, long[] registers, int ip, Throwable t) {
         var handler = getTrapHandler(code);
         if (handler != -1) {
-            // TODO - instead of current mechanism, spawn a fiber at the trap handler with
-            // the trap site and trapped fiber as parameters. Need to work out passing objects
-            // since we no longer have object registers (may want to bring back object registers).
+            // TODO - Invoke trap handler like a normal function, passing the ip as a parameter
+            // without stomping R0.
             registers[0] = ip;
             return handler;
         } else {
