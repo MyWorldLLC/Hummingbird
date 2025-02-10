@@ -181,20 +181,9 @@ public class TestPrograms {
 
     public Callable<Object> decodeChainedDispatch(){
 
-        // Opcodes:
-        // 0 - IFLT
-        // 1 - ADD
-        // 2 - GOTO
-        // 3 - RETURN
-
-        // Flags:
-        // 0 - register
-        // 1 - immediate
-
         var program = new DCOp[]{
                 new DCOp(new ADD(), encodeOp(OP_IMM, R2), 0, 0, 1),
                 new DCOp(new IFLT(), encodeOp(OP_IMM, R1) | encodeOp(OP_IMM, R2), 0, 1000000, 0),
-                //new DCOp(GOTO, DST_MASK, 0, 0, 0, new GOTO()),
                 new DCOp(new RETURN(), 0, 0, 0, 0)
         };
 
