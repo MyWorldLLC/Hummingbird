@@ -30,6 +30,7 @@ public class TestPrograms {
         programs.put("countOneMillion", this::countOneMillion);
         programs.put("returnConstant", this::returnConstant);
         programs.put("decodeChainedDispatch", decodeChainedDispatch());
+        programs.put("decodingStack", decodingStack());
 
         return programs;
     }
@@ -173,6 +174,7 @@ public class TestPrograms {
         static final int OP_REG = 0b00;
         static final int OP_IMM = 0b01;
         static final int OP_MEM = 0b10;
+        static final int OP_PEEK = 0b10;
     }
 
     static int encodeOp(int opType, int register){
@@ -205,6 +207,115 @@ public class TestPrograms {
                 ip = op.impl.exec(program, op, registers, null, ip);
             }
             return registers[0];
+        };
+    }
+
+    private class HStack {
+        final int[] values = new int[10];
+        int sp = 0;
+
+        public void push(int i){
+            values[sp++] = i;
+        }
+
+        public int pop(){
+            var value = values[--sp];
+            return value;
+        }
+
+        public int peek(){
+            return values[sp - 1];
+        }
+    }
+
+    private static int hDecodeOp(int operandTypes, int register, int payload, HStack stack){
+        return switch ((operandTypes >> register) & 0b11){
+            case OP_REG -> stack.pop();
+            case OP_IMM -> payload;
+            case OP_PEEK -> stack.peek(); // TODO
+            default -> throw new IllegalArgumentException();
+        };
+    }
+
+    private interface HOpImpl {
+
+        int exec(HOp[] program, HOp op, int ip, HStack stack);
+
+    }
+
+    private class HAdd implements HOpImpl {
+        @Override
+        public int exec(HOp[] program, HOp op, int ip, HStack stack) {
+            stack.push(hDecodeOp(op.flags, R1, op.v1, stack) + hDecodeOp(op.flags, R2, op.v2, stack));
+            return hChainNext(program, stack, ip);
+        }
+    }
+
+    private class HIflt implements HOpImpl {
+
+        @Override
+        public int exec(HOp[] program, HOp op, int ip, HStack stack) {
+            var t1 = hDecodeOp(op.flags, R1, op.v1, stack);
+            var t2 = hDecodeOp(op.flags, R2, op.v2, stack);
+            if(t1 < t2){
+                ip = hDecodeOp(op.flags, R3, op.v3, stack);
+            }else{
+                ip++;
+            }
+            return ip;
+        }
+
+    }
+
+    private class HReturn implements HOpImpl {
+
+        @Override
+        public int exec(HOp[] program, HOp op, int ip, HStack stack) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    private class HConst implements HOpImpl {
+
+        @Override
+        public int exec(HOp[] program, HOp op, int ip, HStack stack) {
+            stack.push(op.v1);
+            return hChainNext(program, stack, ip);
+        }
+
+    }
+
+    record HOp(HOpImpl impl, int flags, int v1, int v2, int v3){}
+
+    private static int hChainNext(HOp[] program, HStack stack, int ip){
+        try{
+            var next = program[ip + 1];
+            return next.impl().exec(program, next,ip + 1, stack);
+        }catch (HummingbirdException e){
+            throw e;
+        }catch (Throwable t){
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    public Callable<Object> decodingStack(){
+
+        var program = new HOp[]{
+                new HOp(new HConst(), 0, 0, 0, 0),
+                new HOp(new HAdd(), encodeOp(OP_REG, R1) | encodeOp(OP_IMM, R2), 0, 1, 0),
+                new HOp(new HIflt(), encodeOp(OP_PEEK, R1) | encodeOp(OP_IMM, R2) | encodeOp(OP_IMM, R3), 0, 1000000, 1),
+                new HOp(new HReturn(), 0, 0, 0, 0)
+        };
+
+        return () -> {
+            var stack = new HStack();
+
+            int ip = 0;
+            while(ip < program.length){
+                var op = program[ip];
+                ip = op.impl.exec(program, op, ip, stack);
+            }
+            return stack.pop();
         };
     }
 
