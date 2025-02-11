@@ -23,7 +23,7 @@ public class DCondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         var dst = ins.dst();
         var src = ins.src();
         

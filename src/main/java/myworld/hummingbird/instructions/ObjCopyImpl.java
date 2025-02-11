@@ -5,7 +5,7 @@ import myworld.hummingbird.Opcode;
 
 public class ObjCopyImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var objMemory = fiber.vm.objMemory;
 
@@ -15,6 +15,6 @@ public class ObjCopyImpl implements OpcodeImpl {
 
         System.arraycopy(objMemory, start, objMemory, dst, end - start);
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

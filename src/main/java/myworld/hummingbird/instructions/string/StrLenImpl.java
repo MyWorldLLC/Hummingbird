@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class StrLenImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var objMemory = fiber.vm.objMemory;
 
@@ -17,6 +17,6 @@ public class StrLenImpl implements OpcodeImpl {
             registers[ins.dst()] = -1;
         }
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

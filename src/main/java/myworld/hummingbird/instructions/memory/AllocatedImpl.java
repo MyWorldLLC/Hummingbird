@@ -6,8 +6,8 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class AllocatedImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         registers[ins.dst()] = fiber.vm.memory.capacity();
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

@@ -13,10 +13,10 @@ public class DCAddImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
 
         // TODO
         registers[ins.dst()] = (int) Double.doubleToLongBits(Double.longBitsToDouble(registers[ins.src()]) + value);
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

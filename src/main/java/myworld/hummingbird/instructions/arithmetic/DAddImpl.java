@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DAddImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int offset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         // TODO
         registers[ins.dst()] = (int) Double.doubleToLongBits(
@@ -14,6 +14,6 @@ public class DAddImpl implements OpcodeImpl {
                         + Double.longBitsToDouble(registers[ins.extra()])
         );
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, offset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

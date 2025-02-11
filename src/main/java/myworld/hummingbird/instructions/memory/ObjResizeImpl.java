@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ObjResizeImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var objMemory = fiber.vm.objMemory;
 
@@ -18,6 +18,6 @@ public class ObjResizeImpl implements OpcodeImpl {
 
         registers[ins.dst()] = size;
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

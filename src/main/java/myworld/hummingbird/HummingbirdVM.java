@@ -71,7 +71,7 @@ public final class HummingbirdVM {
 
     public Fiber spawn(int entry, int[] initialState) {
         var registers = allocateRegisters( // TODO - variable size register file
-                2000
+                16
         );
 
         if (initialState != null) {
@@ -111,7 +111,7 @@ public final class HummingbirdVM {
         var instructions = exe.code();
         while (ip < instructions.length) {
             var ins = instructions[ip];
-            ip = ins.impl().apply(instructions, fiber, ins, fiber.registers, fiber.registerOffset, ip);
+            ip = ins.impl().apply(instructions, fiber, ins, fiber.registers, ip);
         }
     }
 

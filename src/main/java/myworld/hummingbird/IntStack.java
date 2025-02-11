@@ -52,6 +52,10 @@ public final class IntStack {
         return ints[index];
     }
 
+    public void setIndex(int rbp){
+        index = rbp;
+    }
+
     public void clear(){
         index = 0;
     }

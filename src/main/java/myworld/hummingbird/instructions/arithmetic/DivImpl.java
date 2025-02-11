@@ -7,7 +7,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DivImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         try {
             registers[ins.dst()] = registers[ins.src()] / registers[ins.extra()];
@@ -15,6 +15,6 @@ public class DivImpl implements OpcodeImpl {
             fiber.vm.trap(Traps.DIV_BY_ZERO, registers, ip);
         }
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

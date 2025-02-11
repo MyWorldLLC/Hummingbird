@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class StrImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var src = registers[ins.src()];
 
@@ -19,6 +19,6 @@ public class StrImpl implements OpcodeImpl {
             default -> null;
         };
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

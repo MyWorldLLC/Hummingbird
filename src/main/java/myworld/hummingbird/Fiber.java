@@ -1,5 +1,8 @@
 package myworld.hummingbird;
 
+import static myworld.hummingbird.Registers.RBP;
+import static myworld.hummingbird.Registers.RSP;
+
 public final class Fiber {
 
     public enum State {
@@ -47,6 +50,39 @@ public final class Fiber {
 
     public void restoreCallContext(){
         callStack.popCtx(this);
+    }
+
+    public void prepareCall(int ip, int[] registers, int start, int count){
+        callStack.push(ip);
+        for(int i = start; i < count; i++){
+            callStack.push(registers[i]);
+        }
+        callStack.push(start);
+        callStack.push(count);
+        callStack.push(registers[RBP]);
+        callStack.push(registers[RSP]);
+    }
+
+    public int handleReturn(int[] registers, int start, int count){
+
+        var rsp = callStack.pop();
+        var rbp = callStack.pop();
+        var dCount = callStack.pop();
+        var dStart = callStack.pop();
+
+        for(int i = dCount - 1 - dStart; i >= dStart; i--){
+            if(i <= start || i >= start + count){
+                registers[i] = callStack.pop();
+            }
+        }
+
+        callStack.setIndex(rbp);
+        var ip = callStack.peek(1);
+
+        registers[RSP] = rsp;
+        registers[RBP] = rbp;
+
+        return ip;
     }
 
     public int callerRegisterOffset(){

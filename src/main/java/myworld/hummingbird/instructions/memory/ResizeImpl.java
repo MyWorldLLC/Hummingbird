@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 
 public class ResizeImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var memory = fiber.vm.memory;
 
@@ -20,6 +20,6 @@ public class ResizeImpl implements OpcodeImpl {
 
         registers[ins.dst()] = size;
 
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }

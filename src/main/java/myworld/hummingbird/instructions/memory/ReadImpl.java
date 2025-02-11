@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ReadImpl implements OpcodeImpl {
     @Override
-    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int regOffset, int ip) {
+    public int apply(Opcode[] instructions, Fiber fiber, Opcode ins, int[] registers, int ip) {
         
         var memory = fiber.vm.memory;
 
@@ -18,6 +18,6 @@ public class ReadImpl implements OpcodeImpl {
             case 8 -> (int) memory.getLong(src); // TODO
             default -> throw new IllegalArgumentException("Memory access must be 1,2,4, or 8: " + ins.extra());
         };
-        return OpcodeImpl.chainNext(instructions, fiber, registers, regOffset, ip);
+        return OpcodeImpl.chainNext(instructions, fiber, registers, ip);
     }
 }
