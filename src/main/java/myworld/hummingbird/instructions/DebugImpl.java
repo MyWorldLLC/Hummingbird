@@ -11,6 +11,6 @@ public class DebugImpl implements OpcodeImpl {
         if(debugHandler != null){
             debugHandler.debug(fiber, ins.dst(), fiber.registers[regOffset + ins.src()]);
         }
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

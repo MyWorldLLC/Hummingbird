@@ -16,6 +16,6 @@ public class SCompImpl implements OpcodeImpl {
 
         reg[regOffset + ins.dst()] = vm.objectToString(a).compareTo(vm.objectToString(b));
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

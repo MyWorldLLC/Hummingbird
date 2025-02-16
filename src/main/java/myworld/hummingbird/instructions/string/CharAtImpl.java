@@ -17,6 +17,6 @@ public class CharAtImpl implements OpcodeImpl {
             reg[regOffset + ins.dst()] = 0;
         }
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

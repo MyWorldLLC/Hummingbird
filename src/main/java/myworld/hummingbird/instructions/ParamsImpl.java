@@ -10,6 +10,6 @@ public class ParamsImpl implements OpcodeImpl {
             fiber.registers[regOffset + ins.dst() + i] =
                     fiber.registers[fiber.callerRegisterOffset() + ins.src() + i];
         }
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

@@ -14,6 +14,6 @@ public class DRemImpl implements OpcodeImpl {
                         % Double.longBitsToDouble(reg[offset + ins.extra()])
         );
 
-        return OpcodeImpl.chainNext(fiber, offset, ip, instructions);
+        return ip + 1;
     }
 }

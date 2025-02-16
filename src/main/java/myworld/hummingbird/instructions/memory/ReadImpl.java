@@ -18,6 +18,6 @@ public class ReadImpl implements OpcodeImpl {
             case 8 -> memory.getLong(src);
             default -> throw new IllegalArgumentException("Memory access must be 1,2,4, or 8: " + ins.extra());
         };
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

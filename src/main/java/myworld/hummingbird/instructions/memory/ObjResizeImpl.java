@@ -18,6 +18,6 @@ public class ObjResizeImpl implements OpcodeImpl {
 
         reg[regOffset + ins.dst()] = size;
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

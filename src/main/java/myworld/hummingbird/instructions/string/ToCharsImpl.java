@@ -22,6 +22,6 @@ public class ToCharsImpl implements OpcodeImpl {
             memory.putInt(dst, -1);
         }
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

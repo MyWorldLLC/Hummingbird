@@ -13,6 +13,6 @@ public class DNegImpl implements OpcodeImpl {
                 -Double.longBitsToDouble(reg[offset + ins.src()])
         );
 
-        return OpcodeImpl.chainNext(fiber, offset, ip, instructions);
+        return ip + 1;
     }
 }

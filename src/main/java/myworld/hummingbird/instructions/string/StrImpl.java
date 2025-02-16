@@ -19,6 +19,6 @@ public class StrImpl implements OpcodeImpl {
             default -> null;
         };
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

@@ -9,6 +9,6 @@ public class TrapsImpl implements OpcodeImpl {
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         fiber.trapHandlerCount = ins.src();
         fiber.trapTableAddr = ins.dst();
-        return OpcodeImpl.chainNext(fiber, regOffset, ip + 1, instructions);
+        return ip + 1;
     }
 }

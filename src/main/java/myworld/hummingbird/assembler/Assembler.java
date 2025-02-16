@@ -43,7 +43,7 @@ public class Assembler {
         newline = Pattern.compile("\n|\r\n|\r");
         sectionName = Pattern.compile("\\.\\w+");
         labelDef = Pattern.compile("\\w+:");
-        labelUse = Pattern.compile("\\$\\w+");
+        labelUse = Pattern.compile("\\$(\\$)?\\w+");
         symbolName = Pattern.compile("\\D\\w+");
         symbolUse = Pattern.compile("%\\D\\w+");
         register = Pattern.compile("r\\d+");
@@ -140,7 +140,7 @@ public class Assembler {
                 var label = parseLabelUse(asm);
                 var index = builder.indexOfNextSymbol();
                 builder.appendSymbol(null);
-                labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
+                labels.markUnresolvedUse(label, (resolvedLabel, resolvedIndex) -> {
                     builder.replaceSymbol(index, Symbol.data(nameStr, resolvedIndex));
                 });
             }else if(type == Symbol.Type.FUNCTION){
@@ -159,7 +159,7 @@ public class Assembler {
                 var index = builder.indexOfNextSymbol();
                 builder.appendSymbol(Symbol.empty(nameStr));
 
-                labels.markUnresolvedUse(label.name(), (resolvedLabel, resolvedIndex) -> {
+                labels.markUnresolvedUse(label, (resolvedLabel, resolvedIndex) -> {
                     builder.replaceSymbol(index, Symbol.function(nameStr, resolvedIndex, rType, paramCounts, registerCounts));
                 });
             }else if(type == Symbol.Type.FOREIGN){
@@ -206,7 +206,7 @@ public class Assembler {
                 if(asm.peek() == '$'){
                     var label = parseLabelUse(asm);
                     if(labels.isResolved(label)){
-                        operands.add(labels.getResolvedIndex(label.name()));
+                        operands.add(labels.getResolvedIndex(label));
                     }else{
                         operands.add(label);
                         unresolvedLabels.add(label);
@@ -235,10 +235,10 @@ public class Assembler {
                 var index = builder.appendOpcode(null);
                 var pendingOpcode = new PendingOpcode(index, opName, operands);
                 for(var label : unresolvedLabels){
-                    labels.markUnresolvedUse(label.name(), (resolved, resolvedIndex) -> {
+                    labels.markUnresolvedUse(label, (resolved, resolvedIndex) -> {
                         for(int i = 0; i < pendingOpcode.operands().size(); i++){
                             if(pendingOpcode.operands().get(i) instanceof Label l){
-                                pendingOpcode.operands().set(i, labels.getResolvedIndex(l.name()));
+                                pendingOpcode.operands().set(i, labels.getResolvedIndex(l));
                             }
                         }
                         builder.replaceOpcode(pendingOpcode.index(), makeOpcode(pendingOpcode.name(), pendingOpcode.operands()));
@@ -264,7 +264,7 @@ public class Assembler {
             }
 
             for(var user : uses){
-                user.resolved(label, labels.getResolvedIndex(label));
+                user.resolved(label.name(), labels.getResolvedIndex(label));
             }
         }
     }
@@ -297,8 +297,11 @@ public class Assembler {
 
     protected Label parseLabelUse(CharStream asm) throws AssemblyException {
         var sequence = consume(asm, labelUse);
-        // Trim leading '$'
-        if(sequence != null) return new Label(sequence.subSequence(1, sequence.length()).toString());
+        // Trim leading '$' or '$'
+        if(sequence != null) {
+            var isHotJump = sequence.charAt(1) == '$';
+            return new Label(sequence.subSequence(isHotJump ? 2 : 1, sequence.length()).toString(), isHotJump);
+        }
         throw new AssemblyException("Not a label use: " + asm.debug(10));
     }
 

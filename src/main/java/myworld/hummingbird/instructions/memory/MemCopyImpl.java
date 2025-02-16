@@ -16,6 +16,6 @@ public class MemCopyImpl implements OpcodeImpl {
 
         memory.put(dst, memory.slice(start, end), 0, end - start);
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

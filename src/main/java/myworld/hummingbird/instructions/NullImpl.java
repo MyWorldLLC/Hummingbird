@@ -7,6 +7,6 @@ public class NullImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         fiber.vm.objMemory[regOffset + ins.dst()] = null;
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

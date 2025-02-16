@@ -21,6 +21,6 @@ public class SubStrImpl implements OpcodeImpl {
 
         vm.objMemory[dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

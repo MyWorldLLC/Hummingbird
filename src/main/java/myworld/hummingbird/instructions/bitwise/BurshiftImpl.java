@@ -9,6 +9,6 @@ public class BurshiftImpl implements OpcodeImpl {
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
         reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] >>> reg[regOffset + ins.extra()];
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

@@ -13,6 +13,6 @@ public class DAbsImpl implements OpcodeImpl {
                         Double.longBitsToDouble(reg[regOffset + ins.src()])
                 )
         );
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

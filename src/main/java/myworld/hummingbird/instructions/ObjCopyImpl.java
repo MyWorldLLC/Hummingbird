@@ -15,6 +15,6 @@ public class ObjCopyImpl implements OpcodeImpl {
 
         System.arraycopy(objMemory, start, objMemory, dst, end - start);
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

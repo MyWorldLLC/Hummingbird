@@ -8,6 +8,6 @@ public class D2LImpl implements OpcodeImpl {
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
         reg[regOffset + ins.dst()] = (long) Double.longBitsToDouble(reg[regOffset + ins.src()]);
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

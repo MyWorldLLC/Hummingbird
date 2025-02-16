@@ -7,6 +7,6 @@ public class IpImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         fiber.registers[regOffset + ins.dst()] = ip;
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

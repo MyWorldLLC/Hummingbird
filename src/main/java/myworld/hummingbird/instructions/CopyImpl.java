@@ -8,6 +8,6 @@ public class CopyImpl implements OpcodeImpl {
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
         reg[regOffset + ins.dst()] = reg[regOffset + ins.src()];
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

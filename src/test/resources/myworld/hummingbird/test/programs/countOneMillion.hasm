@@ -17,5 +17,5 @@
     CONST r1, 1
   loop:
     ADD r0, r0, r1
-    IFLT r0, r2, $loop
+    IFLT r0, r2, $$loop
     RETURN r0

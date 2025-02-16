@@ -17,6 +17,6 @@ public class StrLenImpl implements OpcodeImpl {
             reg[regOffset + ins.dst()] = -1;
         }
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

@@ -15,6 +15,6 @@ public class DivImpl implements OpcodeImpl {
             fiber.vm.trap(Traps.DIV_BY_ZERO, reg, ip);
         }
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

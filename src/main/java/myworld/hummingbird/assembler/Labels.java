@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public class Labels {
 
     protected final Map<String, Integer> resolvedLabels;
-    protected final Map<String, List<UnresolvedLabelHandler>> unresolvedLabelUses;
+    protected final Map<Label, List<UnresolvedLabelHandler>> unresolvedLabelUses;
 
     public Labels(){
         resolvedLabels = new HashMap<>();
@@ -23,7 +23,7 @@ public class Labels {
         resolvedLabels.put(label, opcodeIndex);
     }
 
-    public void markUnresolvedUse(String label, UnresolvedLabelHandler user){
+    public void markUnresolvedUse(Label label, UnresolvedLabelHandler user){
         unresolvedLabelUses.computeIfAbsent(label, k -> new ArrayList<>())
                 .add(user);
     }
@@ -36,14 +36,15 @@ public class Labels {
         return resolvedLabels.containsKey(label);
     }
 
-    public int getResolvedIndex(String label) throws AssemblyException {
-        if(isResolved(label)){
-            return resolvedLabels.get(label);
+    public int getResolvedIndex(Label label) throws AssemblyException {
+        if(isResolved(label.name())){
+            var target = resolvedLabels.get(label.name());
+            return label.isHotJump() ? -target : target;
         }
         throw new AssemblyException("Unresolved label: " + label);
     }
 
-    public Map<String, List<UnresolvedLabelHandler>> getUnresolvedLabelUses(){
+    public Map<Label, List<UnresolvedLabelHandler>> getUnresolvedLabelUses(){
         return unresolvedLabelUses;
     }
 

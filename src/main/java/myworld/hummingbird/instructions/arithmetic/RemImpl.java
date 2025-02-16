@@ -14,6 +14,6 @@ public class RemImpl implements OpcodeImpl {
         } catch (ArithmeticException ex) {
             fiber.vm.trap(Traps.DIV_BY_ZERO, reg, ip);
         }
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

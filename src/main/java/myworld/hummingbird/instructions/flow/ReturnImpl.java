@@ -16,6 +16,6 @@ public class ReturnImpl implements OpcodeImpl {
 
         reg[returnOffset + result] = reg[regOffset + ins.dst()];
 
-        return fiber.ip;
+        return -fiber.ip;
     }
 }

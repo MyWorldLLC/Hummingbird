@@ -31,6 +31,6 @@
   DSUB r6, r6, r3 # r6 = i + i + 2 * i + 1 - 0.379
   DDIV r0, r6, r0 # x = (i + i + 2 * i + 1 - 0.379)/x
   ADD r5, r5, r1  # i++
-  GOTO $loop
+  GOTO $$loop
   end:
   RETURN r0

@@ -17,6 +17,6 @@ public class ConcatImpl implements OpcodeImpl {
 
         vm.objMemory[dst] = vm.objectToString(a) + vm.objectToString(b);
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }

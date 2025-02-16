@@ -16,6 +16,6 @@ public class FromCharsImpl implements OpcodeImpl {
 
         vm.objMemory[dst] = vm.readString(src);
 
-        return OpcodeImpl.chainNext(fiber, regOffset, ip, instructions);
+        return ip + 1;
     }
 }
