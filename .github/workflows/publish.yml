@@ -17,12 +17,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Publish to GitHub Packages
-        run: ./gradlew publish
+      - name: Build & Publish to GitHub Packages
+        run: ./gradlew publish --no-daemon
         env:
-          USERNAME: ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.PKG_PUBLISHING_AUTH_TOKEN }}
