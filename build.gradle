@@ -10,8 +10,12 @@ configurations {
     profiling
 }
 
+def getGitVersion(){
+    "git describe --tags --always --first-parent".execute().text.trim()
+}
+
 group = 'myworld'
-version = '0.0.1-SNAPSHOT'
+version = getGitVersion()
 
 dependencies {
 
@@ -121,5 +125,13 @@ publishing {
 
     repositories {
         mavenLocal()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/MyWorldLLC/Chipmunk")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
     }
 }
