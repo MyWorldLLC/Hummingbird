@@ -14,6 +14,23 @@ def getGitVersion(){
     "git describe --tags --always --first-parent".execute().text.trim()
 }
 
+def getGitCredentials(){
+    def process = "git credential fill".execute()
+    def stream = new PrintStream(process.getOutputStream(), true)
+    stream.println("url=https://github.com/")
+    stream.close()
+
+    process.text.trim().split("\n").collectEntries {it.split("=")}
+}
+
+def getGitUser(){
+    System.getenv("GITHUB_USER") ?: gitCredentials["username"]
+}
+
+def getGitPassword(){
+    System.getenv("GITHUB_TOKEN") ?: gitCredentials["password"]
+}
+
 group = 'myworld'
 version = getGitVersion()
 
@@ -127,10 +144,10 @@ publishing {
         mavenLocal()
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/MyWorldLLC/Chipmunk")
+            url = uri("https://maven.pkg.github.com/MyWorldLLC/Packages")
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+                username = gitUser
+                password = gitPassword
             }
         }
     }
