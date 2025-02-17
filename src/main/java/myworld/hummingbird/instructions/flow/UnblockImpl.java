@@ -11,7 +11,7 @@ public class UnblockImpl implements OpcodeImpl {
         var vm = fiber.vm;
         ((Fiber) vm.objMemory[(int) fiber.registers[regOffset + ins.dst()]]).setState(Fiber.State.RUNNABLE);
         vm.enqueue(fiber);
-         return ip + 1;
+        return ip + 1;
     }
 
 }

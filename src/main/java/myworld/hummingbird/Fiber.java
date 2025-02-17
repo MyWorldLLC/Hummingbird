@@ -7,7 +7,7 @@ public final class Fiber {
         BLOCKED
     }
 
-    protected State state;
+    private State state;
     public final long[] registers;
     private final IntStack callStack;
 
