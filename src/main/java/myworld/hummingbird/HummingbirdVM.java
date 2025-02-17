@@ -118,7 +118,7 @@ public final class HummingbirdVM {
     public void run(Fiber fiber) throws HummingbirdException {
 
         fiber.restoreCallContext();
-        var ip = -fiber.ip;
+        var ip = fiber.ip;
 
         var instructions = exe.code();
         while (Math.abs(ip) < instructions.length) {
