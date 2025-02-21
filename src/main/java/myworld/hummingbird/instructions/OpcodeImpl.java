@@ -21,7 +21,7 @@ public interface OpcodeImpl {
         }
 
         ip = target;
-        return -ip;
+        return ip;
     }
 
     static int foreignCall(Fiber fiber, Opcode ins, int regOffset, int ip, int symbolIndex){
