@@ -15,8 +15,6 @@ public class ReturnImpl implements OpcodeImpl {
         var reg = fiber.registers;
         reg[regOffset - CALL_FRAME_SAVED_REGISTERS] = reg[regOffset + ins.dst()];
 
-        //System.out.println("Returning with ip: " + fiber.ip + ", regOffset: " + fiber.registerOffset + ", result: @r" + (regOffset - CALL_FRAME_SAVED_REGISTERS) + "(" + reg[regOffset - CALL_FRAME_SAVED_REGISTERS] + ")");
-
         return -fiber.ip;
     }
 }
