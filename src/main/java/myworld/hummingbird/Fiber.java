@@ -42,7 +42,6 @@ public final class Fiber {
     }
 
     public int saveCallContext(int ip, int regOffset, int returnDest){
-        //System.out.println("Saving call context: ip: " + ip + ", regOffset: " + regOffset + ", returnDest: " + returnDest);
         registers[regOffset + returnDest] = ip;
         registers[regOffset + returnDest + 1] = regOffset;
         registerOffset = regOffset + returnDest + 2;
@@ -52,7 +51,6 @@ public final class Fiber {
     public int restoreCallContext(){
         ip = (int) registers[registerOffset - 2];
         registerOffset = (int) registers[registerOffset - 1];
-        //System.out.println("Restoring call context: ip: " + ip + ", regOffset: " + registerOffset);
         return ip;
     }
 

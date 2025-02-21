@@ -122,8 +122,6 @@ public final class HummingbirdVM {
 
         var instructions = exe.code();
         while (Math.abs(ip) < instructions.length) {
-            //System.out.println("IP: " + ip);
-            //System.out.println(Arrays.toString(fiber.registers));
             try {
                 ip = Math.abs(ip);
                 var ins = instructions[ip];
