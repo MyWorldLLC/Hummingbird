@@ -1,0 +1,29 @@
+.symbols
+    fibonacci function $fibonacci
+            long
+            parameters 3
+            registers 7
+
+.code
+  # fib(30)
+  CONST r1, 30
+  CALL0 r2, $fibonacci#, r1, 1
+  RETURN r2
+  fibonacci: # int fibonacci(n)
+    CONST r2, 2
+    IFGE p0, r2, $recurse
+    RETURN p0
+  recurse:
+    #fib(n - 1)
+    CONST r1, 1
+    SUB r3, p0, r1 # r0 = n - 1
+    #COPY r3, r0
+    CALL0 r4, $fibonacci #, r0, 1
+
+    #fib(n - 2)
+    SUB r5, r3, r1 # r0 = n - 2
+    #COPY r5, r0
+    CALL0 r6, $fibonacci #, r0, 1
+
+    ADD r0, r4, r6
+    RETURN r0

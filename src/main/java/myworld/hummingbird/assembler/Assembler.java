@@ -46,7 +46,7 @@ public class Assembler {
         labelUse = Pattern.compile("\\$(\\$)?\\w+");
         symbolName = Pattern.compile("\\D\\w+");
         symbolUse = Pattern.compile("%\\D\\w+");
-        register = Pattern.compile("r\\d+");
+        register = Pattern.compile("[rp]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
         floatLiteral = Pattern.compile("[FfDd]-?\\d*((\\.)?\\d+)?([eE]-?\\d+)?");
@@ -316,10 +316,16 @@ public class Assembler {
         try{
             var sequence = consume(asm, register);
             if(sequence != null) {
-                var str = sequence.subSequence(1, sequence.length()).toString(); // Drop leading 'r'
-                return Integer.parseInt(str);
+                return switch (sequence.charAt(0)){
+                    // Drop leading 'r' or 'p' and parse reference.
+                    case 'r' -> Integer.parseInt(sequence.subSequence(1, sequence.length()).toString());
+                    case 'p' -> -(Integer.parseInt(sequence.subSequence(1, sequence.length()).toString()) + Fiber.CALL_FRAME_SAVED_REGISTERS + 1);
+                    default -> throw new AssemblyException("Invalid register reference: " + asm.debug(10));
+                };
             }
-        }catch (Exception e){}
+        }catch (Exception e){
+            throw new AssemblyException("Invalid register reference: " + asm.debug(10));
+        }
         throw new AssemblyException("Invalid register reference: " + asm.debug(10));
     }
 

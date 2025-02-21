@@ -7,11 +7,11 @@
 .code
     CONST r0, 0
     CONST r1, 1000000
+    CONST r2, 1
   loop:
-    CALL0 r4, $callOneMillion
-    ADD r0, r0, r4
+    CALL0 r3, $callOneMillion
+    ADD r0, r0, r3
     IFLT r0, r1, $loop
     RETURN r0
   callOneMillion:
-    CONST r0, 1
-    RETURN r0
+    RETURN p0
