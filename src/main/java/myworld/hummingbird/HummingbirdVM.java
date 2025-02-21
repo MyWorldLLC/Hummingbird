@@ -69,7 +69,7 @@ public final class HummingbirdVM {
         return spawn(entry != null ? entry.offset() : 0, initialState);
     }
 
-    public Fiber spawn(int entry, long[] initialState) {
+    public Fiber spawn(int ip, long[] initialState) {
         var registers = allocateRegisters( // TODO - variable size register file
                 2000
         );
@@ -80,7 +80,7 @@ public final class HummingbirdVM {
 
         var fiber = new Fiber(this, exe, registers);
         fiber.saveCallContext(Integer.MAX_VALUE, 0, 0);
-        fiber.saveCallContext(entry, 0, 0);
+        fiber.saveCallContext(ip, Fiber.CALL_FRAME_SAVED_REGISTERS, 0);
 
         runQueue.push(fiber);
 
@@ -122,6 +122,8 @@ public final class HummingbirdVM {
 
         var instructions = exe.code();
         while (Math.abs(ip) < instructions.length) {
+            //System.out.println("IP: " + ip);
+            //System.out.println(Arrays.toString(fiber.registers));
             try {
                 ip = Math.abs(ip);
                 var ins = instructions[ip];

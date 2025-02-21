@@ -5,25 +5,22 @@ import myworld.hummingbird.HummingbirdException;
 import myworld.hummingbird.Opcode;
 
 public interface OpcodeImpl {
+
     int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions);
 
-    static int dispatchCall(Fiber fiber, Opcode ins, int regOffset, int ip, int symbolIndex){
-        var symbol = fiber.exe.symbols()[symbolIndex];
+    static int dispatchCall(Fiber fiber, Opcode ins, int regOffset, int ip, int target){
 
         var callerOffset = regOffset;
-        var callerParams = ins.extra();
-        fiber.saveCallContext(ip + 1, regOffset, ins.dst());
+        var paramCount = ins.extra();
+        regOffset = fiber.saveCallContext(ip + 1, regOffset, ins.dst());
 
         var reg = fiber.registers;
 
-        regOffset += symbol.registers();
         for(int i = 0; i < ins.extra1(); i++){
-            reg[regOffset + i] = reg[callerOffset + callerParams + i];
+            reg[regOffset + i] = reg[callerOffset + paramCount + i];
         }
 
-        fiber.registerOffset = regOffset;
-        ip = symbol.offset();
-        fiber.ip = ip;
+        ip = target;
         return ip;
     }
 

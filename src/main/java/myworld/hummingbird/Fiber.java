@@ -2,6 +2,8 @@ package myworld.hummingbird;
 
 public final class Fiber {
 
+    public static final int CALL_FRAME_SAVED_REGISTERS = 2;
+
     public enum State {
         RUNNABLE,
         BLOCKED
@@ -9,7 +11,6 @@ public final class Fiber {
 
     private State state;
     public final long[] registers;
-    private final IntStack callStack;
 
     public final HummingbirdVM vm;
     public final Executable exe;
@@ -26,7 +27,6 @@ public final class Fiber {
         this.vm = vm;
         this.exe = exe;
         this.registers = registers;
-        callStack = new IntStack(1000);
     }
 
     public void setState(State state){
@@ -41,15 +41,22 @@ public final class Fiber {
         return registers;
     }
 
-    public void saveCallContext(int ip, int regOffset, int returnDest){
-        callStack.pushCtx(ip, regOffset, returnDest);
+    public int saveCallContext(int ip, int regOffset, int returnDest){
+        //System.out.println("Saving call context: ip: " + ip + ", regOffset: " + regOffset + ", returnDest: " + returnDest);
+        registers[regOffset + returnDest] = ip;
+        registers[regOffset + returnDest + 1] = regOffset;
+        registerOffset = regOffset + returnDest + 2;
+        return registerOffset;
     }
 
-    public void restoreCallContext(){
-        callStack.popCtx(this);
+    public int restoreCallContext(){
+        ip = (int) registers[registerOffset - 2];
+        registerOffset = (int) registers[registerOffset - 1];
+        //System.out.println("Restoring call context: ip: " + ip + ", regOffset: " + registerOffset);
+        return ip;
     }
 
     public int callerRegisterOffset(){
-        return callStack.peekCallerRegisterOffset();
+        return (int)registers[registerOffset - 1];
     }
 }
