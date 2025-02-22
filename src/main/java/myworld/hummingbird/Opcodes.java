@@ -415,6 +415,21 @@ public class Opcodes {
         return new Opcode(new IpImpl(), dst);
     }
 
+    @Assembles("STPTR")
+    public static Opcode STPTR(@Register Integer dst, @Register Integer src){
+        return new Opcode(new StPtrImpl(), dst, src);
+    }
+
+    @Assembles("STWRITE")
+    public static Opcode STWRITE(@Register Integer dst, @Register Integer src, @Immediate Integer count){
+        return new Opcode(new StWriteImpl(), dst, src, count);
+    }
+
+    @Assembles("STREAD")
+    public static Opcode STREAD(@Register Integer dst, @Register Integer src, @Immediate Integer count){
+        return new Opcode(new StReadImpl(), dst, src, count);
+    }
+
     @Assembles("CALL0")
     public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol) {
         return new Opcode(new CallImpl(), dst, symbol);
