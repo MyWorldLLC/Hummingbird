@@ -37,9 +37,50 @@ public final class HummingbirdVM {
         };
     }
 
-    public Object run() {
+    public Symbol findFunction(String name, TypeFlag rType){
+        for(var symbol : exe.symbols()){
+            if(symbol.name().equals(name) && symbol.type().equals(Symbol.Type.FUNCTION)){
+                if(symbol.rType().equals(rType)){
+                    return symbol;
+                }
+            }
+        }
+        return null;
+    }
 
-        spawn(null, null);
+    public Symbol findData(String name){
+        for(var symbol : exe.symbols()){
+            if(symbol.name().equals(name) && symbol.type().equals(Symbol.Type.DATA)){
+                return symbol;
+            }
+        }
+        return null;
+    }
+
+    public Symbol findForeignFunction(String name, TypeFlag rType){
+        for(var symbol : exe.symbols()){
+            if(symbol.name().equals(name) && symbol.type().equals(Symbol.Type.FOREIGN)){
+                if(symbol.rType().equals(rType)){
+                    return symbol;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Object run(){
+        return run(null, null);
+    }
+
+    public Object run(String name){
+        return run(name, null);
+    }
+
+    public Object run(String name, TypeFlag rType) {
+
+        var symbol = findForeignFunction(name, rType);
+
+        spawn(symbol, null);
 
         currentFiber = nextFiber();
         var registers = currentFiber.registers;
@@ -49,9 +90,11 @@ public final class HummingbirdVM {
             currentFiber = nextFiber();
         }
 
-        var rType = TypeFlag.LONG;
-        if (exe.symbols().length > 0) {
-            rType = exe.symbols()[0].rType();
+        if(rType == null){
+            rType = TypeFlag.LONG;
+            if (exe.symbols().length > 0) {
+                rType = exe.symbols()[0].rType();
+            }
         }
 
         return switch (rType) {
