@@ -44,8 +44,8 @@ public class Assembler {
         sectionName = Pattern.compile("\\.\\w+");
         labelDef = Pattern.compile("\\w+:");
         labelUse = Pattern.compile("\\$(\\$)?\\w+");
-        symbolName = Pattern.compile("\\D\\w+");
-        symbolUse = Pattern.compile("%\\D\\w+");
+        symbolName = Pattern.compile("\\S+");
+        symbolUse = Pattern.compile("%\\S+");
         register = Pattern.compile("[rp]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
