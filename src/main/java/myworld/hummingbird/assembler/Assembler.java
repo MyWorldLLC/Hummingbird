@@ -42,10 +42,10 @@ public class Assembler {
         whitespace = Pattern.compile("\\h+");
         newline = Pattern.compile("\n|\r\n|\r");
         sectionName = Pattern.compile("\\.\\w+");
-        labelDef = Pattern.compile("\\w+:");
-        labelUse = Pattern.compile("\\$(\\$)?\\w+");
-        symbolName = Pattern.compile("\\S+");
-        symbolUse = Pattern.compile("%\\S+");
+        labelDef = Pattern.compile("[\\S&&[^:,#]]+:");
+        labelUse = Pattern.compile("\\$(\\$)?[\\S&&[^:,#]]+");
+        symbolName = Pattern.compile("[\\S&&[^:,#]]+");
+        symbolUse = Pattern.compile("%[\\S&&[^:,#]]+");
         register = Pattern.compile("[rp]\\d+");
         instruction = Pattern.compile("\\w+");
         intLiteral = Pattern.compile("[IiLl]?(0x|0b|0o)?-?\\d+");
