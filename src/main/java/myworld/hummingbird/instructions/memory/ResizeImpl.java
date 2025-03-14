@@ -10,15 +10,8 @@ public class ResizeImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
-        var memory = fiber.vm.memory;
 
-        var size = Math.min((int) reg[regOffset + ins.src()], fiber.vm.limits.bytes());
-
-        var next = ByteBuffer.allocate(size);
-        next.put(0, memory, 0, Math.min(size, memory.capacity()));
-        fiber.vm.memory = next;
-
-        reg[regOffset + ins.dst()] = size;
+        reg[regOffset + ins.dst()] = fiber.vm.resize((int) reg[regOffset + ins.src()]);
 
         return ip + 1;
     }

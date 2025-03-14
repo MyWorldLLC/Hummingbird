@@ -452,6 +452,26 @@ public final class HummingbirdVM {
         return -1;
     }
 
+    public int resize(int newSize){
+        var size = Math.min(newSize, limits.bytes());
+
+        var next = ByteBuffer.allocate(size);
+        next.put(0, memory, 0, Math.min(size, memory.capacity()));
+        memory = next;
+
+        return size;
+    }
+
+    public int resizeObj(int newSize){
+        var size = Math.min(newSize, limits.objects());
+
+        var next = new Object[size];
+        System.arraycopy(objMemory, 0, next, 0, Math.min(size, objMemory.length));
+        objMemory = next;
+
+        return size;
+    }
+
     public DebugHandler getDebugHandler(){
         return debugHandler;
     }
