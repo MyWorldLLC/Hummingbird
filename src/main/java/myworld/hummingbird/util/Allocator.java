@@ -117,7 +117,7 @@ public class Allocator {
     private static final int NULL = 0;
     public static final int NALLOC = 1024;
 
-    private static final int HEADER_SIZE = 4 * 2; // 2 ints, 4 bytes long each
+    private final HeaderStruct Header;
 
     private final HummingbirdVM hvm;
     private int freep = NULL;
@@ -126,25 +126,7 @@ public class Allocator {
     public Allocator(HummingbirdVM vm, int baseAddress){
         hvm = vm;
         base = baseAddress;
-    }
-
-    // Note: header is implicitly modeled as two ints,
-    // the first being the pointer to the next header
-    // and the second being the size.
-    private int getPtr(int hPtr){
-        return hvm.memory.getInt(hPtr);
-    }
-
-    private void setPtr(int hPtr, int ptr){
-        hvm.memory.putInt(hPtr, ptr);
-    }
-
-    private int getSize(int hPtr){
-        return hvm.memory.getInt(hPtr + 4);
-    }
-
-    private void setSize(int hPtr, int size){
-        hvm.memory.putInt(hPtr + 4, size);
+        Header = new HeaderStruct(vm);
     }
 
     private int morecore(int nu){
@@ -155,14 +137,14 @@ public class Allocator {
             nu = NALLOC;
         }
 
-        cp = sbrk(nu * HEADER_SIZE);
+        cp = sbrk(nu * Header.sizeOf());
         if(cp == -1){
             return NULL;
         }
 
         up = cp;
-        setSize(up, nu);
-        free(up + HEADER_SIZE);
+        Header.size(up, nu);
+        free(up + Header.sizeOf());
         return freep;
     }
 
@@ -181,27 +163,25 @@ public class Allocator {
     public synchronized int malloc(int nbytes){
         int p, prevp;
 
-        int nunits = (nbytes + HEADER_SIZE - 1)/HEADER_SIZE + 1;
+        int nunits = (nbytes + Header.sizeOf() - 1)/Header.sizeOf() + 1;
 
         if((prevp = freep) == NULL){
-            setPtr(prevp, base);
-            setPtr(freep, prevp);
-            setPtr(base, freep);
-            setSize(base, 0);
+            Header.ptr(base, freep = prevp = base);
+            Header.size(base, 0);
         }
 
-        for(p = getPtr(prevp); ; prevp = p, p = getPtr(p)){
+        for(p = Header.ptr(prevp); ; prevp = p, p = Header.ptr(p)){
 
-            if(getSize(p) >= nunits){
-                if(getSize(p) == nunits){
-                    setPtr(prevp, getPtr(p));
+            if(Header.size(p) >= nunits){
+                if(Header.size(p) == nunits){
+                    Header.ptr(prevp, Header.ptr(p));
                 }else{
-                    setSize(p, getSize(p) - nunits);
-                    p += getSize(p);
-                    setSize(p, nunits);
+                    Header.size(p, Header.size(p) - nunits);
+                    p += Header.size(p);
+                    Header.size(p, nunits);
                 }
                 freep = prevp;
-                return p + HEADER_SIZE;
+                return p + Header.sizeOf();
             }
             if(p == freep){
                 if((p = morecore(nunits)) == NULL){
@@ -214,28 +194,70 @@ public class Allocator {
     public synchronized void free(int ap){
         int bp, p;
 
-        bp = ap - HEADER_SIZE;
+        bp = ap - Header.sizeOf();
 
-        for(p = freep; !(bp > p && bp < getPtr(p)); p = getPtr(p)){
-            if(p >= getPtr(p) && (bp > p || bp < getPtr(p))){
+        for(p = freep; !(bp > p && bp < Header.ptr(p)); p = Header.ptr(p)){
+            if(p >= Header.ptr(p) && (bp > p || bp < Header.ptr(p))){
                 break;
             }
         }
 
-        if(bp + getSize(bp) == getPtr(p)){
-            setSize(bp, getSize(bp) + getSize(getPtr(p)));
-            setPtr(bp, getPtr(getPtr(p)));
+        if(bp + Header.size(bp) == Header.ptr(p)){
+            Header.size(bp, Header.size(bp) + Header.size(Header.ptr(p)));
+            Header.ptr(bp, Header.ptr(Header.ptr(p)));
         }else{
-            setPtr(bp, getPtr(p));
+            Header.ptr(bp, Header.ptr(p));
         }
 
-        if(p + getSize(p) == bp){
-            setSize(p, getSize(p) + getSize(bp));
-            setPtr(p, getPtr(bp));
+        if(p + Header.size(p) == bp){
+            Header.size(p, Header.size(p) + Header.size(bp));
+            Header.ptr(p, Header.ptr(bp));
         }else{
-            setPtr(p, bp);
+            Header.ptr(p, bp);
         }
 
         freep = p;
+    }
+
+    public static class HeaderStruct {
+
+        public static final Struct layout;
+        public static final int ptr;
+        public static final int size;
+
+        static {
+            var builder = Struct.builder();
+            ptr = builder.withField(4);
+            size = builder.withField(4);
+
+            layout = builder.build();
+        }
+
+        private final StructAccessor acc;
+
+        public HeaderStruct(HummingbirdVM vm){
+            acc = new StructAccessor(vm, layout);
+        }
+
+        public int ptr(int hPtr){
+            return acc.readInt(hPtr, ptr);
+        }
+
+        public void ptr(int hPtr, int ptr){
+            acc.writeInt(hPtr, Allocator.HeaderStruct.ptr, ptr);
+        }
+
+        public int size(int hPtr){
+            return acc.readInt(hPtr, Allocator.HeaderStruct.size);
+        }
+
+        public void size(int hPtr, int size){
+            acc.writeInt(hPtr, Allocator.HeaderStruct.size, size);
+        }
+
+        public int sizeOf(){
+            return acc.struct().sizeOf();
+        }
+
     }
 }
