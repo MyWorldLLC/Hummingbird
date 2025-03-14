@@ -4,7 +4,7 @@ import myworld.hummingbird.HummingbirdVM;
 
 /**
  * Code for free/malloc adapted for HVM from https://www.math.uni-bielefeld.de/~rehmann/Ckurs-f/b04/alloc.h.
- * No license is specified, but this is credited as the implementation from K&R so it may be in the public domain.
+ * No license is specified, but this is credited as the implementation from K&R.
  */
 
 ///* titel: malloc()/free()-Paar nach K&R 2, p.185ff */
