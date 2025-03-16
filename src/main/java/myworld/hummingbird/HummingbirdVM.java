@@ -8,8 +8,8 @@ public final class HummingbirdVM {
 
     private final Executable exe;
     public final MemoryLimits limits;
-    public ByteBuffer memory;
-    public Object[] objMemory;
+    public volatile ByteBuffer memory;
+    public volatile Object[] objMemory;
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
@@ -27,6 +27,7 @@ public final class HummingbirdVM {
         foreign = new ForeignFunction[(int) exe.foreignSymbols().count()];
 
         memory = ByteBuffer.allocate(1024);
+        // TODO - need to specify memory/object memory initial sizes and initialize memory from data segment
         objMemory = new Object[10];
 
         runQueue = new LinkedList<>();

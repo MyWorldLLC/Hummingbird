@@ -20,6 +20,7 @@ public class TestPrograms {
     public final HummingbirdVM fibonacci30 = load("myworld/hummingbird/test/programs/fibonacci30.hasm");
     public final HummingbirdVM fibonacci30Call0 = load("myworld/hummingbird/test/programs/fibonacci30Call0.hasm");
     public final HummingbirdVM goldenRatio = load("myworld/hummingbird/test/programs/goldenRatio.hasm");
+    public final HummingbirdVM memReadWrite = load("myworld/hummingbird/test/programs/memReadWrite.hasm");
     public final HummingbirdVM simpleFunction = load("myworld/hummingbird/test/programs/simpleFunction.hasm");
     public final HummingbirdVM simpleFiber = load("myworld/hummingbird/test/programs/simpleFiber.hasm");
     public final HummingbirdVM recursiveAdd = load("myworld/hummingbird/test/programs/recursiveAdd.hasm");
@@ -44,6 +45,7 @@ public class TestPrograms {
         programs.put("callOneMillion", callOneMillion);
         programs.put("fibonacci30", fibonacci30);
         programs.put("fibonacci30Call0", fibonacci30Call0);
+        programs.put("memReadWrite", memReadWrite);
         programs.put("simpleFiber", simpleFiber);
         programs.put("simpleFunction", simpleFunction);
         programs.put("recursiveAdd", recursiveAdd);
