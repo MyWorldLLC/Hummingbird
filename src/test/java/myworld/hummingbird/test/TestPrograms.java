@@ -437,7 +437,8 @@ public class TestPrograms {
         int stackPtr = 0;
         int[] vars = new int[200];
 
-        boolean interrupt;
+        int interruptCounter = 0;
+        volatile boolean interrupt;
         boolean _return;
 
         Object payload;
@@ -461,6 +462,14 @@ public class TestPrograms {
 
         int getLocal(int local){
             return vars[stackPtr + local];
+        }
+
+        boolean checkInterrupt(){
+            interruptCounter++;
+            if(interruptCounter >= 100_000){
+                return interrupt;
+            }
+            return false;
         }
     }
 
@@ -650,7 +659,7 @@ public class TestPrograms {
                 ctx.payload = 10;
                 throw e;
             }
-            while(t != 0 && !ctx.interrupt){
+            while(t != 0 && !ctx.checkInterrupt()){
                 try{
                     body.execute(ctx);
                 }catch (Exception e){
@@ -687,7 +696,7 @@ public class TestPrograms {
                 ctx.payload = 10;
                 throw e;
             }
-            while(t != 0 && !ctx.interrupt){
+            while(t != 0 && !ctx.checkInterrupt()){
                 try{
                     body.execute(ctx);
                 }catch (Exception e){
