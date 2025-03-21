@@ -33,9 +33,13 @@ public class TestPrograms {
 
         programs.put("countOneMillion", this::countOneMillion);
         programs.put("returnConstant", this::returnConstant);
+        programs.put("mathBench", this::mathBench);
+        programs.put("fibonacci30", this::fibonacci30);
         programs.put("decodeChainedDispatch", decodeChainedDispatch());
         programs.put("astCountOneMillion", astCountOneMillion());
+        programs.put("astCallOneMillion", astCallOneMillion());
         programs.put("astFibonacci30", astFibonacci30());
+        programs.put("astMathBench", astMathBench());
 
         return programs;
     }
@@ -93,6 +97,25 @@ public class TestPrograms {
             x = x + 1;
         }
         return x;
+    }
+
+    public float mathBench(){
+        float x = 1.0f;
+        for(int i = 0; i<99999999; i++){
+           x = (i + i + 2 * i + 1 - 0.379f)/x;
+        }
+        return x;
+    }
+
+    private int fib(int n){
+        if(n < 2){
+            return n;
+        }
+        return fib(n - 1) + fib(n - 2);
+    }
+
+    public int fibonacci30(){
+        return fib(30);
     }
 
     public int returnConstant(){
@@ -221,20 +244,20 @@ public class TestPrograms {
 
         var ctx = new Context();
 
-        var initX = new SetVar();
+        var initX = new SetVar(0);
         initX.value = new Const(0);
 
-        var getX = new GetVar();
+        var getX = new GetVar(0);
 
         var test = new Iflt();
         test.l = getX;
         test.r = new Const(1000000);
 
         var add = new Add();
-        add.l = new GetVar();
+        add.l = new GetVar(0);
         add.r = new Const(1);
 
-        var body = new SetVar();
+        var body = new SetVar(0);
         body.value = add;
 
         var loop = new While();
@@ -252,7 +275,7 @@ public class TestPrograms {
         var ctx = new Context();
         var fib = new FunctionNode();
 
-        var getN = new GetVar();
+        var getN = new GetVar(0);
 
         var test = new Iflt();
         test.l = getN;
@@ -274,11 +297,11 @@ public class TestPrograms {
         subTwo.l = getN;
         subTwo.r = new Const(2);
 
-        var callOne = new CallNode();
+        var callOne = new CallNode(2);
         callOne.f = fib;
         callOne.args = new Node[]{subOne};
 
-        var callTwo = new CallNode();
+        var callTwo = new CallNode(2);
         callTwo.f = fib;
         callTwo.args = new Node[]{subTwo};
 
@@ -293,10 +316,119 @@ public class TestPrograms {
 
         fib.nodes = new Node[]{_if};
 
-        var callFib = new CallNode();
+        var callFib = new CallNode(2);
         callFib.f = fib;
         callFib.args = new Node[]{new Const(30)};
         return () -> callFib.execute(ctx);
+    }
+
+    private Callable<Object> astMathBench(){
+        /*
+        # int i = 0;
+        # double x = 1.0;
+        # for(i = 0; i<99999999; i++){
+        #   x = (i + i + 2 * i + 1 - 0.379)/x;
+        # }
+         */
+
+        var ctx = new Context();
+
+        var initI = new SetVar(0); // i = 0
+        initI.value = new Const(0);
+
+        var initX = new SetVar(1); // x = 1.0f
+        initX.value = new Const(1.0f);
+
+        var getI = new GetVar(0);
+        var getX = new GetVar(1);
+
+        var test = new Iflt();
+        test.l = getI;
+        test.r = new Const(99999999); // i < 99999999
+
+        var addIPlusI = new Add(); // i + i
+        addIPlusI.l = getI;
+        addIPlusI.r = getI;
+
+        var twoI = new Mul(); // 2 * i
+        twoI.l = new Const(2);
+        twoI.r = getI;
+
+        var addTwoI = new Add(); // i + i + 2 * i
+        addTwoI.l = addIPlusI;
+        addTwoI.r = twoI;
+
+        var plus1 = new Add(); // i + i + 2 * i + 1
+        plus1.l = addTwoI;
+        plus1.r = new Const(1);
+
+        var toFloat = new I2F(); // (float)(i + i + 2 * i + 1)
+        toFloat.i = plus1;
+
+        var fSub = new FSub(); // (float)(i + i + 2 * i + 1) - 0.379
+        fSub.l = toFloat;
+        fSub.r = new Const(0.379f);
+
+        var div = new FDiv(); // ((float)(i + i + 2 * i + 1) - 0.379) / x
+        div.l = fSub;
+        div.r = getX;
+
+        var setX = new SetVar(1); // x = ((float)(i + i + 2 * i + 1) - 0.379) / x
+        setX.value = div;
+
+        var addIPlus1 = new Add(); // i++
+        addIPlus1.l = getI;
+        addIPlus1.r = new Const(1);
+        var incrementI = new SetVar(0);
+        incrementI.value = addIPlus1;
+
+        var loop = new For();
+        loop.pre = initI;
+        loop.test = test;
+        loop.body = setX;
+        loop.post = incrementI;
+
+        var program = new FunctionNode();
+        program.nodes = new Node[]{initX, loop, getX};
+
+        return () -> Float.intBitsToFloat(program.execute(ctx));
+    }
+
+    private Callable<Object> astCallOneMillion(){
+        var ctx = new Context();
+
+        var f = new FunctionNode();
+        f.nodes = new Node[]{new Const(1)};
+
+        var initX = new SetVar(0);
+        initX.value = new Const(0);
+
+        var getX = new GetVar(0);
+
+        var test = new Iflt();
+        test.l = getX;
+        test.r = new Const(1000000);
+
+        var callF = new CallNode(1);
+        callF.args = new Node[0];
+        callF.f = f;
+
+        var xPlus1 = new Add();
+        xPlus1.l = new GetVar(0);
+        xPlus1.r = callF;
+
+        var setX = new SetVar(0);
+        setX.value = xPlus1;
+
+        var loop = new For();
+        loop.pre = initX;
+        loop.test = test;
+        loop.body = setX;
+
+        var program = new FunctionNode();
+        program.nodes = new Node[]{initX, loop, getX};
+
+        return () -> program.execute(ctx);
     }
 
     private static class Context {
@@ -310,10 +442,10 @@ public class TestPrograms {
 
         Object payload;
 
-        void markStackForCall(){
+        void markStackForCall(int locals){
             frame[framePtr] = stackPtr;
             framePtr++;
-            stackPtr += 1; // TODO - make this variable, but for now assume a fixed frame of 1 local
+            stackPtr += locals;
         }
 
         void restoreStack(){
@@ -343,6 +475,10 @@ public class TestPrograms {
             value = v;
         }
 
+        public Const(float f){
+            value = Float.floatToIntBits(f);
+        }
+
         @Override
         public int execute(Context ctx) {
             return value;
@@ -351,17 +487,25 @@ public class TestPrograms {
 
     private static class SetVar implements Node {
         Node value;
-        int v = 0;
+        int v;
+
+        public SetVar(int v){
+            this.v = v;
+        }
 
         @Override
         public int execute(Context ctx) {
             var r = value.execute(ctx);
-            return ctx.setLocal(v, value.execute(ctx));
+            return ctx.setLocal(v, r);
         }
     }
 
     private static class GetVar implements Node {
-        int v = 0;
+        int v;
+
+        public GetVar(int v){
+            this.v = v;
+        }
 
         @Override
         public int execute(Context ctx) {
@@ -384,6 +528,42 @@ public class TestPrograms {
         @Override
         public int execute(Context ctx) {
             return l.execute(ctx) - r.execute(ctx);
+        }
+    }
+
+    private static class Mul implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            return l.execute(ctx) * r.execute(ctx);
+        }
+    }
+
+    private static class FSub implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            return Float.floatToIntBits(Float.intBitsToFloat(l.execute(ctx)) - Float.intBitsToFloat(r.execute(ctx)));
+        }
+    }
+
+    private static class FDiv implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            return Float.floatToIntBits(Float.intBitsToFloat(l.execute(ctx)) / Float.intBitsToFloat(r.execute(ctx)));
+        }
+    }
+
+    private static class I2F implements Node {
+        Node i;
+
+        @Override
+        public int execute(Context ctx) {
+            return Float.floatToIntBits((float) i.execute(ctx));
         }
     }
 
@@ -439,6 +619,24 @@ public class TestPrograms {
         }
     }
 
+    private static class Block implements Node {
+        Node[] body;
+
+        @Override
+        public int execute(Context ctx) {
+            int result = 0;
+            for(int i = 0; i < body.length; i++){
+                try{
+                    result = body[i].execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+            }
+            return result;
+        }
+    }
+
     private static class While implements Node {
         Node test;
         Node body;
@@ -459,6 +657,48 @@ public class TestPrograms {
                     ctx.payload = 10;
                     throw e;
                 }
+
+                try{
+                    t = test.execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+            }
+            return 0;
+        }
+    }
+
+    private static class For implements Node {
+        Node pre;
+        Node test;
+        Node body;
+        Node post;
+
+        @Override
+        public int execute(Context ctx) {
+            if(pre != null){
+                pre.execute(ctx);
+            }
+            int t;
+            try{
+                t = test.execute(ctx);
+            }catch (Exception e){
+                ctx.payload = 10;
+                throw e;
+            }
+            while(t != 0 && !ctx.interrupt){
+                try{
+                    body.execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+
+                if(post != null){
+                    post.execute(ctx);
+                }
+
                 try{
                     t = test.execute(ctx);
                 }catch (Exception e){
@@ -486,16 +726,20 @@ public class TestPrograms {
     }
 
     private static class CallNode implements Node {
+        int locals = 0;
         Node f;
         Node[] args;
+
+        public CallNode(int locals){
+            this.locals = locals;
+        }
 
         @Override
         public int execute(Context ctx) {
             for(int i = 0; i < args.length; i++){
-                // TODO - this + 1 is just to align with the next call frame
-                ctx.setLocal(i + 1, args[i].execute(ctx));
+                ctx.setLocal(i + locals, args[i].execute(ctx));
             }
-            ctx.markStackForCall();
+            ctx.markStackForCall(locals);
             int result = f.execute(ctx);
             ctx.restoreStack();
             return result;
