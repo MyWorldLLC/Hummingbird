@@ -6,6 +6,7 @@ import myworld.hummingbird.assembler.Assembler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,8 @@ public class TestPrograms {
         programs.put("countOneMillion", this::countOneMillion);
         programs.put("returnConstant", this::returnConstant);
         programs.put("decodeChainedDispatch", decodeChainedDispatch());
+        programs.put("astCountOneMillion", astCountOneMillion());
+        programs.put("astFibonacci30", astFibonacci30());
 
         return programs;
     }
@@ -212,6 +215,302 @@ public class TestPrograms {
             }
             return registers[0];
         };
+    }
+
+    public Callable<Object> astCountOneMillion(){
+
+        var ctx = new Context();
+
+        var initX = new SetVar();
+        initX.value = new Const(0);
+
+        var getX = new GetVar();
+
+        var test = new Iflt();
+        test.l = getX;
+        test.r = new Const(1000000);
+
+        var add = new Add();
+        add.l = new GetVar();
+        add.r = new Const(1);
+
+        var body = new SetVar();
+        body.value = add;
+
+        var loop = new While();
+        loop.test = test;
+        loop.body = body;
+
+        var program = new FunctionNode();
+        program.nodes = new Node[]{initX, loop, getX};
+
+        return () -> program.execute(ctx);
+    }
+
+    public Callable<Object> astFibonacci30(){
+
+        var ctx = new Context();
+        var fib = new FunctionNode();
+
+        var getN = new GetVar();
+
+        var test = new Iflt();
+        test.l = getN;
+        test.r = new Const(2);
+
+        var _if = new If();
+        _if.test = test;
+
+        var bail = new ReturnNode();
+        bail.e = getN;
+
+        _if._if = bail;
+
+        var subOne = new Sub();
+        subOne.l = getN;
+        subOne.r = new Const(1);
+
+        var subTwo = new Sub();
+        subTwo.l = getN;
+        subTwo.r = new Const(2);
+
+        var callOne = new CallNode();
+        callOne.f = fib;
+        callOne.args = new Node[]{subOne};
+
+        var callTwo = new CallNode();
+        callTwo.f = fib;
+        callTwo.args = new Node[]{subTwo};
+
+        var addFib = new Add();
+        addFib.l = callOne;
+        addFib.r = callTwo;
+
+        var recursiveReturn = new ReturnNode();
+        recursiveReturn.e = addFib;
+
+        _if._else = recursiveReturn;
+
+        fib.nodes = new Node[]{_if};
+
+        var callFib = new CallNode();
+        callFib.f = fib;
+        callFib.args = new Node[]{new Const(30)};
+        return () -> callFib.execute(ctx);
+    }
+
+    private static class Context {
+        int[] frame = new int[40];
+        int framePtr = 0;
+        int stackPtr = 0;
+        int[] vars = new int[200];
+
+        boolean interrupt;
+        boolean _return;
+
+        Object payload;
+
+        void markStackForCall(){
+            frame[framePtr] = stackPtr;
+            framePtr++;
+            stackPtr += 1; // TODO - make this variable, but for now assume a fixed frame of 1 local
+        }
+
+        void restoreStack(){
+            framePtr--;
+            stackPtr = frame[framePtr];
+            _return = false;
+        }
+
+        int setLocal(int local, int value){
+            vars[stackPtr + local] = value;
+            return value;
+        }
+
+        int getLocal(int local){
+            return vars[stackPtr + local];
+        }
+    }
+
+    private interface Node {
+        int execute(Context ctx);
+    }
+
+    private static class Const implements Node {
+        int value;
+
+        public Const(int v){
+            value = v;
+        }
+
+        @Override
+        public int execute(Context ctx) {
+            return value;
+        }
+    }
+
+    private static class SetVar implements Node {
+        Node value;
+        int v = 0;
+
+        @Override
+        public int execute(Context ctx) {
+            var r = value.execute(ctx);
+            return ctx.setLocal(v, value.execute(ctx));
+        }
+    }
+
+    private static class GetVar implements Node {
+        int v = 0;
+
+        @Override
+        public int execute(Context ctx) {
+            return ctx.getLocal(v);
+        }
+    }
+
+    private static class Add implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            return l.execute(ctx) + r.execute(ctx);
+        }
+    }
+
+    private static class Sub implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            return l.execute(ctx) - r.execute(ctx);
+        }
+    }
+
+    private static class Iflt implements Node {
+        Node l, r;
+
+        @Override
+        public int execute(Context ctx) {
+            int a;
+            try {
+                a = l.execute(ctx);
+            } catch (Exception e) {
+                ctx.payload = 10;
+                throw e;
+            }
+
+            int b;
+            try {
+                b = r.execute(ctx);
+            } catch (Exception e) {
+                ctx.payload = 10;
+                throw e;
+            }
+            return a < b ? 1 : 0;
+        }
+    }
+
+    private static class If implements Node {
+        Node test;
+        Node _if;
+        Node _else;
+
+        @Override
+        public int execute(Context ctx) {
+            int t;
+            try{
+                t = test.execute(ctx);
+            }catch (Exception e){
+                ctx.payload = 10;
+                throw e;
+            }
+            if(t != 0){
+                try{
+                    return _if.execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+            }else if(_else != null){
+                return _else.execute(ctx);
+            }
+            return 0;
+        }
+    }
+
+    private static class While implements Node {
+        Node test;
+        Node body;
+
+        @Override
+        public int execute(Context ctx) {
+            int t;
+            try{
+                t = test.execute(ctx);
+            }catch (Exception e){
+                ctx.payload = 10;
+                throw e;
+            }
+            while(t != 0 && !ctx.interrupt){
+                try{
+                    body.execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+                try{
+                    t = test.execute(ctx);
+                }catch (Exception e){
+                    ctx.payload = 10;
+                    throw e;
+                }
+            }
+            return 0;
+        }
+    }
+
+    private static class FunctionNode implements Node {
+        private Node[] nodes;
+
+        @Override
+        public int execute(Context ctx) {
+            for(int i = 0; i < nodes.length - 1; i++){
+                var v = nodes[i].execute(ctx);
+                if(ctx._return){
+                    return v;
+                }
+            }
+            return nodes[nodes.length - 1].execute(ctx);
+        }
+    }
+
+    private static class CallNode implements Node {
+        Node f;
+        Node[] args;
+
+        @Override
+        public int execute(Context ctx) {
+            for(int i = 0; i < args.length; i++){
+                // TODO - this + 1 is just to align with the next call frame
+                ctx.setLocal(i + 1, args[i].execute(ctx));
+            }
+            ctx.markStackForCall();
+            int result = f.execute(ctx);
+            ctx.restoreStack();
+            return result;
+        }
+    }
+
+    private static class ReturnNode implements Node {
+        Node e;
+
+        @Override
+        public int execute(Context ctx) {
+            var v = e.execute(ctx);
+            ctx._return = true;
+            return v;
+        }
     }
 
 }
