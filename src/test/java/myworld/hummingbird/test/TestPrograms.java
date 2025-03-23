@@ -484,8 +484,20 @@ public class TestPrograms {
             return value;
         }
 
+        long setLocalLong(int local, long value){
+            vars[stackPtr + local] = (int) (value >> 32);
+            vars[stackPtr + local + 1] = (int) value;
+            return value;
+        }
+
         int getLocal(int local){
             return vars[stackPtr + local];
+        }
+
+        long getLocalLong(int local){
+            var a = vars[stackPtr + local];
+            var b = vars[stackPtr + local + 1];
+            return ((long) a << 32) & ((long) b & 0xFFFFFFFFL);
         }
 
         boolean checkInterrupt(){
@@ -527,6 +539,8 @@ public class TestPrograms {
             var suspension = suspensions.pop();
             while(suspension != null){
                 var value = suspension.value;
+                // TODO - add support for exception handlers to suspensions. When executing a suspension,
+                // if an exception is thrown walk back through the suspension stack and execute the nearest handler.
                 for(int i = suspension.state; i < suspension.states.length; i++){
                     try {
                         value = suspension.states[i].execute(ctx, i);
