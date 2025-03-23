@@ -6,10 +6,7 @@ import myworld.hummingbird.assembler.Assembler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import static myworld.hummingbird.test.TestPrograms.DCOp.*;
@@ -40,6 +37,7 @@ public class TestPrograms {
         programs.put("astCallOneMillion", astCallOneMillion());
         programs.put("astFibonacci30", astFibonacci30());
         programs.put("astMathBench", astMathBench());
+        programs.put("astCountAndFib", combined(astCountOneMillion(), astFibonacci30()));
 
         return programs;
     }
@@ -240,6 +238,15 @@ public class TestPrograms {
         };
     }
 
+    private Callable<Object> combined(Callable<Object> a, Callable<Object> b){
+
+        return () -> {
+            var resultA = a.call();
+            var resultB = b.call();
+            return ((Integer) resultA) + ((Integer) resultB);
+        };
+    }
+
     public Callable<Object> astCountOneMillion(){
 
         var ctx = new Context();
@@ -431,6 +438,22 @@ public class TestPrograms {
         return () -> program.execute(ctx);
     }
 
+    private static class Suspension {
+        int state;
+        int value;
+        NodePartial[] states;
+
+        public Suspension(int state, NodePartial... states){
+            this(state, 0, states);
+        }
+
+        public Suspension(int state, int value, NodePartial... states){
+            this.state = state;
+            this.value = value;
+            this.states = states;
+        }
+    }
+
     private static class Context {
         int[] frame = new int[40];
         int framePtr = 0;
@@ -442,6 +465,7 @@ public class TestPrograms {
         boolean _return;
 
         Object payload;
+        Deque<Suspension> suspensions = new ArrayDeque<>();
 
         void markStackForCall(int locals){
             frame[framePtr] = stackPtr;
@@ -470,6 +494,70 @@ public class TestPrograms {
                 return interrupt;
             }
             return false;
+        }
+
+        void repeat(NodePartial test, NodePartial body){
+            int t = 0;
+            try{
+                t = test.execute(this, 0);
+            }catch (Exception e){
+                suspend(e, t, body, test);
+            }
+
+            while(t != 0 && !checkInterrupt()){
+                try{
+                    body.execute(this, 0);
+                } catch (Exception e) {
+                    suspend(e, t, body, test);
+                }
+
+                try{
+                    t = test.execute(this, 0);
+                } catch (Exception e) {
+                    suspend(e, t, body, test);
+                }
+            }
+        }
+
+        void markForResume(Object state, NodePartial... resumables){
+            // TODO push state + resumables.
+        }
+
+        void resume(Context ctx){
+            var suspension = suspensions.pop();
+            while(suspension != null){
+                var value = suspension.value;
+                for(int i = suspension.state; i < suspension.states.length; i++){
+                    try {
+                        value = suspension.states[i].execute(ctx, i);
+                    }catch (Exception e){
+                        ctx.suspend(e, value, Arrays.stream(suspension.states).skip(i - 1).toArray(NodePartial[]::new));
+                    }
+                }
+                suspension = suspensions.pop();
+            }
+
+        }
+
+        void suspendStateless(Throwable t, NodePartial... resumables) throws RuntimeException {
+            suspend(t, 0, resumables);
+        }
+
+        void suspend(Throwable t, int state, NodePartial... resumables) throws RuntimeException {
+            suspensions.add(new Suspension(state, resumables));
+            throw new RuntimeException(t);
+        }
+    }
+
+    private interface NodePartial {
+        int execute(Context ctx, int state);
+    }
+
+    private interface StatelessNodePartial extends NodePartial {
+        int execute(Context ctx);
+
+        default int execute(Context ctx, int state){
+            return execute(ctx);
         }
     }
 
@@ -652,26 +740,30 @@ public class TestPrograms {
 
         @Override
         public int execute(Context ctx) {
-            int t;
+            return doBody(ctx, doTest(ctx, 0));
+        }
+
+        private int doTest(Context ctx, int prior){
             try{
-                t = test.execute(ctx);
+                return test.execute(ctx);
             }catch (Exception e){
-                ctx.payload = 10;
-                throw e;
+                ctx.suspendStateless(e, this::doBody);
             }
+            return 0;
+        }
+
+        private int doBody(Context ctx, int t){
             while(t != 0 && !ctx.checkInterrupt()){
                 try{
                     body.execute(ctx);
                 }catch (Exception e){
-                    ctx.payload = 10;
-                    throw e;
+                    ctx.suspendStateless(e, this::doTest);
                 }
 
                 try{
                     t = test.execute(ctx);
                 }catch (Exception e){
-                    ctx.payload = 10;
-                    throw e;
+                    ctx.suspendStateless(e, this::doBody);
                 }
             }
             return 0;
@@ -686,37 +778,56 @@ public class TestPrograms {
 
         @Override
         public int execute(Context ctx) {
+            doPre(ctx, 0);
+            return doBody(ctx, doTest(ctx, 0));
+        }
+
+        private int doPre(Context ctx, int prior){
             if(pre != null){
-                pre.execute(ctx);
-            }
-            int t;
-            try{
-                t = test.execute(ctx);
-            }catch (Exception e){
-                ctx.payload = 10;
-                throw e;
-            }
-            while(t != 0 && !ctx.checkInterrupt()){
                 try{
-                    body.execute(ctx);
+                    pre.execute(ctx);
                 }catch (Exception e){
-                    ctx.payload = 10;
-                    throw e;
-                }
-
-                if(post != null){
-                    post.execute(ctx);
-                }
-
-                try{
-                    t = test.execute(ctx);
-                }catch (Exception e){
-                    ctx.payload = 10;
-                    throw e;
+                    ctx.suspendStateless(e, this::doTest);
                 }
             }
             return 0;
         }
+
+        private int doTest(Context ctx, int prior){
+            try{
+                return test.execute(ctx);
+            }catch (Exception e){
+                ctx.suspendStateless(e, this::doBody);
+            }
+            return 0; // suspend() will rethrow so this will never be reached
+        }
+
+        private int doBody(Context ctx, int test){
+            int t = test;
+            while(t != 0 && !ctx.checkInterrupt()){
+                try{
+                    body.execute(ctx);
+                }catch (Exception e){
+                    ctx.suspendStateless(e, this::doPost);
+                }
+
+                doPost(ctx, 0);
+                t = doTest(ctx, 0);
+            }
+            return 0;
+        }
+
+        private int doPost(Context ctx, int prior){
+            if(post != null){
+                try{
+                    post.execute(ctx);
+                }catch (Exception e){
+                    ctx.suspendStateless(e, this::doTest);
+                }
+            }
+            return 0;
+        }
+
     }
 
     private static class FunctionNode implements Node {
