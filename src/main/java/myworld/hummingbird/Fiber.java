@@ -22,11 +22,15 @@ public final class Fiber {
     public int trapTableAddr = -1;
     public int trapHandlerCount = 0;
 
+    public Opcode[] currentSegment;
+
     public Fiber(HummingbirdVM vm, Executable exe, long[] registers){
         state = State.RUNNABLE;
         this.vm = vm;
         this.exe = exe;
         this.registers = registers;
+
+        currentSegment = exe.code();
     }
 
     public void setState(State state){
@@ -56,5 +60,14 @@ public final class Fiber {
 
     public int callerRegisterOffset(){
         return (int)registers[registerOffset - 1];
+    }
+
+    public void yield(int ip){
+        saveCallContext(ip + 1, registerOffset, 0);
+        vm.enqueue(this);
+    }
+
+    public int resume(){
+        return restoreCallContext();
     }
 }

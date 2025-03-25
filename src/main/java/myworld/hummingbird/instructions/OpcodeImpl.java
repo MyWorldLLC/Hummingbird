@@ -20,7 +20,12 @@ public interface OpcodeImpl {
             reg[regOffset + i] = reg[callerOffset + paramCount + i];
         }
 
-        ip = target;
+        if(target > 0){
+            ip = target;
+        }else{
+            var symbol = fiber.exe.symbols()[-target];
+            ip = symbol.offset();
+        }
         return ip;
     }
 

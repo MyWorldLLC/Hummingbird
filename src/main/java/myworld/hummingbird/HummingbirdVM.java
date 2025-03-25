@@ -8,8 +8,8 @@ public final class HummingbirdVM {
 
     private final Executable exe;
     public final MemoryLimits limits;
-    public volatile ByteBuffer memory;
-    public volatile Object[] objMemory;
+    public ByteBuffer memory;
+    public Object[] objMemory;
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
@@ -156,7 +156,7 @@ public final class HummingbirdVM {
      * measured speedup was a factor of ~3x better than without it. This is supported by the assembler via the "hot loop label"
      * syntax (prefixing a label target with `$$` instead of just `$`, which the assembler resolves as a negative, signaling
      * to the VM to return control flow to the top of the dispatch loop. This allows the interpreter's dispatch loop
-     * to mirror (from the perspective of the CPU branch predictor) the HVM instructions, allowing the branch predictor
+     * to mirror (from the perspective of the CPU branch predictor) the HVM fiber.currentSegment, allowing the branch predictor
      * to correctly predict which HVM instruction will be dispatched next.
      */
     public void run(Fiber fiber) throws HummingbirdException {
@@ -164,162 +164,161 @@ public final class HummingbirdVM {
         fiber.restoreCallContext();
         var ip = fiber.ip;
 
-        var instructions = exe.code();
-        while (Math.abs(ip) < instructions.length) {
+        while (Math.abs(ip) < fiber.currentSegment.length) {
             try {
                 ip = Math.abs(ip);
-                var ins = instructions[ip];
-                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                var ins = fiber.currentSegment[ip];
+                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                 if (ip >= 0) {
-                    ins = instructions[ip];
-                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                    ins = fiber.currentSegment[ip];
+                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                     if (ip >= 0) {
-                        ins = instructions[ip];
-                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                        ins = fiber.currentSegment[ip];
+                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                         if (ip >= 0) {
-                            ins = instructions[ip];
-                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                            ins = fiber.currentSegment[ip];
+                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                             if (ip >= 0) {
-                                ins = instructions[ip];
-                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                ins = fiber.currentSegment[ip];
+                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                 if (ip >= 0) {
-                                    ins = instructions[ip];
-                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                    ins = fiber.currentSegment[ip];
+                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                     if (ip >= 0) {
-                                        ins = instructions[ip];
-                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                        ins = fiber.currentSegment[ip];
+                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                         if (ip >= 0) {
-                                            ins = instructions[ip];
-                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                            ins = fiber.currentSegment[ip];
+                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                             if (ip >= 0) {
-                                                ins = instructions[ip];
-                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                ins = fiber.currentSegment[ip];
+                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                 if (ip >= 0) {
-                                                    ins = instructions[ip];
-                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                    ins = fiber.currentSegment[ip];
+                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                     if (ip >= 0) {
-                                                        ins = instructions[ip];
-                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                        ins = fiber.currentSegment[ip];
+                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                         if (ip >= 0) {
-                                                            ins = instructions[ip];
-                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                            ins = fiber.currentSegment[ip];
+                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                             if (ip >= 0) {
-                                                                ins = instructions[ip];
-                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                ins = fiber.currentSegment[ip];
+                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                 if (ip >= 0) {
-                                                                    ins = instructions[ip];
-                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                    ins = fiber.currentSegment[ip];
+                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                     if (ip >= 0) {
-                                                                        ins = instructions[ip];
-                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                        ins = fiber.currentSegment[ip];
+                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                         if (ip >= 0) {
-                                                                            ins = instructions[ip];
-                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                            ins = fiber.currentSegment[ip];
+                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                             if (ip >= 0) {
-                                                                                ins = instructions[ip];
-                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                ins = fiber.currentSegment[ip];
+                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                 if (ip >= 0) {
-                                                                                    ins = instructions[ip];
-                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                    ins = fiber.currentSegment[ip];
+                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                     if (ip >= 0) {
-                                                                                        ins = instructions[ip];
-                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                        ins = fiber.currentSegment[ip];
+                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                         if (ip >= 0) {
-                                                                                            ins = instructions[ip];
-                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                            ins = fiber.currentSegment[ip];
+                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                             if (ip >= 0) {
-                                                                                                ins = instructions[ip];
-                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                 if (ip >= 0) {
-                                                                                                    ins = instructions[ip];
-                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                     if (ip >= 0) {
-                                                                                                        ins = instructions[ip];
-                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                         if (ip >= 0) {
-                                                                                                            ins = instructions[ip];
-                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                             if (ip >= 0) {
-                                                                                                                ins = instructions[ip];
-                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                 if (ip >= 0) {
-                                                                                                                    ins = instructions[ip];
-                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                     if (ip >= 0) {
-                                                                                                                        ins = instructions[ip];
-                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                         if (ip >= 0) {
-                                                                                                                            ins = instructions[ip];
-                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                             if (ip >= 0) {
-                                                                                                                                ins = instructions[ip];
-                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                 if (ip >= 0) {
-                                                                                                                                    ins = instructions[ip];
-                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                     if (ip >= 0) {
-                                                                                                                                        ins = instructions[ip];
-                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                         if (ip >= 0) {
-                                                                                                                                            ins = instructions[ip];
-                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                             if (ip >= 0) {
-                                                                                                                                                ins = instructions[ip];
-                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                 if (ip >= 0) {
-                                                                                                                                                    ins = instructions[ip];
-                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                     if (ip >= 0) {
-                                                                                                                                                        ins = instructions[ip];
-                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                         if (ip >= 0) {
-                                                                                                                                                            ins = instructions[ip];
-                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                             if (ip >= 0) {
-                                                                                                                                                                ins = instructions[ip];
-                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                 if (ip >= 0) {
-                                                                                                                                                                    ins = instructions[ip];
-                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                     if (ip >= 0) {
-                                                                                                                                                                        ins = instructions[ip];
-                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                         if (ip >= 0) {
-                                                                                                                                                                            ins = instructions[ip];
-                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                             if (ip >= 0) {
-                                                                                                                                                                                ins = instructions[ip];
-                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                 if (ip >= 0) {
-                                                                                                                                                                                    ins = instructions[ip];
-                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                     if (ip >= 0) {
-                                                                                                                                                                                        ins = instructions[ip];
-                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                         if (ip >= 0) {
-                                                                                                                                                                                            ins = instructions[ip];
-                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                             if (ip >= 0) {
-                                                                                                                                                                                                ins = instructions[ip];
-                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                 if (ip >= 0) {
-                                                                                                                                                                                                    ins = instructions[ip];
-                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                     if (ip >= 0) {
-                                                                                                                                                                                                        ins = instructions[ip];
-                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                         if (ip >= 0) {
-                                                                                                                                                                                                            ins = instructions[ip];
-                                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                            ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                             if (ip >= 0) {
-                                                                                                                                                                                                                ins = instructions[ip];
-                                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                                ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                                 if (ip >= 0) {
-                                                                                                                                                                                                                    ins = instructions[ip];
-                                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                                    ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                                     if (ip >= 0) {
-                                                                                                                                                                                                                        ins = instructions[ip];
-                                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, instructions);
+                                                                                                                                                                                                                        ins = fiber.currentSegment[ip];
+                                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, fiber.registerOffset, ip, fiber.currentSegment);
                                                                                                                                                                                                                     }
                                                                                                                                                                                                                 }
                                                                                                                                                                                                             }
