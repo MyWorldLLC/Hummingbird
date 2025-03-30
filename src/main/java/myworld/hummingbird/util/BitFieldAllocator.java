@@ -16,7 +16,7 @@ public class BitFieldAllocator {
         state = new BitField(initialSize);
     }
 
-    public int allocate(){
+    public synchronized int allocate(){
         if(lastFree != -1){
             state.set(lastFree);
             var ptr = lastFree;
@@ -36,11 +36,11 @@ public class BitFieldAllocator {
         return ALLOC_FAILURE;
     }
 
-    public boolean isAllocated(int ptr){
+    public synchronized boolean isAllocated(int ptr){
         return state.isSet(ptr);
     }
 
-    public void free(int ptr){
+    public synchronized void free(int ptr){
         state.clear(ptr);
         lastFree = ptr;
     }
