@@ -7,9 +7,9 @@ import java.util.function.Function;
 public final class HummingbirdVM {
 
     private final Executable exe;
-    public final MemoryLimits limits;
-    public volatile ByteBuffer memory;
-    public volatile Object[] objMemory;
+    public MemoryLimits limits;
+    public ByteBuffer memory;
+    public Object[] objMemory;
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
