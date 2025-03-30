@@ -28,7 +28,7 @@ public class BitFieldAllocator {
             var word = state.word(i);
             var freeBit = Long.highestOneBit(~word);
             if(freeBit != 0){
-                var ptr = i * 64 + Long.numberOfLeadingZeros(freeBit) + 1;
+                var ptr = i * 64 + Long.numberOfLeadingZeros(freeBit);
                 state.set(ptr);
                 return ptr;
             }

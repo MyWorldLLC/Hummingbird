@@ -7,7 +7,7 @@ public final class BitField {
     private long[] words;
 
     public BitField(int initialSize){
-        words = new long[initialSize];
+        words = new long[initialSize / 64 + (initialSize % 64 != 0 ? 1 : 0)];
     }
 
     public void resize(int newSize){
@@ -31,12 +31,20 @@ public final class BitField {
         words[wordIndex] ^= MASK >>> (bitIndex % 64);
     }
 
+    public long wordFor(int bitIndex){
+        return words[bitIndex / 64];
+    }
+
     public long word(int wordIndex){
         return words[wordIndex];
     }
 
     public int wordCount(){
         return words.length;
+    }
+
+    public int bitCount(){
+        return words.length * 64;
     }
 
 }
