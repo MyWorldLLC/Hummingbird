@@ -57,13 +57,14 @@ public class Assembler {
         for(var method : opcodes.getMethods()){
             if(method.isAnnotationPresent(Assembles.class)){
                 var annotation = method.getAnnotation(Assembles.class);
-                if(opcodeFactories.containsKey(annotation.value())){
-                    throw new IllegalStateException("Assembler for opcode " + annotation.value() + " has already been registered");
+                var opName = annotation.value().toUpperCase();
+                if(opcodeFactories.containsKey(opName)){
+                    throw new IllegalStateException("Assembler for opcode " + opName + " has already been registered");
                 }
                 if(!Modifier.isStatic(method.getModifiers())){
-                    throw new IllegalArgumentException("Assembler for opcode " + annotation.value() + " is not static");
+                    throw new IllegalArgumentException("Assembler for opcode " + opName + " is not static");
                 }
-                opcodeFactories.put(annotation.value(), method);
+                opcodeFactories.put(opName, method);
             }
         }
     }
@@ -470,7 +471,7 @@ public class Assembler {
 
     protected Opcode makeOpcode(String name, List<Object> operands) throws AssemblyException {
 
-        var factory = opcodeFactories.get(name);
+        var factory = opcodeFactories.get(name.toUpperCase());
         if(factory == null){
             throw new AssemblyException("Unrecognized instruction: " + name);
         }
