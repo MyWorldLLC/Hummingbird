@@ -13,11 +13,11 @@ public class StructAccessor {
     }
 
     public int readInt(int basePtr, int field){
-        return vm.memory.getInt(basePtr + struct.offsetOf(field));
+        return vm.readInt(basePtr + struct.offsetOf(field));
     }
 
     public void writeInt(int basePtr, int field, int value){
-        vm.memory.putInt(basePtr + struct.offsetOf(field), value);
+        vm.writeInt(basePtr + struct.offsetOf(field), value);
     }
 
     public Struct struct(){

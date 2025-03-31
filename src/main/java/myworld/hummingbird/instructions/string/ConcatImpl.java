@@ -15,7 +15,7 @@ public class ConcatImpl implements OpcodeImpl {
         var a = (int) reg[regOffset + ins.src()];
         var b = (int) reg[regOffset + ins.extra()];
 
-        vm.objMemory[dst] = vm.objectToString(a) + vm.objectToString(b);
+        vm.writeObj(dst, vm.objectToString(a) + vm.objectToString(b));
 
         return ip + 1;
     }

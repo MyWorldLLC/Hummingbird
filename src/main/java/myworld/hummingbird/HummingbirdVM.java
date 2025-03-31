@@ -1,6 +1,7 @@
 package myworld.hummingbird;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.*;
 import java.util.function.Function;
 
@@ -8,8 +9,8 @@ public final class HummingbirdVM {
 
     private final Executable exe;
     public MemoryLimits limits;
-    public ByteBuffer memory;
-    public Object[] objMemory;
+    private ByteBuffer memory;
+    private Object[] objMemory;
     private Fiber currentFiber;
     private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
@@ -441,26 +442,34 @@ public final class HummingbirdVM {
         var end = trapTableAddr + trapHandlerCount;
         while (start <= end) {
             var m = (start + end) / 2;
-            var mCode = memory.getInt(m);
+            var mCode = readInt(m);
             if (mCode < exCode) {
                 start = m + 1;
             } else if (mCode > exCode) {
                 end = m - 1;
             } else {
-                return memory.getInt(trapTableAddr + trapHandlerCount + m);
+                return readInt(trapTableAddr + trapHandlerCount + m);
             }
         }
         return -1;
+    }
+
+    public int memorySize(){
+        return memory.capacity();
     }
 
     public int resize(int newSize){
         var size = Math.min(newSize, limits.bytes());
 
         var next = ByteBuffer.allocate(size);
-        next.put(0, memory, 0, Math.min(size, memory.capacity()));
+        next.put(0, memory, 0, Math.min(size, memorySize()));
         memory = next;
 
         return size;
+    }
+
+    public int objMemorySize(){
+        return objMemory.length;
     }
 
     public int resizeObj(int newSize){
@@ -473,12 +482,108 @@ public final class HummingbirdVM {
         return size;
     }
 
-    public DebugHandler getDebugHandler(){
-        return debugHandler;
+    public void writeByte(int ptr, byte value){
+        memory.put(ptr, value);
     }
 
-    public static long longFromInts(int high, int low) {
-        return ((long) high << 32) | ((long) low);
+    public void writeShort(int ptr, short value){
+        memory.putShort(ptr, value);
+    }
+
+    public void writeInt(int ptr, int value){
+        memory.putInt(ptr, value);
+    }
+
+    public void writeLong(int ptr, long value){
+        memory.putLong(ptr, value);
+    }
+
+    public void writeFloat(int ptr, float value){
+        writeInt(ptr, Float.floatToIntBits(value));
+    }
+
+    public void writeDouble(int ptr, double value){
+        writeLong(ptr, Double.doubleToLongBits(value));
+    }
+
+    public void writeObj(int ptr, Object value){
+        objMemory[ptr] = value;
+    }
+
+    public byte readByte(int ptr){
+        return memory.get(ptr);
+    }
+
+    public short readShort(int ptr){
+        return memory.getShort(ptr);
+    }
+
+    public int readInt(int ptr){
+        return memory.getInt(ptr);
+    }
+
+    public long readLong(int ptr){
+        return memory.getLong(ptr);
+    }
+
+    public float readFloat(int ptr){
+        return Float.intBitsToFloat(readInt(ptr));
+    }
+
+    public double readDouble(int ptr){
+        return Double.longBitsToDouble(readLong(ptr));
+    }
+
+    public Object readObj(int ptr){
+        return objMemory[ptr];
+    }
+
+    public void copy(int dst, int start, int length){
+        memory.put(dst, memory.slice(start, start + length), 0, length);
+    }
+
+    public void copyObj(int dst, int start, int length){
+        System.arraycopy(objMemory, start, objMemory, dst, length);
+    }
+
+    public void bulkWrite(int dst, ByteBuffer buffer){
+        bulkWrite(dst, buffer, 0, buffer.limit());
+    }
+
+    public void bulkWrite(int dst, ByteBuffer buffer, int srcStart, int length){
+        memory.put(dst, buffer, srcStart, length);
+    }
+
+    public void bulkWriteObj(int dst, Object[] buffer){
+        bulkWriteObj(dst, buffer, 0, buffer.length);
+    }
+
+    public void bulkWriteObj(int dst, Object[] buffer, int src, int length){
+        System.arraycopy(buffer, src, objMemory, dst, length);
+    }
+
+    public void bulkRead(int src, ByteBuffer buffer){
+        bulkRead(src, buffer, 0, buffer.limit());
+    }
+
+    public void bulkRead(int src, ByteBuffer buffer, int bufferStart, int length){
+        buffer.put(bufferStart, memory, src, length);
+    }
+
+    public void bulkReadObj(int src, Object[] buffer){
+        bulkReadObj(src, buffer, 0, buffer.length);
+    }
+
+    public void bulkReadObj(int src, Object[] buffer, int bufferStart, int length){
+        System.arraycopy(objMemory, src, buffer, bufferStart, length);
+    }
+
+    public CharBuffer memoryAsCharBuffer(){
+        return memory.asCharBuffer();
+    }
+
+    public DebugHandler getDebugHandler(){
+        return debugHandler;
     }
 
     private static long[] allocateRegisters(int l) {

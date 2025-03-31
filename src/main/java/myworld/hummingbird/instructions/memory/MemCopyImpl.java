@@ -8,13 +8,12 @@ public class MemCopyImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
-        var memory = fiber.vm.memory;
 
         var dst = (int) reg[regOffset + ins.dst()];
         var start = (int) reg[regOffset + ins.src()];
         var end = (int) reg[regOffset + ins.extra()];
 
-        memory.put(dst, memory.slice(start, end), 0, end - start);
+        fiber.vm.copy(dst, start, end);
 
         return ip + 1;
     }

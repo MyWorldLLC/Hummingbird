@@ -23,7 +23,7 @@ public class IfNullImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var dst = regOffset + ins.dst();
-        var result = fiber.vm.objMemory[dst] == null;
+        var result = fiber.vm.readObj(dst) == null;
         if(jump){
             if(result){
                 return ins.src();

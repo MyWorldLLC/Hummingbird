@@ -149,7 +149,7 @@ public class Allocator {
     }
 
     public synchronized int sbrk(int moreBytes){
-        int oldSize = hvm.memory.limit();
+        int oldSize = hvm.memorySize();
         if(moreBytes == 0){
             return oldSize;
         }

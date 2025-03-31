@@ -19,7 +19,7 @@ public class SubStrImpl implements OpcodeImpl {
 
         var str = vm.objectToString(src);
 
-        vm.objMemory[dst] = str.substring(Math.max(0, start), Math.min(str.length(), end));
+        vm.writeObj(dst, str.substring(Math.max(0, start), Math.min(str.length(), end)));
 
         return ip + 1;
     }

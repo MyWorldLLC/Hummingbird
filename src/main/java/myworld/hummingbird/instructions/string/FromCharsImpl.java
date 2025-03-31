@@ -14,7 +14,7 @@ public class FromCharsImpl implements OpcodeImpl {
         var src = (int) reg[regOffset + ins.src()];
         var dst = (int) reg[regOffset + ins.dst()];
 
-        vm.objMemory[dst] = vm.readString(src);
+        fiber.vm.writeObj(dst, vm.readString(src));
 
         return ip + 1;
     }

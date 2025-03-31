@@ -8,18 +8,18 @@ public class ToCharsImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
         var reg = fiber.registers;
-        var memory = fiber.vm.memory;
-        var charBuf = memory.asCharBuffer();
+        var vm = fiber.vm;
+        var charBuf = vm.memoryAsCharBuffer();
 
         var dst = (int) reg[regOffset + ins.dst()];
         var src = (int) reg[regOffset + ins.src()];
 
-        if (fiber.vm.objMemory[src] instanceof String s) {
+        if (fiber.vm.readObj(src) instanceof String s) {
             var chars = s.toCharArray();
-            memory.putInt(dst, chars.length);
+            vm.writeInt(dst, chars.length);
             charBuf.put((dst + 4) / 2, chars);
         }else{
-            memory.putInt(dst, -1);
+            vm.writeInt(dst, -1);
         }
 
         return ip + 1;
