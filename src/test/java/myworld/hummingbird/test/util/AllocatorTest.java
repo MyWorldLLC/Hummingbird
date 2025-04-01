@@ -69,4 +69,17 @@ public class AllocatorTest {
         assertEquals(1, allocator.countFreeBlocks(), "Allocator must merge free blocks");
         assertEquals(100 - header.sizeOf(), allocator.freeSpace(), "Space must be fully free");
     }
+
+    @Test
+    public void delegateTest(){
+        var subBase = allocator.malloc(50);
+        var subAllocator = new Allocator(vm, subBase, allocator, 50);
+
+        assertEquals(34, subAllocator.freeSpace(), "Suballocator correctly reports initial free space");
+        var ptr = subAllocator.malloc(15);
+        assertNotEquals(NULL, ptr, "Suballocator correctly allocates a pointer");
+        assertEquals(34 - (15 + header.sizeOf()), subAllocator.freeSpace(), "Suballocator correctly reports post-allocation free space");
+        subAllocator.free(ptr);
+        assertEquals(42, subAllocator.freeSpace(), "Suballocator correctly reports final free space");
+    }
 }

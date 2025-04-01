@@ -117,34 +117,68 @@ import static myworld.hummingbird.HummingbirdVM.NULL;
 public class Allocator {
 
     public static final int NALLOC = 1024;
+    private static final int ROOT_INITIAL_SIZE = -1;
 
-    private final HeaderStruct Header;
 
     private final HummingbirdVM hvm;
-    private int freeBlock;
+    private final HeaderStruct Header;
+    private final Allocator delegate;
+
+    private final int initialSize;
     private final int base;
 
+    private int freeBlock;
+
     public Allocator(HummingbirdVM vm, int baseAddress){
+        this(vm, baseAddress, null, ROOT_INITIAL_SIZE);
+    }
+
+    public Allocator(HummingbirdVM vm, int baseAddress, Allocator delegate, int initialSize){
         hvm = vm;
         base = baseAddress;
         Header = new HeaderStruct(vm);
+
+        this.initialSize = initialSize;
+        this.delegate = delegate;
+
+        initFreeList();
+    }
+
+    private void initFreeList(){
+        // Init circular linked list as base -> freeBlock -> base
+        freeBlock = base + Header.sizeOf();
+        Header.nextBlock(base, freeBlock);
+        Header.size(base, 0);
+
+        Header.nextBlock(freeBlock, base);
+        if(initialSize == ROOT_INITIAL_SIZE){
+            Header.size(freeBlock, hvm.memorySize() - base - 2 * Header.sizeOf());
+        }else{
+            Header.size(freeBlock, initialSize - 2 * Header.sizeOf());
+        }
     }
 
     private int morecore(int nbytes){
 
         nbytes = Math.max(nbytes, NALLOC);
 
-        int formerEndPtr = sbrk(nbytes);
-        if(formerEndPtr == -1){
-            return NULL;
+        int nextBlockStart;
+
+        if(delegate == null){
+            nextBlockStart = sbrk(nbytes);
+            if(nextBlockStart == -1){
+                return NULL;
+            }
+        }else{
+            nextBlockStart = delegate.malloc(nbytes);
         }
 
-        Header.size(formerEndPtr, nbytes);
+        Header.size(nextBlockStart, nbytes);
         // Have to add the size of the header because the first thing free()
         // will do is subtract the size of the header to inspect it.
         // We call free() here so that the new block is properly added into
         // the free list
-        free(formerEndPtr + Header.sizeOf());
+        free(nextBlockStart + Header.sizeOf());
         return freeBlock;
     }
 
@@ -164,16 +198,6 @@ public class Allocator {
 
         if(nbytes == 0){
             return NULL;
-        }
-
-        if(freeBlock == NULL){
-            // Init circular linked list as base -> freeBlock -> base
-            freeBlock = base + Header.sizeOf();
-            Header.nextBlock(base, freeBlock);
-            Header.size(base, 0);
-
-            Header.nextBlock(freeBlock, base);
-            Header.size(freeBlock, hvm.memorySize() - base - 2 * Header.sizeOf());
         }
 
         int lastFreeBlock = freeBlock;

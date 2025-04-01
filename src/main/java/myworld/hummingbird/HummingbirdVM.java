@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 public final class HummingbirdVM {
 
+    public static final MemoryLimits DEFAULT_LIMITS = new MemoryLimits(512 * 1024, 512);
     public static final int NULL = 0;
 
     private final Executable exe;
@@ -21,7 +22,7 @@ public final class HummingbirdVM {
     private DebugHandler debugHandler;
 
     public HummingbirdVM(Executable exe) {
-        this(exe, new MemoryLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        this(exe, DEFAULT_LIMITS);
     }
 
     public HummingbirdVM(Executable exe, MemoryLimits limits) {
