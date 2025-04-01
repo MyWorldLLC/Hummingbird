@@ -2,6 +2,8 @@ package myworld.hummingbird.util;
 
 import myworld.hummingbird.HummingbirdVM;
 
+import static myworld.hummingbird.HummingbirdVM.NULL;
+
 /**
  * Code for malloc/free adapted for HVM from https://www.math.uni-bielefeld.de/~rehmann/Ckurs-f/b04/alloc.h.
  * No license is specified, but this is credited as the implementation from K&R.
@@ -114,7 +116,6 @@ import myworld.hummingbird.HummingbirdVM;
 //}
 public class Allocator {
 
-    private static final int NULL = 0;
     public static final int NALLOC = 1024;
 
     private final HeaderStruct Header;

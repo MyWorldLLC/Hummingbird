@@ -7,6 +7,8 @@ import java.util.function.Function;
 
 public final class HummingbirdVM {
 
+    public static final int NULL = 0;
+
     private final Executable exe;
     public MemoryLimits limits;
     private ByteBuffer memory;
@@ -483,19 +485,35 @@ public final class HummingbirdVM {
     }
 
     public void writeByte(int ptr, byte value){
-        memory.put(ptr, value);
+        try{
+            memory.put(ptr, value);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public void writeShort(int ptr, short value){
-        memory.putShort(ptr, value);
+        try{
+            memory.putShort(ptr, value);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public void writeInt(int ptr, int value){
-        memory.putInt(ptr, value);
+        try{
+            memory.putInt(ptr, value);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public void writeLong(int ptr, long value){
-        memory.putLong(ptr, value);
+        try{
+            memory.putLong(ptr, value);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public void writeFloat(int ptr, float value){
@@ -507,23 +525,43 @@ public final class HummingbirdVM {
     }
 
     public void writeObj(int ptr, Object value){
-        objMemory[ptr] = value;
+        try{
+            objMemory[ptr] = value;
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public byte readByte(int ptr){
-        return memory.get(ptr);
+        try{
+            return memory.get(ptr);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public short readShort(int ptr){
-        return memory.getShort(ptr);
+        try{
+            return memory.getShort(ptr);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public int readInt(int ptr){
-        return memory.getInt(ptr);
+        try{
+            return memory.getInt(ptr);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public long readLong(int ptr){
-        return memory.getLong(ptr);
+        try{
+            return memory.getLong(ptr);
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public float readFloat(int ptr){
@@ -535,7 +573,11 @@ public final class HummingbirdVM {
     }
 
     public Object readObj(int ptr){
-        return objMemory[ptr];
+        try{
+            return objMemory[ptr];
+        } catch (IndexOutOfBoundsException e) {
+            throw new IndexOutOfBoundsException(ptr);
+        }
     }
 
     public void copy(int dst, int start, int length){
