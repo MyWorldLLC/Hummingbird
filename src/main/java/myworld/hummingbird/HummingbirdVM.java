@@ -29,9 +29,8 @@ public final class HummingbirdVM {
         this.limits = limits;
         foreign = new ForeignFunction[(int) exe.foreignSymbols().count()];
 
-        memory = ByteBuffer.allocate(1024);
-        // TODO - need to specify memory/object memory initial sizes and initialize memory from data segment
-        objMemory = new Object[10];
+        memory = ByteBuffer.allocate(limits.bytes());
+        objMemory = new Object[limits.objects()];
 
         runQueue = new LinkedList<>();
         trapCodes = new ArrayList<>();
