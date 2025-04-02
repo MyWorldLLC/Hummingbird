@@ -207,7 +207,7 @@ public class Allocator {
 
         for(var block = Header.nextBlock(head); block != NULL; previousBlock = block, block = Header.nextBlock(block)){
 
-            if(Header.size(block) == nbytes && !(previousBlock == head && block == tail)){
+            if(Header.size(block) == nbytes && !(previousBlock == head && Header.nextBlock(block) == NULL)){
                 // Exact match - don't resize, just join the preceding and trailing blocks.
                 // Can't do this on the head block because there is no prior block to work with.
 
@@ -255,6 +255,10 @@ public class Allocator {
     protected int freeInternal(int ptr){
         // Return the address of the pointer's block, or the address
         // of the combined block that it was merged with
+
+        if(ptr == NULL){
+            return NULL;
+        }
 
         int hPtr = ptr - Header.sizeOf();
 
@@ -364,8 +368,9 @@ public class Allocator {
         }
 
         public void nextBlock(int hPtr, int ptr){
-            if(hPtr == 10 && ptr == 0){
+            if(hPtr == 8 && ptr == 0){
                 new Exception().printStackTrace();
+                System.exit(0);
             }
             acc.writeInt(hPtr, Allocator.HeaderStruct.nextBlock, ptr);
         }

@@ -129,6 +129,16 @@ task runProfiler(type:JavaExec) {
     classpath = sourceSets.profiling.runtimeClasspath + sourceSets.profiling.compileClasspath
 }
 
+task runAllocatorSmokeTest(type:JavaExec) {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    mainClass = 'myworld.hummingbird.test.util.AllocatorSmokeTest'
+
+    classpath = sourceSets.test.runtimeClasspath + sourceSets.test.compileClasspath
+}
+
 publishing {
     publications {
         hummingbird(MavenPublication) {
