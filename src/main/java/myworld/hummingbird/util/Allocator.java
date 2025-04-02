@@ -2,6 +2,8 @@ package myworld.hummingbird.util;
 
 import myworld.hummingbird.HummingbirdVM;
 
+import java.util.Arrays;
+
 import static myworld.hummingbird.HummingbirdVM.NULL;
 
 /**
@@ -117,69 +119,72 @@ import static myworld.hummingbird.HummingbirdVM.NULL;
 public class Allocator {
 
     public static final int NALLOC = 1024;
-    private static final int ROOT_INITIAL_SIZE = -1;
-
+    private static final int DEFAULT_INITIAL_SIZE = -1;
 
     private final HummingbirdVM hvm;
     private final HeaderStruct Header;
-    private final Allocator delegate;
 
     private final int initialSize;
-    private final int base;
-
-    private int freeBlock;
+    private final int head;
+    private int tail;
 
     public Allocator(HummingbirdVM vm, int baseAddress){
-        this(vm, baseAddress, null, ROOT_INITIAL_SIZE);
+        this(vm, baseAddress, DEFAULT_INITIAL_SIZE);
     }
 
-    public Allocator(HummingbirdVM vm, int baseAddress, Allocator delegate, int initialSize){
+    public Allocator(HummingbirdVM vm, int baseAddress, int initialSize){
+        if(baseAddress == NULL){
+            throw new IllegalArgumentException("Allocator base address must be non-zero");
+        }
+
         hvm = vm;
-        base = baseAddress;
+        head = baseAddress;
+        tail = head;
         Header = new HeaderStruct(vm);
 
         this.initialSize = initialSize;
-        this.delegate = delegate;
 
         initFreeList();
     }
 
     private void initFreeList(){
-        // Init circular linked list as base -> freeBlock -> base
-        freeBlock = base + Header.sizeOf();
-        Header.nextBlock(base, freeBlock);
-        Header.size(base, 0);
+        // Init linked free list.
+        // Invariants:
+        // (1) There is always at least one block - the head block, it never moves from the base pointer, and its
+        //     size is always 0.
+        // (2) The base pointer of each block is a higher address than
+        //     the base pointer of the block before it.
+        // (3) Adjacent blocks are merged when they are added to the free list.
+        // (4) The tail block's nextBlock field is always NULL.
 
-        Header.nextBlock(freeBlock, base);
-        if(initialSize == ROOT_INITIAL_SIZE){
-            Header.size(freeBlock, hvm.memorySize() - base - 2 * Header.sizeOf());
+        // Init head
+        tail = head + Header.sizeOf();
+        Header.nextBlock(head, tail);
+        Header.size(head, 0);
+        Header.nextBlock(tail, NULL);
+        if(initialSize == DEFAULT_INITIAL_SIZE){
+            Header.size(tail, hvm.memorySize() - head - 2 * Header.sizeOf());
         }else{
-            Header.size(freeBlock, initialSize - 2 * Header.sizeOf());
+            Header.size(tail, initialSize - 2 * Header.sizeOf());
         }
+
     }
 
     private int morecore(int nbytes){
 
-        nbytes = Math.max(nbytes, NALLOC);
+        nbytes = Math.max(nbytes + Header.sizeOf(), NALLOC);
 
-        int nextBlockStart;
-
-        if(delegate == null){
-            nextBlockStart = sbrk(nbytes);
-            if(nextBlockStart == -1){
-                return NULL;
-            }
-        }else{
-            nextBlockStart = delegate.malloc(nbytes);
+        int newBlock = sbrk(nbytes);
+        if(newBlock == -1){
+            return NULL;
         }
 
-        Header.size(nextBlockStart, nbytes);
+        Header.size(newBlock, nbytes);
         // Have to add the size of the header because the first thing free()
         // will do is subtract the size of the header to inspect it.
         // We call free() here so that the new block is properly added into
         // the free list
-        free(nextBlockStart + Header.sizeOf());
-        return freeBlock;
+        return freeInternal(newBlock + Header.sizeOf());
     }
 
     public synchronized int sbrk(int moreBytes){
@@ -197,132 +202,135 @@ public class Allocator {
     public synchronized int malloc(int nbytes){
 
         if(nbytes == 0){
-
             return NULL;
         }
 
-        int lastFreeBlock = freeBlock;
+        int previousBlock = head;
 
-        for(var block = Header.nextBlock(lastFreeBlock); ; lastFreeBlock = block, block = Header.nextBlock(block)){
+        for(var block = Header.nextBlock(head); block != NULL; previousBlock = block, block = Header.nextBlock(block)){
 
-            if(Header.size(block) == nbytes){
+            if(Header.size(block) == nbytes && !(previousBlock == head && block == tail)){
+                // Exact match - don't resize, just join the preceding and trailing blocks.
+                // Can't do this on the head block because there is no prior block to work with.
 
-                // Exact match - don't resize, just join the preceding and trailing blocks
-                System.out.println("Joining " + lastFreeBlock + " " + Header.nextBlock(block));
-                Header.nextBlock(lastFreeBlock, Header.nextBlock(block));
+                Header.nextBlock(previousBlock, Header.nextBlock(block));
+                Header.nextBlock(block, NULL);
 
-                freeBlock = lastFreeBlock;
                 return block + Header.sizeOf();
-            }else if(Header.size(block) > nbytes + Header.sizeOf()){
-                System.out.println("Splitting");
+            }else if(Header.size(block) >= nbytes + Header.sizeOf()){
 
-                // There's room to insert a new free block
+                // There's room in this block to claim the memory we need
+                // and also leave behind a newly created block that's a fragment
+                // of this one.
                 int newBlock = block + Header.sizeOf() + nbytes;
 
                 // Insert new free block into the list
-                Header.nextBlock(lastFreeBlock, newBlock);
+                Header.nextBlock(previousBlock, newBlock);
                 Header.nextBlock(newBlock, Header.nextBlock(block));
+
                 Header.size(newBlock, Header.size(block) - nbytes - Header.sizeOf());
                 Header.size(block, nbytes);
 
-                freeBlock = lastFreeBlock;
+                if(block == tail){
+                    // We just snagged the first bit of the tail block, so update
+                    // the tail to the new block
+                    tail = newBlock;
+                    Header.nextBlock(newBlock, NULL);
+                }
                 return block + Header.sizeOf();
             }
 
-            // We've done a full loop without finding a splittable block or we've allocated all
-            // available memory, so attempt to allocate more from the VM
-            if(block == freeBlock){
-                System.out.println("Request more core");
-                block = morecore(nbytes + Header.sizeOf());
+            // We've done a full pass without finding a suitable allocation,
+            // so request more memory from the VM. morecore() will return a pointer
+            // to the next block to search for, which if morecore() succeeded is guaranteed
+            // to be large enough.
+            if(block == tail){
+                block = morecore(nbytes);
                 if(block == NULL){
                     return NULL;
                 }
             }
         }
+        return NULL;
     }
 
-    public synchronized void free(int ptr){
+    protected int freeInternal(int ptr){
+        // Return the address of the pointer's block, or the address
+        // of the combined block that it was merged with
 
         int hPtr = ptr - Header.sizeOf();
 
-        // Find insertion point in free list by pointer order so that
-        // we can merge adjacent blocks
-        //var block = Header.nextBlock(freeBlock);
-
-        // Select the block before hPtr where its next block follows hPtr, stopping if we only have a single free block
-        //while(!(block < hPtr && Header.nextBlock(block) > hPtr) && Header.nextBlock(block) != block){
-        //    block = Header.nextBlock(block);
-        //}
-
-        int block;
-        for(block = Header.nextBlock(freeBlock); ; block = Header.nextBlock(block)){
-            if((block < hPtr && Header.nextBlock(block) > hPtr) || (block == freeBlock)){
-                break;
+        int block = head;
+        if(hPtr > tail){
+            block = tail;
+        }else{
+            while(block != tail){
+                if(block < hPtr && hPtr < Header.nextBlock(block)){
+                    break;
+                }
+                var next = Header.nextBlock(block);
+                if(next == block){
+                    // An invariant was broken due to data corruption, exit
+                    return -1;
+                }
+                block = next;
             }
         }
 
         // Insert hPtr into the list
+        // Note that when block == tail, nextBlock is NULL.
         int nextBlock = Header.nextBlock(block);
 
         Header.nextBlock(block, hPtr);
         Header.nextBlock(hPtr, nextBlock);
 
         // Now merge (if able) block, hPtr, and the trailing block
-        var mergedOrTail = mergeIfAble(block, hPtr);
-        mergedOrTail = mergeIfAble(mergedOrTail, nextBlock);
+        var mergedOrNext = mergeIfAble(block, hPtr);
+        if(nextBlock != NULL){
+            mergedOrNext = mergeIfAble(mergedOrNext, nextBlock);
+        }
 
-        freeBlock = mergedOrTail;
+        if(block == tail){
+            // Sets the tail to the merged block (if merge happened),
+            // or leaves it pointing to the old tail (if merge didn't happen).
+            tail = mergedOrNext;
+            Header.nextBlock(tail, NULL);
+        }
+        return mergedOrNext;
+    }
+
+    public synchronized void free(int ptr){
+        freeInternal(ptr);
     }
 
     public synchronized int freeSpace(){
         int size = 0;
-        for(var block = Header.nextBlock(base); ; block = Header.nextBlock(block)){
-            System.out.println("Free block (%d): %d".formatted(block, Header.size(block)));
+        for(var block = head; block != NULL; block = Header.nextBlock(block)){
             size += Header.size(block);
-            if(block == base){
-                return size;
-            }
         }
+        return size;
     }
 
     public synchronized int countFreeBlocks(){
         int count = 0;
-        for(var block = Header.nextBlock(base); ; block = Header.nextBlock(block)){
+        for(var block = head; block != NULL; block = Header.nextBlock(block)){
             count++;
-            if(block == base){
-                return count;
-            }
         }
+        return count;
     }
 
-    public synchronized int compact(){
-
-        var lastBlock = -1;
-        var prevBlock = base;
-        for(var block = base; ; prevBlock = block, block = Header.nextBlock(block)){
-            if(block > lastBlock){
-                lastBlock = block;
-            }else{
-                break;
-            }
+    public synchronized int[] blockSizes(){
+        var blocks = countFreeBlocks();
+        var sizes = new int[blocks];
+        for(int i = 0, block = head; block != NULL; block = Header.nextBlock(block), i++){
+            sizes[i] = Header.size(block);
         }
-
-        var size = Header.size(lastBlock) + Header.sizeOf();
-
-        Header.nextBlock(prevBlock, base);
-
-        if(delegate == null){
-            sbrk(-size);
-        }else{
-            delegate.free(lastBlock);
-        }
-
-        return size;
+        return sizes;
     }
 
     private int mergeIfAble(int preceding, int trailing){
-        if(preceding == base || trailing == base){
-            return trailing;
+        if(preceding == head){
+            return trailing; // Can't merge head
         }
         if(preceding + Header.sizeOf() + Header.size(preceding) == trailing){
             // Include the size of the header in the block being merged
@@ -358,6 +366,9 @@ public class Allocator {
         }
 
         public void nextBlock(int hPtr, int ptr){
+            if(hPtr == 10 && ptr == 0){
+                new Exception().printStackTrace();
+            }
             acc.writeInt(hPtr, Allocator.HeaderStruct.nextBlock, ptr);
         }
 
