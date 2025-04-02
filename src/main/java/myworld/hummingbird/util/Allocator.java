@@ -2,8 +2,6 @@ package myworld.hummingbird.util;
 
 import myworld.hummingbird.HummingbirdVM;
 
-import java.util.Arrays;
-
 import static myworld.hummingbird.HummingbirdVM.NULL;
 
 /**
