@@ -2,6 +2,8 @@ package myworld.hummingbird.util;
 
 import myworld.hummingbird.HummingbirdVM;
 
+import java.util.Arrays;
+
 import static myworld.hummingbird.HummingbirdVM.NULL;
 
 /**
@@ -137,7 +139,6 @@ public class Allocator {
 
         hvm = vm;
         head = baseAddress;
-        tail = head;
         Header = new HeaderStruct(vm);
 
         this.initialSize = initialSize;
@@ -207,12 +208,17 @@ public class Allocator {
 
         for(var block = Header.nextBlock(head); block != NULL; previousBlock = block, block = Header.nextBlock(block)){
 
-            if(Header.size(block) == nbytes && !(previousBlock == head && Header.nextBlock(block) == NULL)){
+            if(Header.size(block) == nbytes && !(previousBlock == head && block == tail)){
                 // Exact match - don't resize, just join the preceding and trailing blocks.
                 // Can't do this on the head block because there is no prior block to work with.
 
                 Header.nextBlock(previousBlock, Header.nextBlock(block));
                 Header.nextBlock(block, NULL);
+
+                System.out.println("Exact malloc(%d): %s (tail is %s (%d))".formatted(nbytes, Pointer.toString(block), Pointer.toString(tail), Header.size(tail)));
+                if(block == tail){
+                    System.out.println("Did exact allocation on tail. Prior block is %s, prior's new next is %s".formatted(Pointer.toString(previousBlock), Pointer.toString(Header.nextBlock(previousBlock))));
+                }
 
                 return block + Header.sizeOf();
             }else if(Header.size(block) >= nbytes + Header.sizeOf()){
@@ -232,9 +238,14 @@ public class Allocator {
                 if(block == tail){
                     // We just snagged the first bit of the tail block, so update
                     // the tail to the new block
+                    if(newBlock == 452984836){
+                        System.out.println("Found it");
+                        new Exception().printStackTrace();
+                    }
                     tail = newBlock;
                     Header.nextBlock(newBlock, NULL);
                 }
+                System.out.println("Split malloc(%d): %s".formatted(nbytes, Pointer.toString(block)));
                 return block + Header.sizeOf();
             }
 
@@ -244,6 +255,7 @@ public class Allocator {
             // to be large enough.
             if(block == tail){
                 block = morecore(nbytes);
+                //System.out.println("New core ptr: " + Pointer.toString(block));
                 if(block == NULL){
                     return NULL;
                 }
@@ -261,6 +273,10 @@ public class Allocator {
         }
 
         int hPtr = ptr - Header.sizeOf();
+        System.out.println("free(%s)".formatted(Pointer.toString(hPtr)));
+        System.out.println("Free blocks: " + Arrays.toString(Arrays.stream(freeBlocks()).mapToObj(Pointer::toString).toArray()));
+        System.out.println("Free block sizes: " + Arrays.toString(blockSizes()));
+        //new Exception().printStackTrace(System.out);
 
         int block = head;
         if(hPtr > tail){
@@ -278,9 +294,13 @@ public class Allocator {
                 block = next;
             }
         }
+        System.out.println("block: " + Pointer.toString(block));
 
         // Insert hPtr into the list
         // Note that when block == tail, nextBlock is NULL.
+        if(block == tail){
+            System.out.println("Freeing from tail (%s): next is (%s)".formatted(Pointer.toString(tail), Pointer.toString(Header.nextBlock(tail))));
+        }
         int nextBlock = Header.nextBlock(block);
 
         Header.nextBlock(block, hPtr);
@@ -288,13 +308,24 @@ public class Allocator {
 
         // Now merge (if able) block, hPtr, and the trailing block
         var mergedOrNext = mergeIfAble(block, hPtr);
+        //System.out.println("Merge 1: %s (%d), next %s (%d)".formatted(Pointer.toString(mergedOrNext), Header.size(mergedOrNext),
+        //        Pointer.toString(nextBlock), Header.size(nextBlock)));
         if(nextBlock != NULL){
             mergedOrNext = mergeIfAble(mergedOrNext, nextBlock);
+        //    System.out.println("Merge 2: %s (%d), next %s (%d)".formatted(Pointer.toString(mergedOrNext), Header.size(mergedOrNext),
+        //            Pointer.toString(Header.nextBlock(mergedOrNext)), Header.size(Header.nextBlock(nextBlock))));
         }
+        //System.out.println("Finished applicable merges");
 
         if(block == tail){
             // Sets the tail to the merged block (if merge happened),
             // or leaves it pointing to the old tail (if merge didn't happen).
+            //if(mergedOrNext == 452984832){
+                //System.out.println("Setting new tail: Block: %s (%d), hPtr: %s (%d), tail: %s (%d)".formatted(Pointer.toString(block), Header.size(block), Pointer.toString(hPtr), Header.size(hPtr), Pointer.toString(tail), Header.size(tail)));
+                //System.out.println("Merged ptr: " + Pointer.toString(mergedOrNext));
+                //System.out.println("Tail next block: " + Pointer.toString(Header.nextBlock(tail)));
+                //System.out.println("Head size: " + Header.size(head));
+            //}
             tail = mergedOrNext;
             Header.nextBlock(tail, NULL);
         }
@@ -330,16 +361,46 @@ public class Allocator {
         return sizes;
     }
 
+    public synchronized int[] freeBlocks(){
+        var blocks = countFreeBlocks();
+        var pointers = new int[blocks];
+        for(int i = 0, block = head; block != NULL; block = Header.nextBlock(block), i++){
+            pointers[i] = block;
+        }
+        return pointers;
+    }
+
     private int mergeIfAble(int preceding, int trailing){
+        //if(preceding == 0x7E4 || trailing == 0x7E4 || preceding == 0x7EE || trailing == 0x7EE){
+            //System.out.println("Merge: Preceding %s (%d), trailing %s (%d)".formatted(
+            //        Pointer.toString(preceding), Header.size(preceding),
+            //        Pointer.toString(trailing), Header.size(trailing)
+            //));
+        //}
         if(preceding == head){
+            System.out.println("Preceding is head, not merging");
             return trailing; // Can't merge head
         }
         if(preceding + Header.sizeOf() + Header.size(preceding) == trailing){
             // Include the size of the header in the block being merged
             Header.size(preceding, Header.size(preceding) + Header.size(trailing) + Header.sizeOf());
             Header.nextBlock(preceding, Header.nextBlock(trailing));
+            //if(preceding == 0x7E4 || trailing == 0x7E4){
+            //    System.out.println("Merged block: %s (%d), next %s (%d)".formatted(
+            //            Pointer.toString(preceding), Header.size(preceding),
+            //            Pointer.toString(Header.nextBlock(preceding)), Header.size(Header.nextBlock(preceding))
+            //    ));
+            //}
+            System.out.println("Merged %s (%d)".formatted(Pointer.toString(preceding), Header.size(preceding)));
             return preceding;
         }
+        //if(preceding == 0x7E4 || trailing == 0x7E4){
+            //System.out.println("Tail: " + Pointer.toString(tail));
+            //System.out.println("Didn't merge, trailing block: %s (%d), next %s".formatted(
+            //        Pointer.toString(trailing), Header.size(trailing),
+            //        Pointer.toString(Header.nextBlock(trailing)))
+            //);
+        //}
         return trailing;
     }
 
@@ -364,13 +425,18 @@ public class Allocator {
         }
 
         public int nextBlock(int hPtr){
-            return acc.readInt(hPtr, nextBlock);
+            var ptr = acc.readInt(hPtr, nextBlock);
+            if(ptr == 0x1B000000){
+                System.out.println("Found bad next read at nextBlock(%s)".formatted(Pointer.toString(hPtr)));
+                new Exception().printStackTrace(System.out);
+            }
+            return ptr;
         }
 
         public void nextBlock(int hPtr, int ptr){
-            if(hPtr == 8 && ptr == 0){
-                new Exception().printStackTrace();
-                System.exit(0);
+            if(/*hPtr == 0x7EE &&*/ ptr == 0x1B000000){
+                System.out.println("Found bad next write: " + ptr);
+                new Exception().printStackTrace(System.out);
             }
             acc.writeInt(hPtr, Allocator.HeaderStruct.nextBlock, ptr);
         }
@@ -380,6 +446,13 @@ public class Allocator {
         }
 
         public void size(int hPtr, int size){
+            if(hPtr == 0x08 + 4){
+                System.err.println("Found bad write to head size: " + size);
+            }
+            /*if(hPtr == 0x7E4){
+                System.err.println("Found write to tail: " + size);
+                new Exception().printStackTrace();
+            }*/
             acc.writeInt(hPtr, Allocator.HeaderStruct.size, size);
         }
 

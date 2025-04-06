@@ -5,6 +5,7 @@ import myworld.hummingbird.HummingbirdVM;
 import myworld.hummingbird.MemoryLimits;
 import myworld.hummingbird.util.Allocator;
 import myworld.hummingbird.util.Pointer;
+import myworld.hummingbird.util.RingAllocator;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -52,7 +53,7 @@ public class AllocatorSmokeTest {
         random.setSeed(randomSeed);
 
         var vm = new HummingbirdVM(Executable.builder().build(), new MemoryLimits(2048, 0));
-        var allocator = new Allocator(vm, 8);
+        var allocator = new RingAllocator(vm, 0x08);
 
         var iteration = new AtomicInteger(0);
 
@@ -68,15 +69,23 @@ public class AllocatorSmokeTest {
             }
         }, 5 * 1000L, 5 * 1000L);
 
-        System.out.println("Starting smoke test");
+        System.out.println("Starting smoke test with seed " + randomSeed);
 
         while(iterationLimit == NO_ITERATION_LIMIT || iteration.intValue() < iterationLimit){
 
-            var sizes = sizes(random, 0.75f);
+            var sizes = sizes(random, 0.85f);
             var pointers = new int[sizes.length];
 
             for(int i = 0; i < pointers.length; i++){
                 pointers[i] = allocator.malloc(sizes[i]);
+                if(random.nextBoolean()){
+                    allocator.free(pointers[i]);
+                    pointers[i] = allocator.malloc(sizes[i]);
+                }
+                if(sizes[i] > 8){
+                    vm.writeInt(pointers[i], 0xFFFFFFFF);
+                    vm.writeInt(pointers[i] + sizes[i] - 4, 0xFFFFFFFF);
+                }
             }
 
             checkSolution(pointers, sizes, randomSeed, iteration.intValue(), iterationLimit, stats);
@@ -127,7 +136,10 @@ public class AllocatorSmokeTest {
                 stats.success();
 
                 if(inRange(ptr, tPtr, tPtr + tSize) || inRange(ptr + size, tPtr, tPtr + tSize)){
-                    System.out.println("Failed pointer: ptr %s, size %d, test range %s - %s".formatted(Pointer.toString(ptr), size, Pointer.toString(tPtr), Pointer.toString(tPtr + tSize)));
+                    System.out.println("Failed pointer: ptr %s, size %d, test range %s - %s"
+                            .formatted(
+                                    Pointer.toString(ptr), size, Pointer.toString(tPtr),
+                                    Pointer.toString(tPtr + tSize)));
                     return i;
                 }
             }
@@ -162,6 +174,11 @@ public class AllocatorSmokeTest {
     }
 
     public static void main(String[] args){
-        runSmokeTest(NO_ITERATION_LIMIT);
+        if(args.length == 0){
+            runSmokeTest(NO_ITERATION_LIMIT);
+        }else{
+            runSmokeTest(NO_ITERATION_LIMIT, Long.parseLong(args[0]));
+        }
+
     }
 }

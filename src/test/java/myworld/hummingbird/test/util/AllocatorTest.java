@@ -4,10 +4,12 @@ import myworld.hummingbird.Executable;
 import myworld.hummingbird.HummingbirdVM;
 import myworld.hummingbird.MemoryLimits;
 import myworld.hummingbird.util.Allocator;
+import myworld.hummingbird.util.RingAllocator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static myworld.hummingbird.HummingbirdVM.NULL;
+import static myworld.hummingbird.util.RingAllocator.SIZE_OFFSET;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -15,7 +17,7 @@ public class AllocatorTest {
 
     private Allocator.HeaderStruct header;
     private HummingbirdVM vm;
-    private Allocator allocator;
+    private RingAllocator allocator;
 
     private int maxAllocation;
     private int fullyFree;
@@ -24,9 +26,9 @@ public class AllocatorTest {
     public void setupAllocator(){
         vm = new HummingbirdVM(Executable.builder().build(), new MemoryLimits(100, 0));
         header = new Allocator.HeaderStruct(vm);
-        allocator = new Allocator(vm, 10);
-        maxAllocation = 90 - 3 * header.sizeOf();
-        fullyFree = 90 - 2 * header.sizeOf();
+        allocator = new RingAllocator(vm, 10);
+        maxAllocation = 90 - 3 * SIZE_OFFSET;
+        fullyFree = 90 - SIZE_OFFSET;
     }
 
     @Test
@@ -57,7 +59,7 @@ public class AllocatorTest {
         allocator.free(ptr);
         ptr = allocator.malloc(maxAllocation);
         assertNotEquals(NULL, ptr, "Subsequent allocation must succeed");
-        assertEquals(0, allocator.freeSpace(), "Allocator must have no more free space available");
+        assertEquals(4, allocator.freeSpace(), "Allocator must have no more free space available");
     }
 
     @Test
@@ -70,7 +72,7 @@ public class AllocatorTest {
         allocator.free(p2);
         allocator.free(p3);
 
-        assertEquals(2, allocator.countFreeBlocks(), "Allocator must merge free blocks");
+        assertEquals(1, allocator.countFreeBlocks(), "Allocator must merge free blocks");
         assertEquals(fullyFree, allocator.freeSpace(), "Space must be fully free");
     }
 
