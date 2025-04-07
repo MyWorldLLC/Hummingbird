@@ -3,9 +3,8 @@ package myworld.hummingbird.test.util;
 import myworld.hummingbird.Executable;
 import myworld.hummingbird.HummingbirdVM;
 import myworld.hummingbird.MemoryLimits;
-import myworld.hummingbird.util.Allocator;
 import myworld.hummingbird.util.Pointer;
-import myworld.hummingbird.util.RingAllocator;
+import myworld.hummingbird.util.TrackingAllocator;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -53,7 +52,7 @@ public class AllocatorSmokeTest {
         random.setSeed(randomSeed);
 
         var vm = new HummingbirdVM(Executable.builder().build(), new MemoryLimits(2048, 0));
-        var allocator = new RingAllocator(vm, 0x08);
+        var allocator = new TrackingAllocator(vm, 0x08);
 
         var iteration = new AtomicInteger(0);
 
@@ -73,7 +72,7 @@ public class AllocatorSmokeTest {
 
         while(iterationLimit == NO_ITERATION_LIMIT || iteration.intValue() < iterationLimit){
 
-            var sizes = sizes(random, 0.85f);
+            var sizes = sizes(random, 0.95f);
             var pointers = new int[sizes.length];
 
             for(int i = 0; i < pointers.length; i++){
@@ -82,11 +81,13 @@ public class AllocatorSmokeTest {
                     allocator.free(pointers[i]);
                     pointers[i] = allocator.malloc(sizes[i]);
                 }
-                if(sizes[i] > 8){
+                if(sizes[i] > 4){
                     vm.writeInt(pointers[i], 0xFFFFFFFF);
                     vm.writeInt(pointers[i] + sizes[i] - 4, 0xFFFFFFFF);
                 }
             }
+
+            iteration.incrementAndGet();
 
             checkSolution(pointers, sizes, randomSeed, iteration.intValue(), iterationLimit, stats);
 
@@ -94,14 +95,18 @@ public class AllocatorSmokeTest {
                 allocator.free(ptr);
             }
 
-            iteration.incrementAndGet();
         }
     }
 
     private static void checkSolution(int[] pointers, int[] sizes, long randomSeed, int iteration, int iterationLimit, AllocationStats stats){
         boolean pass = true;
         for(int i = 0; i < pointers.length; i++){
-            var overlap = findOverlap(i, pointers, sizes, stats);
+            if(pointers[i] == NULL){
+                stats.fail();
+                continue;
+            }
+            stats.success();
+            var overlap = findOverlap(i, pointers, sizes);
             if(overlap != NO_OVERLAP){
                 pass = false;
             }
@@ -112,16 +117,14 @@ public class AllocatorSmokeTest {
 
     }
 
-    private static int findOverlap(int index, int[] pointers, int[] sizes, AllocationStats stats){
+    private static int findOverlap(int index, int[] pointers, int[] sizes){
         var ptr = pointers[index];
         var size = sizes[index];
 
         // Note that allocations can fail due to fragmentation & load factor, so some pointers may be null
         if(ptr == NULL){
-            stats.fail();
             return NO_OVERLAP;
         }
-        stats.success();
 
         for(int i = 0; i < pointers.length; i++){
             if(i != index){
@@ -129,13 +132,10 @@ public class AllocatorSmokeTest {
                 var tSize = sizes[i];
 
                 if(tPtr == NULL){
-                    stats.fail();
                     continue;
                 }
 
-                stats.success();
-
-                if(inRange(ptr, tPtr, tPtr + tSize) || inRange(ptr + size, tPtr, tPtr + tSize)){
+                if(inRange(ptr, tPtr, tPtr + tSize) || inRange(ptr + size - 1, tPtr, tPtr + tSize)){
                     System.out.println("Failed pointer: ptr %s, size %d, test range %s - %s"
                             .formatted(
                                     Pointer.toString(ptr), size, Pointer.toString(tPtr),
@@ -149,7 +149,7 @@ public class AllocatorSmokeTest {
     }
 
     private static boolean inRange(int test, int a, int b){
-        return a <= test && b >= test;
+        return a <= test && test < b;
     }
 
     private static int[] sizes(Random random, float loadFactor){

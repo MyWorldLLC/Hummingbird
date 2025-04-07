@@ -9,11 +9,21 @@ import static myworld.hummingbird.util.FibHash.*;
  */
 public class IntHashTable {
 
+    public static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
     private final float loadFactor;
     private int count;
     private int slots;
     private int nominalSize;
     private int[] entries;
+
+    public IntHashTable(){
+        this(100);
+    }
+
+    public IntHashTable(int initialSize){
+        this(initialSize, DEFAULT_LOAD_FACTOR);
+    }
 
     public IntHashTable(int initialSize, float loadFactor){
         if(loadFactor <= 0.0 || loadFactor >= 1.0f){
@@ -32,13 +42,15 @@ public class IntHashTable {
         if(count + 1 >= nominalSize){
             growTable();
         }
-        var nominalIndex = hashToRange(hash(k), slots);
-        for(int i = nominalIndex; i < slots; i += 2){
+        var nominalIndex = indexForKey(k);
+        for(int i = nominalIndex; i < entries.length; i += 2){
             var eKey = entries[i];
             if(eKey == 0 || eKey == k){
                 entries[i] = k;
                 entries[i + 1] = v;
-                count++;
+                if(eKey == 0){
+                    count++;
+                }
                 return;
             }
         }
@@ -53,8 +65,8 @@ public class IntHashTable {
         if(k == 0){
             throw new IllegalArgumentException("Illegal key: %d".formatted(k));
         }
-        var nominalIndex = hashToRange(hash(k), slots);
-        for(int i = nominalIndex; i < slots; i += 2){
+        var nominalIndex = indexForKey(k);
+        for(int i = nominalIndex; i < entries.length; i += 2){
             var eKey = entries[i];
             if(eKey == k){
                 return entries[i + 1];
@@ -67,8 +79,8 @@ public class IntHashTable {
         if(k == 0){
             throw new IllegalArgumentException("Illegal key: %d".formatted(k));
         }
-        var nominalIndex = hashToRange(hash(k), slots);
-        for(int i = nominalIndex; i < slots; i += 2){
+        var nominalIndex = indexForKey(k);
+        for(int i = nominalIndex; i < entries.length; i += 2){
             var eKey = entries[i];
             if(eKey == k){
                 return true;
@@ -81,8 +93,8 @@ public class IntHashTable {
         if(k == 0){
             throw new IllegalArgumentException("Illegal key: %d".formatted(k));
         }
-        var nominalIndex = hashToRange(hash(k), slots);
-        for(int i = nominalIndex; i < slots; i += 2){
+        var nominalIndex = indexForKey(k);
+        for(int i = nominalIndex; i < entries.length; i += 2){
             var eKey = entries[i];
             if(eKey == k){
                 entries[i] = 0;
@@ -104,17 +116,53 @@ public class IntHashTable {
         return count;
     }
 
-    public int slots(){
+    public int capacity(){
         return slots;
     }
 
+    protected int indexForKey(int k){
+        return hashToRange(hash(k), slots) << 1; // Multiply by 2 to convert a slot number to its equivalent strided index
+    }
+
     public void copyTo(IntHashTable other){
-        for(int i = 0; i < slots; i += 2){
+        for(int i = 0; i < entries.length; i += 2){
             var k = entries[i];
             if(k != 0){
                 other.insert(k, entries[i + 1]);
             }
         }
+    }
+
+    public void compact(){
+        var other = new IntHashTable(count, loadFactor);
+        copyTo(other);
+        nominalSize = count;
+        slots = other.slots;
+        entries = other.entries;
+    }
+
+    public int[] keys(){
+        var keys = new int[count];
+        for(int i = 0, j = 0; i < entries.length; i += 2){
+            var k = entries[i];
+            if(k != 0){
+                keys[j] = k;
+                j++;
+            }
+        }
+        return keys;
+    }
+
+    public int[] values(){
+        var values = new int[count];
+        for(int i = 0, j = 0; i < entries.length; i += 2){
+            var k = entries[i];
+            if(k != 0){
+                values[j] = entries[i + 1];
+                j++;
+            }
+        }
+        return values;
     }
 
     private void growTable(){
@@ -126,7 +174,7 @@ public class IntHashTable {
         if(oldTable != null){
             count = 0;
             // This works because we've already snagged a copy of the entries and set the count to 0
-            for(int i = 0; i < slots; i += 2){
+            for(int i = 0; i < oldTable.length; i += 2){
                 var k = oldTable[i];
                 if(k != 0){
                     insert(k, oldTable[i + 1]);
@@ -134,5 +182,7 @@ public class IntHashTable {
             }
         }
     }
+
+
 
 }
