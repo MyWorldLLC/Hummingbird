@@ -108,4 +108,8 @@ public class TrackingAllocator {
         return freeList.freeBlockPointers();
     }
 
+    public synchronized boolean isAllocated(int ptr){
+        return allocated.contains(ptr);
+    }
+
 }
