@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class JmpImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        return (int) fiber.registers[regOffset + ins.dst()];
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        return fiber.register(ins.dst());
     }
 }

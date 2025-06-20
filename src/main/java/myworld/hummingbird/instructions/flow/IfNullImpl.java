@@ -21,8 +21,8 @@ public class IfNullImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var dst = regOffset + ins.dst();
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var dst = regOffset + ins.dst();
         var result = fiber.vm.readObj(dst) == null;
         if(jump){
             if(result){
@@ -30,7 +30,7 @@ public class IfNullImpl implements OpcodeImpl {
             }
         }else{
             fiber.registers[ins.src()] = result ? 1 : 0;
-        }
+        }*/
         return ip + 1;
     }
 }

@@ -6,16 +6,16 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ConcatImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
 
-        var reg = fiber.registers;
+        /*var reg = fiber.registers;
         var vm = fiber.vm;
 
         var dst = (int) reg[regOffset + ins.dst()];
         var a = (int) reg[regOffset + ins.src()];
         var b = (int) reg[regOffset + ins.extra()];
 
-        vm.writeObj(dst, vm.objectToString(a) + vm.objectToString(b));
+        vm.writeObj(dst, vm.objectToString(a) + vm.objectToString(b));*/
 
         return ip + 1;
     }

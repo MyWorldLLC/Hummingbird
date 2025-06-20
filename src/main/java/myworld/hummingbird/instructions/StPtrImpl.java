@@ -5,8 +5,8 @@ import myworld.hummingbird.Opcode;
 
 public class StPtrImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        fiber.registers[regOffset + ins.dst()] = regOffset + ins.src();
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        fiber.register(ins.dst(), ins.src());
         return ip + 1;
     }
 }

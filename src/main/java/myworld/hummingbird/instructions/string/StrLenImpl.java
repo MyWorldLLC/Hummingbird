@@ -6,15 +6,15 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class StrLenImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var reg = fiber.registers;
 
         var src = (int) reg[regOffset + ins.src()];
         if(fiber.vm.readObj(src) instanceof String s){
             reg[regOffset + ins.dst()] = s.length();
         }else{
             reg[regOffset + ins.dst()] = -1;
-        }
+        }*/
 
         return ip + 1;
     }

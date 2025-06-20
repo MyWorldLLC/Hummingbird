@@ -5,12 +5,11 @@ import myworld.hummingbird.Opcode;
 
 public class ObjCopyImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
 
-        var dst = (int) reg[regOffset + ins.dst()];
-        var start = (int) reg[regOffset + ins.src()];
-        var end = (int) reg[regOffset + ins.extra()];
+        var dst = fiber.register(ins.dst());
+        var start = fiber.register(ins.src());
+        var end = fiber.register(ins.extra());
 
         fiber.vm.copyObj(dst, start, end - start);
 

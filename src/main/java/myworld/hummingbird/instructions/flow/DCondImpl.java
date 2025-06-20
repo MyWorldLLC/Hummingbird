@@ -23,8 +23,8 @@ public class DCondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var dst = regOffset + ins.dst();
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var dst = regOffset + ins.dst();
         var src = regOffset + ins.src();
         var reg = fiber.registers;
         var result = switch (ins.extra()) {
@@ -43,7 +43,7 @@ public class DCondImpl implements OpcodeImpl {
             }
         }else{
             reg[ins.extra1()] = result ? 1 : 0;
-        }
+        }*/
         return ip + 1;
     }
 }

@@ -6,15 +6,14 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class SCompImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
 
-        var reg = fiber.registers;
         var vm = fiber.vm;
 
-        var a = (int) reg[regOffset + ins.src()];
-        var b = (int) reg[regOffset + ins.extra()];
+        var a = fiber.register(ins.src());
+        var b = fiber.register(ins.extra());
 
-        reg[regOffset + ins.dst()] = vm.objectToString(a).compareTo(vm.objectToString(b));
+        fiber.register(ins.dst(), vm.objectToString(a).compareTo(vm.objectToString(b)));
 
         return ip + 1;
     }

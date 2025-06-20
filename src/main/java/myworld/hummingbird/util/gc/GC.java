@@ -23,9 +23,9 @@ public class GC {
         objectDef = new GcObject();
         gcAccessor = new StructAccessor(vm, objectDef.struct());
 
-        inc = (hvm, fiber) -> inc((int)fiber.registers[0]);
-        dec = (hvm, fiber) -> dec((int)fiber.registers[0]);
-        gcNew = (hvm, fiber) -> fiber.registers[0] = gcNew((int)fiber.registers[0]);
+        inc = (hvm, fiber) -> inc(fiber.register(0));
+        dec = (hvm, fiber) -> dec(fiber.register(0));
+        gcNew = (hvm, fiber) -> fiber.register(0, gcNew(fiber.register(0)));
 
     }
 

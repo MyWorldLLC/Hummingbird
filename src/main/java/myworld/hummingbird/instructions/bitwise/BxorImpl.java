@@ -6,9 +6,9 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class BxorImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] ^ reg[regOffset + ins.extra()];
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var reg = fiber.registers;
+        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] ^ reg[regOffset + ins.extra()];*/
         return ip + 1;
     }
 }

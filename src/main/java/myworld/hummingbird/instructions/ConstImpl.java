@@ -2,7 +2,6 @@ package myworld.hummingbird.instructions;
 
 import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
-import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ConstImpl implements OpcodeImpl {
 
@@ -13,8 +12,8 @@ public class ConstImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        fiber.registers[regOffset + ins.dst()] = value;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        fiber.register(ins.dst(), (int) value); // TODO - long support
         return ip + 1;
     }
 }

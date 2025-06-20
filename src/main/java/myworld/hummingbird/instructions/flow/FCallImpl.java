@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class FCallImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        return OpcodeImpl.foreignCall(fiber, ins, regOffset, ip, ins.src());
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        return OpcodeImpl.foreignCall(fiber, ins, ip, ins.src());
     }
 }

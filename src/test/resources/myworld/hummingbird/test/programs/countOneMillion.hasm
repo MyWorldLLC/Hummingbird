@@ -4,7 +4,7 @@
     # name, type (data, local or foreign function), offset
     # Note that data symbols logically have none of the pieces after the offset
     countToAMillion function $countToAMillion
-        long
+        int
         # Parameters are specified as a sequence of integers, in register file order.
         # Note that parameter spec is ignored by the VM - it is only useful
         # for reflection by embedders, though it is always required. Missing integers are assumed zero.

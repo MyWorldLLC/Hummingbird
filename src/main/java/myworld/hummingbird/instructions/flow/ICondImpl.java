@@ -23,17 +23,16 @@ public class ICondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var dst = regOffset + ins.dst();
-        var src = regOffset + ins.src();
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        var dst = fiber.register(ins.dst());
+        var src = fiber.register(ins.src());
         var result = switch (ins.extra()) {
-            case COND_LT -> reg[dst] < reg[src];
-            case COND_LE -> reg[dst] <= reg[src];
-            case COND_EQ -> reg[dst] == reg[src];
-            case COND_NE -> reg[dst] != reg[src];
-            case COND_GE -> reg[dst] >= reg[src];
-            case COND_GT -> reg[dst] > reg[src];
+            case COND_LT -> dst < src;
+            case COND_LE -> dst <= src;
+            case COND_EQ -> dst == src;
+            case COND_NE -> dst != src;
+            case COND_GE -> dst >= src;
+            case COND_GT -> dst > src;
             default -> false;
         };
 
@@ -42,7 +41,7 @@ public class ICondImpl implements OpcodeImpl {
                 return ins.extra1();
             }
         }else{
-            reg[ins.extra1()] = result ? 1 : 0;
+            fiber.register(ins.extra1(), result ? 1 : 0);
         }
         return ip + 1;
     }

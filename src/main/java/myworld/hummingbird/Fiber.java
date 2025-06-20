@@ -10,7 +10,8 @@ public final class Fiber {
     }
 
     private State state;
-    public final long[] registers;
+    private final int stackBase;
+    private final int stackMax;
 
     public final HummingbirdVM vm;
     public final Executable exe;
@@ -22,11 +23,17 @@ public final class Fiber {
     public int trapTableAddr = -1;
     public int trapHandlerCount = 0;
 
-    public Fiber(HummingbirdVM vm, Executable exe, long[] registers){
+    public Fiber(HummingbirdVM vm, Executable exe, int stackBase, int stackSize){
         state = State.RUNNABLE;
         this.vm = vm;
         this.exe = exe;
-        this.registers = registers;
+        this.stackBase = stackBase;
+        stackMax = stackBase + stackSize;
+        registerOffset = stackBase;
+    }
+
+    public int getStackSize(){
+        return stackMax - stackBase;
     }
 
     public void setState(State state){
@@ -37,24 +44,41 @@ public final class Fiber {
         return state;
     }
 
-    public long[] getRegisters() {
-        return registers;
-    }
-
-    public int saveCallContext(int ip, int regOffset, int returnDest){
-        registers[regOffset + returnDest] = ip;
-        registers[regOffset + returnDest + 1] = regOffset;
-        registerOffset = regOffset + returnDest + 2;
+    public int saveCallContext(int ip, int returnDest){
+        register(returnDest, ip);
+        register(returnDest + 1, registerOffset);
+        registerOffset += returnDest + 2;
         return registerOffset;
     }
 
     public int restoreCallContext(){
-        ip = (int) registers[registerOffset - 2];
-        registerOffset = (int) registers[registerOffset - 1];
-        return ip;
+        ip = register(-2);
+        var oldOffset = registerOffset;
+        registerOffset = register(-1);
+        return oldOffset - registerOffset - 2; // Return destination register
+    }
+
+    public void register(int r, int value){
+        vm.writeInt(r + registerOffset, value);
+    }
+
+    public int register(int r){
+        return vm.readInt(r + registerOffset);
+    }
+
+    public void longRegister(int r, long value){
+        vm.writeLong(r + registerOffset, value);
+    }
+
+    public long longRegister(int r){
+        return vm.readLong(r + registerOffset);
+    }
+
+    public int regPointer(int r){
+        return r + registerOffset;
     }
 
     public int callerRegisterOffset(){
-        return (int)registers[registerOffset - 1];
+        return register(registerOffset - 1);
     }
 }

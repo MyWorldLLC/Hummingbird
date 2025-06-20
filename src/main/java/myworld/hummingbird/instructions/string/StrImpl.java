@@ -8,8 +8,8 @@ import java.util.Objects;
 
 public class StrImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var reg = fiber.registers;
         var src = reg[regOffset + ins.src()];
 
         fiber.vm.writeObj(regOffset + ins.dst(), switch (ins.extra()){
@@ -18,7 +18,7 @@ public class StrImpl implements OpcodeImpl {
             case 2 -> Objects.toString(fiber.vm.readObj((int) src));
             default -> null;
         });
-
+*/
         return ip + 1;
     }
 }

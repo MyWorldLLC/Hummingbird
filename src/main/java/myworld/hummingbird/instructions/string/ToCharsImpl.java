@@ -6,10 +6,11 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class ToCharsImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        //var reg = fiber.registers;
         var vm = fiber.vm;
-        var charBuf = vm.memoryAsCharBuffer();
+        // TODO
+        /*var charBuf = vm.memoryAsCharBuffer();
 
         var dst = (int) reg[regOffset + ins.dst()];
         var src = (int) reg[regOffset + ins.src()];
@@ -20,7 +21,7 @@ public class ToCharsImpl implements OpcodeImpl {
             charBuf.put((dst + 4) / 2, chars);
         }else{
             vm.writeInt(dst, -1);
-        }
+        }*/
 
         return ip + 1;
     }

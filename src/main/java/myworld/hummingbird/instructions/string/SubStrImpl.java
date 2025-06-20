@@ -6,9 +6,9 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class SubStrImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int regOffset, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
 
-        var reg = fiber.registers;
+        /*var reg = fiber.registers;
         var vm = fiber.vm;
 
         var dst = (int) reg[regOffset + ins.dst()];
@@ -19,7 +19,7 @@ public class SubStrImpl implements OpcodeImpl {
 
         var str = vm.objectToString(src);
 
-        vm.writeObj(dst, str.substring(Math.max(0, start), Math.min(str.length(), end)));
+        vm.writeObj(dst, str.substring(Math.max(0, start), Math.min(str.length(), end)));*/
 
         return ip + 1;
     }

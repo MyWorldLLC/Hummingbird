@@ -6,13 +6,13 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DMulImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int offset, int ip, Opcode[] instructions) {
-        var reg = fiber.registers;
+    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+        /*var reg = fiber.registers;
 
         reg[offset + ins.dst()] = Double.doubleToLongBits(
                 Double.longBitsToDouble(reg[offset + ins.src()])
                         * Double.longBitsToDouble(reg[offset + ins.extra()])
-        );
+        );*/
 
         return ip + 1;
     }
