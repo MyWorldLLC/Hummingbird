@@ -7,12 +7,9 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class DNegImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var reg = fiber.registers;
-
-        reg[offset + ins.dst()] = Double.doubleToLongBits(
-                -Double.longBitsToDouble(reg[offset + ins.src()])
-        );*/
-
+        fiber.longRegister(ins.dst(), Double.doubleToLongBits(
+                -Double.longBitsToDouble(fiber.register(ins.src()))
+        ));
         return ip + 1;
     }
 }

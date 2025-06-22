@@ -7,8 +7,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class NegImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var reg = fiber.registers;
-        reg[regOffset + ins.dst()] = -reg[regOffset + ins.src()];*/
+        fiber.register(ins.dst(), -fiber.register(ins.src()));
         return ip + 1;
     }
 }

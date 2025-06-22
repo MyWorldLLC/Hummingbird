@@ -7,12 +7,9 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class DRemImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-       /* var reg = fiber.registers;
-
-        reg[offset + ins.dst()] = Double.doubleToLongBits(
-                Double.longBitsToDouble(reg[offset + ins.src()])
-                        % Double.longBitsToDouble(reg[offset + ins.extra()])
-        );*/
+        fiber.longRegister(ins.dst(), Double.doubleToLongBits(
+                Double.longBitsToDouble(fiber.longRegister(ins.src()))
+                        % Double.longBitsToDouble(fiber.longRegister(ins.extra()))));
 
         return ip + 1;
     }

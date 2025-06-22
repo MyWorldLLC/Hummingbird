@@ -78,11 +78,6 @@ public class Opcodes {
         return new Opcode(new AbsImpl(), dst, a);
     }
 
-    @Assembles("CADD")
-    public static Opcode CADD(@Register Integer dst, @Register Integer a, @Immediate Long value){
-        return new Opcode(new CAddImpl(value), dst, a);
-    }
-
     @Assembles("DADD")
     public static Opcode DADD(@Register Integer dst, @Register Integer a, @Register Integer b){
         return new Opcode(new DAddImpl(), dst, a, b);
@@ -121,11 +116,6 @@ public class Opcodes {
     @Assembles("DABS")
     public static Opcode DABS(@Register Integer dst, @Register Integer a){
         return new Opcode(new DAbsImpl(), dst, a);
-    }
-
-    @Assembles("DCADD")
-    public static Opcode DCADD(@Register Integer dst, @Register Integer a, @Immediate Double value){
-        return new Opcode(new DCAddImpl(value), dst, a);
     }
 
     @Assembles("BAND")
