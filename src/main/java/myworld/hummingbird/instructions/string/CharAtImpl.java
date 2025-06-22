@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class CharAtImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
 
         var src = (int) reg[regOffset + ins.src()];

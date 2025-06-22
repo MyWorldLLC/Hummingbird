@@ -5,7 +5,7 @@ import myworld.hummingbird.Opcode;
 
 public class ObjCopyImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
 
         var dst = fiber.register(ins.dst());
         var start = fiber.register(ins.src());

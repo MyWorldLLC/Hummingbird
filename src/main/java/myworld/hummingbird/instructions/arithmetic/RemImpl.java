@@ -2,12 +2,11 @@ package myworld.hummingbird.instructions.arithmetic;
 
 import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
-import myworld.hummingbird.Traps;
 import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class RemImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
         try {
             reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] % reg[regOffset + ins.extra()];

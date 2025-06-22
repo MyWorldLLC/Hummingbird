@@ -23,7 +23,7 @@ public class ICondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         var dst = fiber.register(ins.dst());
         var src = fiber.register(ins.src());
         var result = switch (ins.extra()) {

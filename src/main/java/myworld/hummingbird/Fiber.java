@@ -66,6 +66,10 @@ public final class Fiber {
         return vm.readInt(r + registerOffset);
     }
 
+    public int rawRegister(int r){
+        return vm.readInt(r);
+    }
+
     public void longRegister(int r, long value){
         vm.writeLong(r + registerOffset, value);
     }

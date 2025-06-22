@@ -1,6 +1,6 @@
 .symbols
     fibonacci function $fibonacci
-            long
+            int
             parameters 3
             registers 7
 

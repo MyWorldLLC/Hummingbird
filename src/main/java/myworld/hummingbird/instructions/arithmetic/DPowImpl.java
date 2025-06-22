@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class DPowImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
 
         reg[offset + ins.dst()] = Double.doubleToLongBits(

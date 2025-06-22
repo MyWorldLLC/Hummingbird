@@ -5,15 +5,15 @@ import myworld.hummingbird.Opcode;
 
 public class ConstImpl implements OpcodeImpl {
 
-    protected final long value;
+    protected final int value;
 
-    public ConstImpl(long value){
+    public ConstImpl(int value){
         this.value = value;
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
-        fiber.register(ins.dst(), (int) value); // TODO - long support
+    public int apply(Fiber fiber, Opcode ins, int ip) {
+        fiber.register(ins.dst(), value);
         return ip + 1;
     }
 }

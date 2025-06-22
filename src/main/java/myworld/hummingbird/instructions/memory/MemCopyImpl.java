@@ -6,7 +6,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 
 public class MemCopyImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
 
         var dst = (int) reg[regOffset + ins.dst()];

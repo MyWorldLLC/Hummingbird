@@ -4,8 +4,6 @@ import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
 import myworld.hummingbird.instructions.OpcodeImpl;
 
-import static myworld.hummingbird.Opcodes.*;
-
 public class DCondImpl implements OpcodeImpl {
 
     private final boolean jump;
@@ -23,7 +21,7 @@ public class DCondImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var dst = regOffset + ins.dst();
         var src = regOffset + ins.src();
         var reg = fiber.registers;

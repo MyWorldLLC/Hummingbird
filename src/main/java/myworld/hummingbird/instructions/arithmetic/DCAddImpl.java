@@ -13,7 +13,7 @@ public class DCAddImpl implements OpcodeImpl {
     }
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
         reg[regOffset + ins.dst()] = Double.doubleToLongBits(Double.longBitsToDouble(reg[regOffset + ins.src()]) + value);*/
         return ip + 1;

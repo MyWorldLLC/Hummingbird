@@ -6,7 +6,7 @@ import myworld.hummingbird.Opcode;
 public class DebugImpl implements OpcodeImpl {
 
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         var debugHandler = fiber.vm.getDebugHandler();
         if(debugHandler != null){
             debugHandler.debug(fiber, ins.dst(), fiber.register(ins.src()));

@@ -5,7 +5,7 @@ import myworld.hummingbird.Opcode;
 
 public class L2DImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         fiber.longRegister(ins.dst(), Double.doubleToLongBits((double) fiber.longRegister(ins.src())));
         return ip + 1;
     }

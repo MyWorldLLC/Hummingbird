@@ -5,17 +5,17 @@ import myworld.hummingbird.Opcode;
 
 public interface OpcodeImpl {
 
-    int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions);
+    int apply(Fiber fiber, Opcode ins, int ip);
 
     static int dispatchCall(Fiber fiber, Opcode ins, int ip, int target){
 
         var callerOffset = fiber.registerOffset;
-        var paramCount = ins.extra();
-        var regOffset = fiber.registerOffset; // TODO
-        regOffset = fiber.saveCallContext(ip + 1, ins.dst());
+        var paramOffset = ins.extra();
+
+        fiber.saveCallContext(ip + 1, ins.dst());
 
         for(int i = 0; i < ins.extra1(); i++){
-            fiber.register(regOffset + i, fiber.register(callerOffset + paramCount + i));
+            fiber.register(i, fiber.rawRegister(callerOffset + paramOffset + i));
         }
 
         ip = target;

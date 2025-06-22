@@ -4,11 +4,9 @@ import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
 import myworld.hummingbird.instructions.OpcodeImpl;
 
-import java.util.Objects;
-
 public class StrImpl implements OpcodeImpl {
     @Override
-    public int apply(Fiber fiber, Opcode ins, int ip, Opcode[] instructions) {
+    public int apply(Fiber fiber, Opcode ins, int ip) {
         /*var reg = fiber.registers;
         var src = reg[regOffset + ins.src()];
 

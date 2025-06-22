@@ -82,7 +82,7 @@ public final class HummingbirdVM {
 
         var symbol = findForeignFunction(name, rType);
 
-        spawn(symbol, null);
+        spawn(symbol);
 
         Fiber lastFiber = null;
         currentFiber = nextFiber();
@@ -111,21 +111,13 @@ public final class HummingbirdVM {
         };
     }
 
-    public Fiber spawn(Symbol entry, long[] initialState) {
-        return spawn(entry != null ? entry.offset() : 0, initialState);
+    public Fiber spawn(Symbol entry) {
+        return spawn(entry != null ? entry.offset() : 0, exe.data().length, memorySize() - exe.data().length);
     }
 
-    public Fiber spawn(int ip, long[] initialState) {
-        //var registers = allocateRegisters( // TODO - variable size register file
-        //        2000
-        //);
+    public Fiber spawn(int ip, int stackBase, int stackSize) {
 
-        if (initialState != null) {
-            //copyRegisters(initialState, registers);
-        }
-        // TODO - initialize initial state
-
-        var fiber = new Fiber(this, exe, 0, 1000); // TODO
+        var fiber = new Fiber(this, exe, stackBase, stackSize);
         fiber.ip = ip;
         fiber.saveCallContext(Integer.MAX_VALUE, 0);
         fiber.saveCallContext(0, 0);
@@ -173,157 +165,157 @@ public final class HummingbirdVM {
             try {
                 ip = Math.abs(ip);
                 var ins = instructions[ip];
-                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                ip = ins.impl().apply(fiber, ins, ip);
                 if (ip >= 0) {
                     ins = instructions[ip];
-                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                    ip = ins.impl().apply(fiber, ins, ip);
                     if (ip >= 0) {
                         ins = instructions[ip];
-                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                        ip = ins.impl().apply(fiber, ins, ip);
                         if (ip >= 0) {
                             ins = instructions[ip];
-                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                            ip = ins.impl().apply(fiber, ins, ip);
                             if (ip >= 0) {
                                 ins = instructions[ip];
-                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                ip = ins.impl().apply(fiber, ins, ip);
                                 if (ip >= 0) {
                                     ins = instructions[ip];
-                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                    ip = ins.impl().apply(fiber, ins, ip);
                                     if (ip >= 0) {
                                         ins = instructions[ip];
-                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                        ip = ins.impl().apply(fiber, ins, ip);
                                         if (ip >= 0) {
                                             ins = instructions[ip];
-                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                            ip = ins.impl().apply(fiber, ins, ip);
                                             if (ip >= 0) {
                                                 ins = instructions[ip];
-                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                ip = ins.impl().apply(fiber, ins, ip);
                                                 if (ip >= 0) {
                                                     ins = instructions[ip];
-                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                     if (ip >= 0) {
                                                         ins = instructions[ip];
-                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                         if (ip >= 0) {
                                                             ins = instructions[ip];
-                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                             if (ip >= 0) {
                                                                 ins = instructions[ip];
-                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                 if (ip >= 0) {
                                                                     ins = instructions[ip];
-                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                     if (ip >= 0) {
                                                                         ins = instructions[ip];
-                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                         if (ip >= 0) {
                                                                             ins = instructions[ip];
-                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                             if (ip >= 0) {
                                                                                 ins = instructions[ip];
-                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                 if (ip >= 0) {
                                                                                     ins = instructions[ip];
-                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                     if (ip >= 0) {
                                                                                         ins = instructions[ip];
-                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                         if (ip >= 0) {
                                                                                             ins = instructions[ip];
-                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                             if (ip >= 0) {
                                                                                                 ins = instructions[ip];
-                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                 if (ip >= 0) {
                                                                                                     ins = instructions[ip];
-                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                     if (ip >= 0) {
                                                                                                         ins = instructions[ip];
-                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                         if (ip >= 0) {
                                                                                                             ins = instructions[ip];
-                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                             if (ip >= 0) {
                                                                                                                 ins = instructions[ip];
-                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                 if (ip >= 0) {
                                                                                                                     ins = instructions[ip];
-                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                     if (ip >= 0) {
                                                                                                                         ins = instructions[ip];
-                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                         if (ip >= 0) {
                                                                                                                             ins = instructions[ip];
-                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                             if (ip >= 0) {
                                                                                                                                 ins = instructions[ip];
-                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                 if (ip >= 0) {
                                                                                                                                     ins = instructions[ip];
-                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                     if (ip >= 0) {
                                                                                                                                         ins = instructions[ip];
-                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                         if (ip >= 0) {
                                                                                                                                             ins = instructions[ip];
-                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                             if (ip >= 0) {
                                                                                                                                                 ins = instructions[ip];
-                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                 if (ip >= 0) {
                                                                                                                                                     ins = instructions[ip];
-                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                     if (ip >= 0) {
                                                                                                                                                         ins = instructions[ip];
-                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                         if (ip >= 0) {
                                                                                                                                                             ins = instructions[ip];
-                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                             if (ip >= 0) {
                                                                                                                                                                 ins = instructions[ip];
-                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                 if (ip >= 0) {
                                                                                                                                                                     ins = instructions[ip];
-                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                     if (ip >= 0) {
                                                                                                                                                                         ins = instructions[ip];
-                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                         if (ip >= 0) {
                                                                                                                                                                             ins = instructions[ip];
-                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                             if (ip >= 0) {
                                                                                                                                                                                 ins = instructions[ip];
-                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                 if (ip >= 0) {
                                                                                                                                                                                     ins = instructions[ip];
-                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                     if (ip >= 0) {
                                                                                                                                                                                         ins = instructions[ip];
-                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                         if (ip >= 0) {
                                                                                                                                                                                             ins = instructions[ip];
-                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                             if (ip >= 0) {
                                                                                                                                                                                                 ins = instructions[ip];
-                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                 if (ip >= 0) {
                                                                                                                                                                                                     ins = instructions[ip];
-                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                     if (ip >= 0) {
                                                                                                                                                                                                         ins = instructions[ip];
-                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                         if (ip >= 0) {
                                                                                                                                                                                                             ins = instructions[ip];
-                                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                            ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                             if (ip >= 0) {
                                                                                                                                                                                                                 ins = instructions[ip];
-                                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                                ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                                 if (ip >= 0) {
                                                                                                                                                                                                                     ins = instructions[ip];
-                                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                                    ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                                     if (ip >= 0) {
                                                                                                                                                                                                                         ins = instructions[ip];
-                                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip, instructions);
+                                                                                                                                                                                                                        ip = ins.impl().apply(fiber, ins, ip);
                                                                                                                                                                                                                     }
                                                                                                                                                                                                                 }
                                                                                                                                                                                                             }
