@@ -8,9 +8,7 @@ public class TrapImpl implements OpcodeImpl {
 
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        //var registers = fiber.registers;
-        //return fiber.vm.trap((int)registers[regOffset + ins.dst()], registers, ip);
-        return ip + 1;
+        return fiber.vm.trap(fiber.register(ins.dst()), fiber, ip);
     }
 
 }

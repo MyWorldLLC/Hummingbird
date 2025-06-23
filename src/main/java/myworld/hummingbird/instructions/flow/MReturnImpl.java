@@ -8,14 +8,11 @@ public class MReturnImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
 
-        fiber.restoreCallContext();
+        var vPtr = fiber.regPointer(ins.dst());
+        var rDest = fiber.restoreCallContext();
 
-        var result = fiber.returnDest;
-        var returnOffset = fiber.registerOffset;
-        //var reg = fiber.registers;
+        fiber.vm.copy(rDest, vPtr, ins.src());
 
-        //System.arraycopy(reg, regOffset + ins.dst(), reg, returnOffset + result, ins.src());
-
-        return fiber.ip;
+        return -fiber.ip;
     }
 }

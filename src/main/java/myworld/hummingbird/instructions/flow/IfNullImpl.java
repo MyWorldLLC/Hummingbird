@@ -22,15 +22,14 @@ public class IfNullImpl implements OpcodeImpl {
 
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var dst = regOffset + ins.dst();
-        var result = fiber.vm.readObj(dst) == null;
+        var result = fiber.vm.readObj(fiber.register(ins.dst())) == null;
         if(jump){
             if(result){
                 return ins.src();
             }
         }else{
-            fiber.registers[ins.src()] = result ? 1 : 0;
-        }*/
+            fiber.register(ins.src(), result ? 1 : 0);
+        }
         return ip + 1;
     }
 }

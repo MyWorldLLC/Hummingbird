@@ -7,8 +7,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class BorImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var reg = fiber.registers;
-        reg[regOffset + ins.dst()] = reg[regOffset + ins.src()] | reg[regOffset + ins.extra()];*/
+        fiber.register(ins.dst(), fiber.register(ins.src()) | fiber.register(ins.extra()));
         return ip + 1;
     }
 }

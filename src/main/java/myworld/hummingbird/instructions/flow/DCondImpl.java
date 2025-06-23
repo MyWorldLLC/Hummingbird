@@ -4,6 +4,11 @@ import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
 import myworld.hummingbird.instructions.OpcodeImpl;
 
+import static myworld.hummingbird.Opcodes.*;
+import static myworld.hummingbird.Opcodes.COND_GE;
+import static myworld.hummingbird.Opcodes.COND_GT;
+import static myworld.hummingbird.Opcodes.COND_NE;
+
 public class DCondImpl implements OpcodeImpl {
 
     private final boolean jump;
@@ -22,16 +27,16 @@ public class DCondImpl implements OpcodeImpl {
 
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var dst = regOffset + ins.dst();
-        var src = regOffset + ins.src();
-        var reg = fiber.registers;
+
+        var dst = fiber.doubleRegister(ins.dst());
+        var src = fiber.doubleRegister(ins.src());
         var result = switch (ins.extra()) {
-            case COND_LT -> Double.longBitsToDouble(reg[dst]) < Double.longBitsToDouble(reg[src]);
-            case COND_LE -> Double.longBitsToDouble(reg[dst]) <= Double.longBitsToDouble(reg[src]);
-            case COND_EQ -> Double.longBitsToDouble(reg[dst]) == Double.longBitsToDouble(reg[src]);
-            case COND_NE -> Double.longBitsToDouble(reg[dst]) != Double.longBitsToDouble(reg[src]);
-            case COND_GE -> Double.longBitsToDouble(reg[dst]) >= Double.longBitsToDouble(reg[src]);
-            case COND_GT -> Double.longBitsToDouble(reg[dst]) > Double.longBitsToDouble(reg[src]);
+            case COND_LT -> dst < src;
+            case COND_LE -> dst <= src;
+            case COND_EQ -> dst == src;
+            case COND_NE -> dst != src;
+            case COND_GE -> dst >= src;
+            case COND_GT -> dst > src;
             default -> false;
         };
 
@@ -40,8 +45,8 @@ public class DCondImpl implements OpcodeImpl {
                 return ins.extra1();
             }
         }else{
-            reg[ins.extra1()] = result ? 1 : 0;
-        }*/
+            fiber.register(ins.extra1(), result ? 1 : 0);
+        }
         return ip + 1;
     }
 }

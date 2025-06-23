@@ -3,6 +3,7 @@ package myworld.hummingbird;
 public final class Fiber {
 
     public static final int CALL_FRAME_SAVED_REGISTERS = 2;
+    public static final int YIELDED_RDEST = -1;
 
     public enum State {
         RUNNABLE,
@@ -76,6 +77,14 @@ public final class Fiber {
 
     public long longRegister(int r){
         return vm.readLong(r + registerOffset);
+    }
+
+    public double doubleRegister(int r){
+        return vm.readDouble(r + registerOffset);
+    }
+
+    public void doubleRegister(int r, double value){
+        vm.writeDouble(r, value);
     }
 
     public int regPointer(int r){

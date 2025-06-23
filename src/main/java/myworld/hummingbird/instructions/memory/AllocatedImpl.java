@@ -7,7 +7,7 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class AllocatedImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*fiber.registers[regOffset + ins.dst()] = fiber.vm.memorySize();*/
+        fiber.register(ins.dst(), fiber.vm.memorySize());
         return ip + 1;
     }
 }

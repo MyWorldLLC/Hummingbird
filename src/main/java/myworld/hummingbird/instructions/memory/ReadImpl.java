@@ -7,17 +7,15 @@ import myworld.hummingbird.instructions.OpcodeImpl;
 public class ReadImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        /*var reg = fiber.registers;
         var vm = fiber.vm;
-
-        var src = (int) reg[regOffset + ins.src()] + ins.extra1();
-        reg[regOffset + ins.dst()] = switch (ins.extra()) {
-            case 1 -> vm.readByte(src);
-            case 2 -> vm.readShort(src);
-            case 4 -> vm.readInt(src);
-            case 8 -> vm.readLong(src);
+        var src = fiber.register(ins.src()) + ins.extra1();
+        switch (ins.extra()){
+            case 1 -> fiber.register(ins.dst(), vm.readByte(src));
+            case 2 -> fiber.register(ins.dst(), vm.readShort(src));
+            case 4 -> fiber.register(ins.dst(), vm.readInt(src));
+            case 8 -> fiber.longRegister(ins.dst(), vm.readLong(src));
             default -> throw new IllegalArgumentException("Memory access must be 1,2,4, or 8: " + ins.extra());
-        };*/
+        }
         return ip + 1;
     }
 }
