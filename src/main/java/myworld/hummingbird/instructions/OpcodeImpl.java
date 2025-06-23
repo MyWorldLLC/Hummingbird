@@ -18,8 +18,7 @@ public interface OpcodeImpl {
             fiber.register(i, fiber.rawRegister(callerOffset + paramOffset + i));
         }
 
-        ip = target;
-        return ip;
+        return target;
     }
 
     static int foreignCall(Fiber fiber, Opcode ins, int ip, int symbolIndex){
@@ -28,10 +27,11 @@ public interface OpcodeImpl {
 
         fiber.saveCallContext(ip + 1, ins.dst());
 
-        ip = ip + 1;
+
         try {
             func.call(fiber.vm, fiber);
             fiber.restoreCallContext();
+            ip = ip + 1;
         } catch (Exception e) {
             ip = fiber.vm.trap(e, fiber, ip);
         }
