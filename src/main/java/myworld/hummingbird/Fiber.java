@@ -85,4 +85,12 @@ public final class Fiber {
     public int callerRegisterOffset(){
         return register(registerOffset - 1);
     }
+
+    public int param(int p, int count){
+        return register(- CALL_FRAME_SAVED_REGISTERS - count + p);
+    }
+
+    public long longParam(int p, int count){
+        return longRegister(- CALL_FRAME_SAVED_REGISTERS - count + p);
+    }
 }

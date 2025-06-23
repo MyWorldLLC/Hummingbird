@@ -26,7 +26,7 @@ public interface OpcodeImpl {
         var symbol = fiber.exe.symbols()[symbolIndex];
         var func = fiber.vm.foreign[symbol.offset()];
 
-        fiber.saveCallContext(ip + 1,  /*TODO*/ ins.dst());
+        fiber.saveCallContext(ip + 1, ins.dst());
 
         ip = ip + 1;
         try {
