@@ -345,7 +345,7 @@ public class Assembler {
 
             String str;
             if(hasSignifier){
-                str = sequence.subSequence(1, sequence.length() - 1).toString();
+                str = sequence.subSequence(1, sequence.length()).toString();
             }else{
                 str = sequence.toString();
             }

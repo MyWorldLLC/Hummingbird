@@ -1,6 +1,7 @@
 .code
     SPAWN r0, $fiber
     YIELD
+    RETURN r0
   fiber:
     CONST r0, 5
     RETURN r0

@@ -3,7 +3,6 @@ package myworld.hummingbird;
 public final class Fiber {
 
     public static final int CALL_FRAME_SAVED_REGISTERS = 2;
-    public static final int YIELDED_RDEST = -1;
 
     public enum State {
         RUNNABLE,
@@ -59,12 +58,16 @@ public final class Fiber {
         return oldOffset - registerOffset - 2; // Return destination register
     }
 
+    public int regPointer(int r){
+        return r + registerOffset + stackBase;
+    }
+
     public void register(int r, int value){
-        vm.writeInt(r + registerOffset, value);
+        vm.writeInt(regPointer(r), value);
     }
 
     public int register(int r){
-        return vm.readInt(r + registerOffset);
+        return vm.readInt(regPointer(r));
     }
 
     public int rawRegister(int r){
@@ -72,23 +75,19 @@ public final class Fiber {
     }
 
     public void longRegister(int r, long value){
-        vm.writeLong(r + registerOffset, value);
+        vm.writeLong(regPointer(r), value);
     }
 
     public long longRegister(int r){
-        return vm.readLong(r + registerOffset);
+        return vm.readLong(regPointer(r));
     }
 
     public double doubleRegister(int r){
-        return vm.readDouble(r + registerOffset);
+        return vm.readDouble(regPointer(r));
     }
 
     public void doubleRegister(int r, double value){
         vm.writeDouble(r, value);
-    }
-
-    public int regPointer(int r){
-        return r + registerOffset;
     }
 
     public int callerRegisterOffset(){

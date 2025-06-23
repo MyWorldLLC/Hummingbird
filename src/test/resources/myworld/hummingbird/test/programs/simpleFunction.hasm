@@ -1,6 +1,6 @@
 .symbols
     simple function $simple
-        long
+        int
         parameters 1
         registers 6
 

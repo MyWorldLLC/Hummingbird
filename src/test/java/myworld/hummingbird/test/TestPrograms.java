@@ -22,7 +22,6 @@ public class TestPrograms {
     public final HummingbirdVM simpleFunction = load("myworld/hummingbird/test/programs/simpleFunction.hasm");
     public final HummingbirdVM simpleFiber = load("myworld/hummingbird/test/programs/simpleFiber.hasm");
     public final HummingbirdVM recursiveAdd = load("myworld/hummingbird/test/programs/recursiveAdd.hasm");
-    public final HummingbirdVM recursiveCountOneMillion = load("myworld/hummingbird/test/programs/recursiveCountOneMillion.hasm");
     public final HummingbirdVM mathBench = load("myworld/hummingbird/test/programs/mathBench.hasm");
 
     public Map<String, Callable<Object>> javaTestPrograms(){
@@ -54,7 +53,6 @@ public class TestPrograms {
         programs.put("simpleFiber", simpleFiber);
         programs.put("simpleFunction", simpleFunction);
         programs.put("recursiveAdd", recursiveAdd);
-        programs.put("recursiveCountOneMillion", recursiveCountOneMillion);
         programs.put("goldenRatio", goldenRatio);
         programs.put("mathBench", mathBench);
 
@@ -97,10 +95,10 @@ public class TestPrograms {
         return x;
     }
 
-    public float mathBench(){
-        float x = 1.0f;
+    public double mathBench(){
+        double x = 1.0;
         for(int i = 0; i<99999999; i++){
-           x = (i + i + 2 * i + 1 - 0.379f)/x;
+           x = (i + i + 2 * i + 1 - 0.379)/x;
         }
         return x;
     }

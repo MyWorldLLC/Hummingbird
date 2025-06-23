@@ -4,12 +4,10 @@ import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
 import myworld.hummingbird.instructions.OpcodeImpl;
 
-public class BlockImpl implements OpcodeImpl {
-
+public class FiberImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        fiber.vm.block(fiber, ip);
-        return -Integer.MAX_VALUE;
+        fiber.vm.writeObj(fiber.register(ins.dst()), fiber);
+        return ip + 1;
     }
-
 }

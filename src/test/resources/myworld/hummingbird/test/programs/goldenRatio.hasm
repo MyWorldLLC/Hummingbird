@@ -2,7 +2,7 @@
     goldenRatio function $goldenRatio
             double
             parameters 0
-            registers 6
+            registers 10
 
 # Calculate an approximation of the golden ratio.
 # Algorithm complements of Ken Perano.
@@ -14,23 +14,23 @@
     # r1 = const 0
     # r2 = const 1
     # r3 = x
-    # r4 = const d1.0
-    # r5 = const d2.0
-    # r6 = temp
+    # r5 = const d1.0
+    # r7 = const d2.0
+    # r9 = temp
     CONST r0, 20    # counter (init 20)
     CONST r1, 0     # iconst 0
     CONST r2, 1     # iconst 1
     CONST r3, d2.0  # x (init 2.0)
-    CONST r4, d1.0  # dconst 1.0
-    CONST r5, d2.0  # dconst 2.0
+    CONST r5, d1.0  # dconst 1.0
+    CONST r7, d2.0  # dconst 2.0
 
   calc:
-    COPY   r6, r4       # temp = 1.0
-    DDIV   r6, r6, r3  # temp = 1/x
-    DADD   r6, r6, r3  # temp = 1/x + x
-    DADD   r6, r6, r4  # temp = 1/x + x + 1
-    DDIV   r6, r6, r5  # temp = (1/x + x + 1)/2
-    COPY   r3, r6       # x = temp
+    LCOPY  r9, r5        # temp = 1.0
+    DDIV   r9, r9, r3    # temp = 1/x
+    DADD   r9, r9, r3    # temp = 1/x + x
+    DADD   r9, r9, r5    # temp = 1/x + x + 1
+    DDIV   r9, r9, r7    # temp = (1/x + x + 1)/2
+    LCOPY  r3, r9        # x = temp
     SUB    r0, r0, r2
     IFGT   r0, r1, $$calc
-    RETURN r3
+    MRETURN r3, 2

@@ -248,9 +248,19 @@ public class Opcodes {
         return new Opcode(new CopyImpl(), dst, src);
     }
 
+    @Assembles("LCOPY")
+    public static Opcode LCOPY(@Register Integer dst, @Register Integer src) {
+        return new Opcode(new LCopyImpl(), dst, src);
+    }
+
     @Assembles("L2D")
     public static Opcode L2D(@Register Integer dst, @Register Integer src) {
         return new Opcode(new L2DImpl(), dst, src);
+    }
+
+    @Assembles("I2D")
+    public static Opcode I2D(@Register Integer dst, @Register Integer src) {
+        return new Opcode(new I2DImpl(), dst, src);
     }
 
     @Assembles("D2L")
@@ -391,6 +401,11 @@ public class Opcodes {
     @Assembles("BLOCK")
     public static Opcode BLOCK(){
         return new Opcode(new BlockImpl());
+    }
+
+    @Assembles("FIBER")
+    public static Opcode FIBER(@Register Integer dst){
+        return new Opcode(new FiberImpl(), dst);
     }
 
     @Assembles("UNBLOCK")

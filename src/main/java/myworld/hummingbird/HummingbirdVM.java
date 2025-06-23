@@ -93,7 +93,7 @@ public final class HummingbirdVM {
         }
 
         if(rType == null){
-            rType = TypeFlag.LONG;
+            rType = TypeFlag.INT;
             if (exe.symbols().length > 0) {
                 rType = exe.symbols()[0].rType();
             }
@@ -120,20 +120,20 @@ public final class HummingbirdVM {
         var fiber = new Fiber(this, exe, stackBase, stackSize);
         fiber.ip = ip;
         fiber.saveCallContext(Integer.MAX_VALUE, 0);
-        fiber.saveCallContext(0, 0);
 
-        runQueue.push(fiber);
+        enqueue(fiber);
 
         return fiber;
     }
 
     public void block(Fiber fiber, int ip){
         fiber.setState(Fiber.State.BLOCKED);
-        fiber.saveCallContext(ip + 1, Fiber.YIELDED_RDEST);
+        fiber.ip = ip + 1;
     }
 
     public void yield(Fiber fiber, int ip){
-        fiber.saveCallContext(ip + 1, Fiber.YIELDED_RDEST);
+        fiber.setState(Fiber.State.RUNNABLE);
+        fiber.ip = ip + 1;
         enqueue(fiber);
     }
 
@@ -172,7 +172,6 @@ public final class HummingbirdVM {
      */
     public void run(Fiber fiber) throws HummingbirdException {
 
-        fiber.restoreCallContext();
         var ip = fiber.ip;
 
         var instructions = exe.code();
@@ -567,7 +566,7 @@ public final class HummingbirdVM {
         try{
             long a = memory[ptr];
             var b = memory[ptr + 1];
-            return (a << 32) | b;
+            return (a << 32) | (b & 0xFFFFFFFFL);
         } catch (IndexOutOfBoundsException e) {
             throw new IndexOutOfBoundsException(ptr);
         }
