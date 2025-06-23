@@ -8,8 +8,7 @@ public class YieldImpl implements OpcodeImpl {
 
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
-        fiber.saveCallContext(ip + 1, Fiber.YIELDED_RDEST);
-        fiber.vm.enqueue(fiber);
+        fiber.vm.yield(fiber, ip);
         return -Integer.MAX_VALUE;
     }
 

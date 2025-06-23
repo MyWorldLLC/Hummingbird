@@ -8,7 +8,7 @@ public class SpawnImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
         var vm = fiber.vm;
-        //vm.writeObj((int) fiber.registers[regOffset + ins.dst()], vm.spawn(ins.src(), fiber.registers));
+        vm.writeObj(fiber.register(ins.dst()), vm.spawn(ins.src(), fiber.register(ins.extra()), fiber.register(ins.extra1())));
         return ip + 1;
     }
 }

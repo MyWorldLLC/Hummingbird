@@ -9,8 +9,7 @@ public class UnblockImpl implements OpcodeImpl {
     @Override
     public int apply(Fiber fiber, Opcode ins, int ip) {
         var vm = fiber.vm;
-        ((Fiber) vm.readObj(fiber.register(ins.dst()))).setState(Fiber.State.RUNNABLE);
-        vm.enqueue(fiber);
+        vm.unblock((Fiber) vm.readObj(fiber.register(ins.dst())));
         return ip + 1;
     }
 

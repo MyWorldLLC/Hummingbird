@@ -127,6 +127,21 @@ public final class HummingbirdVM {
         return fiber;
     }
 
+    public void block(Fiber fiber, int ip){
+        fiber.setState(Fiber.State.BLOCKED);
+        fiber.saveCallContext(ip + 1, Fiber.YIELDED_RDEST);
+    }
+
+    public void yield(Fiber fiber, int ip){
+        fiber.saveCallContext(ip + 1, Fiber.YIELDED_RDEST);
+        enqueue(fiber);
+    }
+
+    public void unblock(Fiber fiber){
+        fiber.setState(Fiber.State.RUNNABLE);
+        enqueue(fiber);
+    }
+
     private Fiber nextFiber() {
         var it = runQueue.iterator();
         while (it.hasNext()) {
