@@ -174,7 +174,7 @@ public final class HummingbirdVM {
 
         var ip = fiber.ip;
 
-        var instructions = exe.code();
+        var instructions = fiber.code();
         while (Math.abs(ip) < instructions.length) {
             try {
                 ip = Math.abs(ip);

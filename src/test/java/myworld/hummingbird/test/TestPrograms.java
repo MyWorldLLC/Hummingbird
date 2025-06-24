@@ -2,6 +2,7 @@ package myworld.hummingbird.test;
 
 import myworld.hummingbird.HummingbirdException;
 import myworld.hummingbird.HummingbirdVM;
+import myworld.hummingbird.MemoryLimits;
 import myworld.hummingbird.assembler.Assembler;
 
 import java.io.BufferedReader;
@@ -80,7 +81,7 @@ public class TestPrograms {
             var assembler = new Assembler();
             var exe = assembler.assemble(builder);
 
-            return new HummingbirdVM(exe);
+            return new HummingbirdVM(exe, new MemoryLimits(1024 * 1024, 1024));
 
         }catch (Exception e){
             throw new RuntimeException(e);

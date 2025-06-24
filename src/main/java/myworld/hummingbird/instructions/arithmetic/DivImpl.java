@@ -11,7 +11,7 @@ public class DivImpl implements OpcodeImpl {
         try {
             fiber.register(ins.dst(), fiber.register(ins.src()) / fiber.register(ins.extra()));
         }catch (ArithmeticException ex){
-            fiber.vm.trap(Traps.DIV_BY_ZERO, fiber, ip);
+            return fiber.vm.trap(Traps.DIV_BY_ZERO, fiber, ip);
         }
         return ip + 1;
     }

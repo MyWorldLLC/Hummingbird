@@ -1,5 +1,7 @@
 package myworld.hummingbird;
 
+import myworld.hummingbird.instructions.OpcodeImpl;
+
 public final class Fiber {
 
     public static final int CALL_FRAME_SAVED_REGISTERS = 2;
@@ -30,6 +32,14 @@ public final class Fiber {
         this.stackBase = stackBase;
         stackMax = stackBase + stackSize;
         registerOffset = stackBase;
+    }
+
+    public Opcode[] code(){
+        return exe.code();
+    }
+
+    public int getStackMax(){
+        return stackMax;
     }
 
     public int getStackSize(){

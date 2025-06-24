@@ -2,6 +2,7 @@ package myworld.hummingbird.instructions;
 
 import myworld.hummingbird.Fiber;
 import myworld.hummingbird.Opcode;
+import myworld.hummingbird.Traps;
 
 public interface OpcodeImpl {
 
@@ -9,16 +10,23 @@ public interface OpcodeImpl {
 
     static int dispatchCall(Fiber fiber, Opcode ins, int ip, int target){
 
+        var symbol = fiber.exe.symbols()[target];
+
         var callerOffset = fiber.registerOffset;
-        var paramOffset = ins.extra();
+        var paramStart = ins.extra();
+        var paramCount = ins.extra1();
+
+        if(callerOffset + paramStart + paramCount + symbol.registers() + Fiber.CALL_FRAME_SAVED_REGISTERS > fiber.getStackMax()){
+            return fiber.vm.trap(Traps.STACK_OVERFLOW, fiber, ip);
+        }
 
         fiber.saveCallContext(ip + 1, ins.dst());
 
         for(int i = 0; i < ins.extra1(); i++){
-            fiber.register(i, fiber.rawRegister(callerOffset + paramOffset + i));
+            fiber.register(i, fiber.rawRegister(callerOffset + paramStart + i));
         }
 
-        return target;
+        return symbol.offset();
     }
 
     static int foreignCall(Fiber fiber, Opcode ins, int ip, int symbolIndex){

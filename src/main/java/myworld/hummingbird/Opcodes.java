@@ -349,8 +349,8 @@ public class Opcodes {
     }
 
     @Assembles("CALL0")
-    public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol) {
-        return new Opcode(new CallImpl(), dst, symbol);
+    public static Opcode CALL0(@Register Integer dst, @Immediate Integer symbol, @Immediate Integer safeRegisters) {
+        return new Opcode(new CallImpl(), dst, symbol, safeRegisters);
     }
 
     @Assembles("CALL")
