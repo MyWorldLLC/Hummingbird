@@ -1,5 +1,7 @@
 package myworld.hummingbird;
 
+import myworld.hummingbird.util.TrackingAllocator;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -10,6 +12,7 @@ public final class HummingbirdVM {
     public static final int NULL = 0;
 
     private final Executable exe;
+    private Allocator allocator;
     public MemoryLimits limits;
     private int[] memory;
     private Object[] objMemory;
@@ -26,6 +29,7 @@ public final class HummingbirdVM {
 
     public HummingbirdVM(Executable exe, MemoryLimits limits) {
         this.exe = exe;
+        allocator = new TrackingAllocator(this, exe.data().length, limits.bytes());
         this.limits = limits;
         foreign = new ForeignFunction[(int) exe.foreignSymbols().count()];
 
@@ -38,6 +42,11 @@ public final class HummingbirdVM {
         debugHandler = (fiber, staticValue, dynamicValue) -> {
             System.out.println("Debug: " + staticValue + " " + dynamicValue);
         };
+    }
+
+    public HummingbirdVM(Executable exe, MemoryLimits limits, Allocator allocator){
+        this(exe, limits);
+        this.allocator = allocator;
     }
 
     public Symbol findFunction(String name, TypeFlag rType){
@@ -125,6 +134,14 @@ public final class HummingbirdVM {
         enqueue(fiber);
 
         return fiber;
+    }
+
+    public Fiber spawn(Symbol entry, int stackSize){
+        var stack = allocator.malloc(stackSize);
+        if(stack == NULL){
+            return null;
+        }
+        return spawn(entry != null ? entry.offset() : 0, stack, stackSize);
     }
 
     public void block(Fiber fiber, int ip){

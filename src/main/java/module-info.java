@@ -7,4 +7,6 @@ module hummingbird {
     exports myworld.hummingbird.instructions.flow;
     exports myworld.hummingbird.instructions.memory;
     exports myworld.hummingbird.instructions.string;
+    exports myworld.hummingbird.util;
+    exports myworld.hummingbird.util.gc;
 }

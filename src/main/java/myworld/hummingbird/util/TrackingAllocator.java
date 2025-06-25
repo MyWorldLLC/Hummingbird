@@ -1,10 +1,11 @@
 package myworld.hummingbird.util;
 
+import myworld.hummingbird.Allocator;
 import myworld.hummingbird.HummingbirdVM;
 
 import static myworld.hummingbird.HummingbirdVM.NULL;
 
-public class TrackingAllocator {
+public class TrackingAllocator implements Allocator {
 
     public static final int DEFAULT_INITIAL_SIZE = -1;
     public static final int DEFAULT_CORE_INCREMENT = 1024;
