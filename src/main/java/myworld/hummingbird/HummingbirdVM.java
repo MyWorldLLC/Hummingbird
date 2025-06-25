@@ -2,6 +2,7 @@ package myworld.hummingbird;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public final class HummingbirdVM {
 
@@ -127,13 +128,22 @@ public final class HummingbirdVM {
     }
 
     public void block(Fiber fiber, int ip){
-        fiber.setState(Fiber.State.BLOCKED);
         fiber.ip = ip + 1;
+        block(fiber);
     }
 
     public void yield(Fiber fiber, int ip){
-        fiber.setState(Fiber.State.RUNNABLE);
         fiber.ip = ip + 1;
+        this.yield(fiber);
+    }
+
+    public void block(Fiber fiber){
+        fiber.setState(Fiber.State.BLOCKED);
+        enqueue(fiber);
+    }
+
+    public void yield(Fiber fiber){
+        fiber.setState(Fiber.State.RUNNABLE);
         enqueue(fiber);
     }
 
@@ -154,8 +164,15 @@ public final class HummingbirdVM {
         return null;
     }
 
-    public void enqueue(Fiber fiber){
+    private void enqueue(Fiber fiber){
         runQueue.add(fiber);
+    }
+
+    public Stream<Fiber> allFibers(){
+        return Stream.concat(
+                Stream.ofNullable(currentFiber),
+                runQueue.stream()
+        );
     }
 
     /**
