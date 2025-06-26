@@ -183,6 +183,11 @@ public final class HummingbirdVM {
         enqueue(fiber);
     }
 
+    public void untrapFiber(Fiber fiber){
+        fiber.setState(Fiber.State.RUNNABLE);
+        // Don't re-enqueue because trapped fibers are already enqueued.
+    }
+
     private Fiber nextFiber() {
         var it = runQueue.iterator();
         while (it.hasNext()) {
