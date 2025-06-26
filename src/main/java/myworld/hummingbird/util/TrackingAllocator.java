@@ -8,7 +8,7 @@ import static myworld.hummingbird.HummingbirdVM.NULL;
 public class TrackingAllocator implements Allocator {
 
     public static final int DEFAULT_INITIAL_SIZE = -1;
-    public static final int DEFAULT_CORE_INCREMENT = 1024;
+    public static final int DEFAULT_CORE_INCREMENT = 256;
 
     private final HummingbirdVM vm;
     private int coreIncrement;
@@ -29,7 +29,7 @@ public class TrackingAllocator implements Allocator {
         this.coreIncrement = coreIncrement;
 
         if(initialSize == DEFAULT_INITIAL_SIZE){
-            initialSize = vm.memorySize() - baseAddress;
+            initialSize = vm.memorySizeWords() - baseAddress;
         }
 
         freeList = FreeBlock.head(baseAddress, initialSize);
@@ -49,7 +49,7 @@ public class TrackingAllocator implements Allocator {
     }
 
     private int sbrk(int moreBytes){
-        int oldSize = vm.memorySize();
+        int oldSize = vm.memorySizeWords();
         if(moreBytes == 0){
             return oldSize;
         }
@@ -71,7 +71,7 @@ public class TrackingAllocator implements Allocator {
             }
             // Retry after morecore() is called above
             // At this point we're either guaranteed success or
-            // the VM has hit its memory limit
+            // the VM has hit its words limit
             ptr = freeList.findOrSplit(size);
         }
         if(ptr != NULL){

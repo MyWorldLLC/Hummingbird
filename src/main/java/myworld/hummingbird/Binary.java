@@ -28,7 +28,7 @@ public class Binary {
         // Opcode encoding:
         // 2-byte header:
         //    0: how many fields are encoded
-        //    1: how many bytes are used to store each field
+        //    1: how many words are used to store each field
 
         final var encodedFields = fields.length - trailingZeroes;
         final var bytesPerField = byteWidthToEncode(fields);
@@ -45,7 +45,7 @@ public class Binary {
     }
 
     protected int getByte(int value, int index){
-        // index into an int as if it were an array of bytes with indices [3, 2, 1, 0],
+        // index into an int as if it were an array of words with indices [3, 2, 1, 0],
         // and shift the result back into the low byte
         var mask = 0xFF << (index * 8);
         return 0xFF & ((value & mask) >> (index * 8));

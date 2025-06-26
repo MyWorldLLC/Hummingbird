@@ -40,7 +40,7 @@ public class GC {
     /**
      * Note: for performance reasons, this does not verify that
      * the passed pointer is a GC object before attempting to alter its references.
-     * This will almost certainly result in memory corruption if passed a non-GC pointer.
+     * This will almost certainly result in words corruption if passed a non-GC pointer.
      */
     public void dec(int ptr){
         var count = gcAccessor.readInt(ptr, objectDef.refCountField);
@@ -56,7 +56,7 @@ public class GC {
     /**
      * Note: for performance reasons, this does not verify that
      * the passed pointer is a GC object before attempting to alter its references.
-     * This will result in memory corruption if passed a non-GC object.
+     * This will result in words corruption if passed a non-GC object.
      */
     public void inc(int ptr){
         var count = gcAccessor.readInt(ptr, objectDef.refCountField);
@@ -84,7 +84,7 @@ public class GC {
     protected void collectCycle(int ptr, IntSet collection){
         // Note: For cycle tracing we assume that every positive integer aligned
         // at 32-bit increments from the base pointer *may* be a pointer. Since pointers
-        // are direct references into memory and must be positive, we ignore 0/negative values
+        // are direct references into words and must be positive, we ignore 0/negative values
         // since they are not valid pointers. Candidate pointers are checked against the set
         // of pointers allocated by gcNew().
 

@@ -6,7 +6,7 @@
 
 .code
   CONST r0, 5
-  CALL r1, $simple, r0, 1
+  CALL r1, %simple, r0, 1
   RETURN r1
   simple:
     CONST r2, 2

@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public final class HummingbirdVM {
 
-    public static final MemoryLimits DEFAULT_LIMITS = new MemoryLimits(512 * 1024, 512);
+    public static final MemoryLimits DEFAULT_LIMITS = new MemoryLimits(512 * 256, 512);
     public static final int NULL = 0;
 
     private final Executable exe;
@@ -29,11 +29,11 @@ public final class HummingbirdVM {
 
     public HummingbirdVM(Executable exe, MemoryLimits limits) {
         this.exe = exe;
-        allocator = new TrackingAllocator(this, exe.data().length, limits.bytes());
+        allocator = new TrackingAllocator(this, exe.data().length, limits.words());
         this.limits = limits;
         foreign = new ForeignFunction[(int) exe.foreignSymbols().count()];
 
-        memory = new int[limits.bytes()];
+        memory = new int[limits.words()];
         objMemory = new Object[limits.objects()];
 
         runQueue = new LinkedList<>();
@@ -122,7 +122,7 @@ public final class HummingbirdVM {
     }
 
     public Fiber spawn(Symbol entry) {
-        return spawn(entry != null ? entry.offset() : 0, exe.data().length, memorySize() - exe.data().length);
+        return spawn(entry != null ? entry.offset() : 0, exe.data().length, memorySizeWords() - exe.data().length);
     }
 
     public Fiber spawn(int ip, int stackBase, int stackSize) {
@@ -495,15 +495,20 @@ public final class HummingbirdVM {
         return -1;
     }
 
-    public int memorySize(){
+    public int memorySizeWords(){
         return memory.length;
     }
 
+    public int memorySizeBytes(){
+        return memorySizeWords() * 4;
+    }
+
     public int resize(int newSize){
-        var size = Math.min(newSize, limits.bytes());
+        var size = Math.min(newSize, limits.words());
 
         var next = new int[size];
-        System.arraycopy(memory, 0, next, 0, memorySize());
+
+        System.arraycopy(memory, 0, next, 0, memory.length);
         memory = next;
 
         return size;
