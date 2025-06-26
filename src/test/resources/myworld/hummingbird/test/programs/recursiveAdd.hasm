@@ -1,14 +1,20 @@
+.symbols
+    recursiveAdd function $add
+        int
+        parameters 1
+        registers 3
+
 .code
     CONST r0, 1
     CONST r1, 10
-    CALL0 r2, $add, 2
+    CALL0 r2, %recursiveAdd, 2
     RETURN r2
   add:
     IFEQ p0, p1, $done
     CONST r1, 1
     ADD r0, p1, r1
     COPY r1, p0
-    CALL0 r2, $add, 2
+    CALL0 r2, %recursiveAdd, 2
     RETURN r2
   done:
     RETURN p1

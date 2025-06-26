@@ -37,6 +37,13 @@ public class RunTestPrograms {
     }
 
     @Test
+    void fibonacci30Call0(){
+        var result = testPrograms.fibonacci30Call0.run();
+        assertInstanceOf(Integer.class, result);
+        assertEquals(832040, result);
+    }
+
+    @Test
     void goldenRatio(){
         var result = testPrograms.goldenRatio.run();
         assertInstanceOf(Double.class, result);
@@ -48,6 +55,20 @@ public class RunTestPrograms {
         var result = testPrograms.mathBench.run();
         assertInstanceOf(Double.class, result);
         assertEquals(7051.571197642306, result);
+    }
+
+    @Test
+    void memReadWrite(){
+        var result = testPrograms.memReadWrite.run();
+        assertInstanceOf(Integer.class, result);
+        assertEquals(7, result);
+    }
+
+    @Test
+    void recursiveAdd(){
+        var result = testPrograms.recursiveAdd.run();
+        assertInstanceOf(Integer.class, result);
+        assertEquals(10, result);
     }
 
     @Test
