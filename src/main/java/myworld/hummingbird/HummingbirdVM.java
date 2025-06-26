@@ -10,6 +10,7 @@ public final class HummingbirdVM {
 
     public static final MemoryLimits DEFAULT_LIMITS = new MemoryLimits(512 * 256, 512);
     public static final int NULL = 0;
+    public static final int YIELD_INTERPRETER_CONTROL = -Integer.MAX_VALUE;
 
     private final Executable exe;
     private Allocator allocator;
@@ -144,6 +145,13 @@ public final class HummingbirdVM {
         return spawn(entry != null ? entry.offset() : 0, stack, stackSize);
     }
 
+    public Fiber findFiber(int stackBase){
+        return allFibers()
+                .filter(f -> f.getStackBase() == stackBase)
+                .findFirst()
+                .orElse(null);
+    }
+
     public void block(Fiber fiber, int ip){
         fiber.ip = ip + 1;
         block(fiber);
@@ -166,6 +174,12 @@ public final class HummingbirdVM {
 
     public void unblock(Fiber fiber){
         fiber.setState(Fiber.State.RUNNABLE);
+        enqueue(fiber);
+    }
+
+    private void trapFiber(Fiber fiber, int ip){
+        fiber.ip = ip + 1;
+        fiber.setState(Fiber.State.TRAPPED);
         enqueue(fiber);
     }
 
@@ -447,12 +461,24 @@ public final class HummingbirdVM {
     }
 
     public int trap(int code, Fiber fiber, int ip, Throwable t) {
+        trapFiber(fiber, ip);
         var handler = getTrapHandler(code);
         if (handler != -1) {
-            // TODO - Invoke trap handler like a normal function, passing the ip as a parameter
-            // without stomping R0.
-            fiber.register(0, ip);
-            return handler;
+            if(handler < 0 || handler >= exe.symbols().length){
+                throw new InvalidTrapHandlerException(handler, code, ip, fiber, t);
+            }
+            var symbol = exe.symbols()[handler];
+            var handlingFiber = spawn(symbol, 10);
+            if(handlingFiber == null){
+                throw new TrapMemoryExhaustionException(code, ip, fiber, t);
+            }
+
+            handlingFiber.register(0, code);
+            handlingFiber.register(1, ip);
+            handlingFiber.register(2, fiber.getStackBase());
+            handlingFiber.register(3, fiber.registerOffset);
+
+            return YIELD_INTERPRETER_CONTROL;
         } else {
             throw new HummingbirdException(ip, fiber, t);
         }
@@ -468,10 +494,21 @@ public final class HummingbirdVM {
         return code;
     }
 
+    /**
+     * Trap handlers are functions that take 4 arguments:
+     * (1) the trap code
+     * (2) the ip where the trap occurred
+     * (3) the stack base pointer of the fiber that trapped
+     * (4) the stack frame pointer of the fiber that trapped
+     * Trap handlers are called in a new fiber that is spawned
+     * with the arguments pushed into registers 0 - 3.
+     * @param exCode
+     * @return
+     */
     public int getTrapHandler(int exCode) {
         // Trap table layout: sequence of integer trap codes,
-        // followed by a sequence of trap handler addresses,
-        // 1 address per code.
+        // followed by a sequence of trap handler symbol entries,
+        // 1 symbol per code.
 
         var trapTableAddr = currentFiber.trapTableAddr;
         var trapHandlerCount = currentFiber.trapHandlerCount;
@@ -677,14 +714,6 @@ public final class HummingbirdVM {
 
     public DebugHandler getDebugHandler(){
         return debugHandler;
-    }
-
-    private static long[] allocateRegisters(int l) {
-        return new long[l];
-    }
-
-    public static void copyRegisters(long[] from, long[] to) {
-        System.arraycopy(from, 0, to, 0, from.length);
     }
 
 }

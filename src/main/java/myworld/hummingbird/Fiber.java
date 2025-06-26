@@ -1,14 +1,13 @@
 package myworld.hummingbird;
 
-import myworld.hummingbird.instructions.OpcodeImpl;
-
 public final class Fiber {
 
     public static final int CALL_FRAME_SAVED_REGISTERS = 2;
 
     public enum State {
         RUNNABLE,
-        BLOCKED
+        BLOCKED,
+        TRAPPED
     }
 
     private State state;
@@ -36,6 +35,10 @@ public final class Fiber {
 
     public Opcode[] code(){
         return exe.code();
+    }
+
+    public int getStackBase(){
+        return stackBase;
     }
 
     public int getStackMax(){
