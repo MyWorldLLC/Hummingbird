@@ -11,6 +11,7 @@ public class BitFieldAllocator {
 
     private final BitField state;
     private int lastFree = 0;
+    private int allocated = 0;
 
     public BitFieldAllocator(int initialSize){
         state = new BitField(initialSize);
@@ -21,6 +22,7 @@ public class BitFieldAllocator {
             state.set(lastFree);
             var ptr = lastFree;
             lastFree = -1;
+            allocated++;
             return ptr;
         }
 
@@ -30,6 +32,7 @@ public class BitFieldAllocator {
             if(freeBit != 0){
                 var ptr = i * 64 + Long.numberOfLeadingZeros(freeBit);
                 state.set(ptr);
+                allocated++;
                 return ptr;
             }
         }
@@ -41,8 +44,13 @@ public class BitFieldAllocator {
     }
 
     public synchronized void free(int ptr){
+        allocated--;
         state.clear(ptr);
         lastFree = ptr;
+    }
+
+    public synchronized int freeSpace(){
+        return state.bitCount() - allocated;
     }
 
 }
