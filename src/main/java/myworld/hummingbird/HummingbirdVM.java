@@ -1,5 +1,6 @@
 package myworld.hummingbird;
 
+import myworld.hummingbird.util.BitFieldAllocator;
 import myworld.hummingbird.util.TrackingAllocator;
 
 import java.util.*;
@@ -13,14 +14,18 @@ public final class HummingbirdVM {
     public static final int YIELD_INTERPRETER_CONTROL = -Integer.MAX_VALUE;
 
     private final Executable exe;
-    private Allocator allocator;
+    public final ForeignFunction[] foreign;
+
     public MemoryLimits limits;
     private int[] memory;
+    private Allocator allocator;
     private Object[] objMemory;
+    private BitFieldAllocator objAllocator;
+
     private Fiber currentFiber;
-    private List<Function<Throwable, Integer>> trapCodes;
     private final Deque<Fiber> runQueue;
-    public final ForeignFunction[] foreign;
+
+    private List<Function<Throwable, Integer>> trapCodes;
 
     private DebugHandler debugHandler;
 
@@ -36,6 +41,7 @@ public final class HummingbirdVM {
 
         memory = new int[limits.words()];
         objMemory = new Object[limits.objects()];
+        objAllocator = new BitFieldAllocator(limits.objects());
 
         runQueue = new LinkedList<>();
         trapCodes = new ArrayList<>();
@@ -79,6 +85,14 @@ public final class HummingbirdVM {
             }
         }
         return null;
+    }
+
+    public Allocator getAllocator(){
+        return allocator;
+    }
+
+    public BitFieldAllocator getObjAllocator(){
+        return objAllocator;
     }
 
     public Object run(){
