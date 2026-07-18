@@ -32,6 +32,7 @@ public class TestPrograms {
         programs.put("returnConstant", this::returnConstant);
         programs.put("mathBench", this::mathBench);
         programs.put("fibonacci30", this::fibonacci30);
+        programs.put("fibonacci30Suspendable", this::fibonacci30Suspendable);
         programs.put("decodeChainedDispatch", decodeChainedDispatch());
         programs.put("astCountOneMillion", astCountOneMillion());
         programs.put("astCallOneMillion", astCallOneMillion());
@@ -111,8 +112,86 @@ public class TestPrograms {
         return fib(n - 1) + fib(n - 2);
     }
 
+    abstract class Value {
+        public abstract Value add(Value other);
+        public abstract int compare(Value other);
+    }
+
+    class VNumber extends Value {
+        private final int value;
+        public VNumber(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public Value add(Value other) {
+            if(other instanceof VNumber n){
+                return new VNumber(value + n.value);
+            }
+            throw new IllegalArgumentException();
+        }
+
+        @Override
+        public int compare(Value other) {
+            if(other instanceof VNumber n){
+                return Integer.compare(value, n.value);
+            }
+            throw new IllegalArgumentException();
+        }
+    }
+
+    class Fiber {
+        int state;
+        Object[] stack;
+    }
+
     public int fibonacci30(){
         return fib(30);
+    }
+
+    private int fibSuspendable(Fiber f, int tos, int argc, int state){
+        int s = 0;
+        int _yield = 0;
+        switch (state){
+            case 0:
+                s = 1;
+                var n = (Value) f.stack[tos];
+                if(n.compare(new VNumber(2)) < 0){
+                    f.stack[tos] = n;
+                    return 1;
+                }
+            case 1:
+                s = 1;
+                f.stack[tos + 1] = ((Value) f.stack[tos]).add(new VNumber(-1));
+            case 2:
+                _yield = fibSuspendable(f, tos + 1, 1, 0);
+                if(_yield < 0){
+                    break;
+                }
+            case 3:
+                s = 2;
+                f.stack[tos + 2] = ((Value) f.stack[tos]).add(new VNumber(-2));
+            case 4:
+                _yield = fibSuspendable(f, tos + 2, 1, 0);
+                if(_yield < 0){
+                    break;
+                }
+            case 5:
+                f.stack[tos] = ((Value) f.stack[tos + 1]).add((Value) f.stack[tos + 2]);
+        }
+        if(_yield < 0){
+            f.state = s;
+        }
+        Arrays.fill(f.stack, tos + 1, tos + 3, 0);
+        return 1;
+    }
+
+    public int fibonacci30Suspendable(){
+        var fiber = new Fiber();
+        fiber.stack = new Object[56];
+        fiber.stack[0] = new VNumber(30);
+        fibSuspendable(fiber, 0, 1, 0);
+        return ((VNumber) fiber.stack[0]).value;
     }
 
     public int returnConstant(){
