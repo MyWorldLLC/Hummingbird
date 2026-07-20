@@ -7,6 +7,7 @@ import myworld.hummingbird.assembler.Assembler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -143,55 +144,67 @@ public class TestPrograms {
     class Fiber {
         int state;
         Object[] stack;
+        boolean resuming = false;
     }
 
     public int fibonacci30(){
         return fib(30);
     }
 
-    private int fibSuspendable(Fiber f, int tos, int argc, int state){
+    private int fibSuspendable(Fiber f, int n){
         int s = 0;
-        int _yield = 0;
-        switch (state){
-            case 0:
-                s = 1;
-                var n = (Value) f.stack[tos];
-                if(n.compare(new VNumber(2)) < 0){
-                    f.stack[tos] = n;
-                    return 1;
-                }
-            case 1:
-                s = 1;
-                f.stack[tos + 1] = ((Value) f.stack[tos]).add(new VNumber(-1));
-            case 2:
-                _yield = fibSuspendable(f, tos + 1, 1, 0);
-                if(_yield < 0){
-                    break;
-                }
-            case 3:
-                s = 2;
-                f.stack[tos + 2] = ((Value) f.stack[tos]).add(new VNumber(-2));
-            case 4:
-                _yield = fibSuspendable(f, tos + 2, 1, 0);
-                if(_yield < 0){
-                    break;
-                }
-            case 5:
-                f.stack[tos] = ((Value) f.stack[tos + 1]).add((Value) f.stack[tos + 2]);
+        int r0 = 0, r1 = 0;
+        if(f.resuming){
+            s = f.state;
+            // Note: In real usage, r0 & r1 would need to be set here
         }
-        if(_yield < 0){
+        try{
+            switch (s){
+                case 0:
+                    s = 1;
+                    if(n < 2){
+                        return 1;
+                    }
+                case 1:
+                    s = 1;
+                    r0 = fibSuspendable(f, n - 1);
+                case 2:
+                    s = 2;
+                    r1 = fibSuspendable(f, n - 2);
+                    return r0 + r1;
+            }
+        } catch (Exception e) {
             f.state = s;
+            throw new RuntimeException(e); // Simulate suspension
         }
-        Arrays.fill(f.stack, tos + 1, tos + 3, 0);
         return 1;
     }
+
+    /*private int fibSuspendable(Fiber f, int tos, int argc, int state){
+        var n = f.stack[tos];
+        if(n < 2){
+            f.stack[tos] = n;
+            return 1;
+        }
+
+        f.stack[tos + 1] = f.stack[tos] - 1;
+        fibSuspendable(f, tos + 1, 1, 0);
+        f.stack[tos + 2] = f.stack[tos] - 2;
+        fibSuspendable(f, tos + 2, 1, 0);
+        if(!Double.isNaN(f.stack[tos + 1]) && !Double.isNaN(f.stack[tos + 2])){
+            f.stack[tos] =  f.stack[tos + 1] + f.stack[tos + 2];
+        }
+
+        //Arrays.fill(f.stack, tos + 1, tos + 3, 0);
+        return 1;
+    }*/
 
     public int fibonacci30Suspendable(){
         var fiber = new Fiber();
         fiber.stack = new Object[56];
         fiber.stack[0] = new VNumber(30);
-        fibSuspendable(fiber, 0, 1, 0);
-        return ((VNumber) fiber.stack[0]).value;
+        return fibSuspendable(fiber, 30);
+        //return ((VNumber) fiber.stack[0]).value;
     }
 
     public int returnConstant(){
